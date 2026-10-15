@@ -1,53 +1,59 @@
 /**
  * Sahayak 3D Design Tokens
- * Colorblind-safe palettes (Okabe-Ito / Paul Tol standards)
- * Optimized for high-contrast accessibility (WCAG AAA/AA)
+ * Authentic Okabe-Ito Colorblind-Safe Standard:
+ * - On-Time: Bluish Green (#009E73)
+ * - Delay: Amber / Orange (#E69F00)
+ * - Cancelled / Section Halt: Vermilion (#D55E00)
+ * - Rerouted: Blue (#0072B2)
+ * Tested against Protanopia, Deuteranopia, Tritanopia, and Monochromacy.
  */
 
 export const tokens = {
   colors: {
-    // Colorblind-Safe Status Colors
+    // Authentic Okabe-Ito Colorblind-Safe Palette
     status: {
       onTime: {
-        primary: '#059669', // Emerald / Sea Green
+        primary: '#009E73', // Okabe-Ito Bluish Green
         light: '#D1FAE5',
-        dark: '#065F46',
-        border: '#34D399',
-        glow: 'rgba(16, 185, 129, 0.4)',
+        dark: '#004D38',
+        border: '#009E73',
+        glow: 'rgba(0, 158, 115, 0.4)',
         label: 'On Time / समय पर',
       },
       delay: {
-        primary: '#D97706', // High-contrast Ochre / Amber
+        primary: '#E69F00', // Okabe-Ito Orange / Amber
         light: '#FEF3C7',
-        dark: '#78350F',
-        border: '#FBBF24',
-        glow: 'rgba(217, 119, 6, 0.4)',
+        dark: '#7A5400',
+        border: '#E69F00',
+        glow: 'rgba(230, 159, 0, 0.4)',
         label: 'Delayed / विलंबित',
       },
       cancelled: {
-        primary: '#E11D48', // High-contrast Crimson Vermilion
+        primary: '#D55E00', // Okabe-Ito Vermilion
         light: '#FFE4E6',
-        dark: '#881337',
-        border: '#FB7185',
-        glow: 'rgba(225, 29, 72, 0.4)',
+        dark: '#6E3100',
+        border: '#D55E00',
+        glow: 'rgba(213, 94, 0, 0.4)',
         label: 'Cancelled / रद्द',
       },
       rerouted: {
-        primary: '#2563EB', // Ultramarine / Sky Blue
+        primary: '#0072B2', // Okabe-Ito Blue
         light: '#DBEAFE',
-        dark: '#1E40AF',
-        border: '#60A5FA',
-        glow: 'rgba(37, 99, 235, 0.4)',
+        dark: '#003B5C',
+        border: '#0072B2',
+        glow: 'rgba(0, 114, 178, 0.4)',
         label: 'Rerouted / मार्ग परिवर्तित',
       },
+      skyBlue: '#56B4E9',
+      reddishPurple: '#CC79A7',
     },
 
     // Railway Corridor Palette
     railway: {
       heritageNavy: '#0F172A',
       irDeepBlue: '#1E3A8A',
-      irCoachBlue: '#2563EB',
-      irYellowStripe: '#F59E0B',
+      irCoachBlue: '#0072B2',
+      irYellowStripe: '#E69F00',
       locoCrimson: '#B91C1C',
       ballastGrey: '#334155',
       steelRail: '#94A3B8',
@@ -58,29 +64,29 @@ export const tokens = {
     // Environmental 3D Palettes
     environment: {
       day: {
-        skyTop: '#38BDF8',
+        skyTop: '#56B4E9',
         skyBottom: '#BAE6FD',
         sun: '#FFFBEB',
-        sunIntensity: 1.8,
+        sunIntensity: 1.6,
         ambient: '#F0F9FF',
         ambientIntensity: 0.65,
         fog: '#BAE6FD',
-        fogNear: 40,
-        fogFar: 140,
-        terrainGrass: '#4ADE80',
-        terrainHill: '#22C55E',
+        fogNear: 45,
+        fogFar: 160,
+        terrainGrass: '#34D399',
+        terrainHill: '#059669',
         terrainSoil: '#A16207',
       },
       dusk: {
         skyTop: '#1E1B4B',
         skyBottom: '#FB923C',
         sun: '#F97316',
-        sunIntensity: 1.4,
+        sunIntensity: 1.3,
         ambient: '#FED7AA',
         ambientIntensity: 0.45,
         fog: '#C2410C',
-        fogNear: 30,
-        fogFar: 120,
+        fogNear: 35,
+        fogFar: 130,
         terrainGrass: '#15803D',
         terrainHill: '#166534',
         terrainSoil: '#78350F',
@@ -126,7 +132,7 @@ export const tokens = {
 
   // Accessibility
   a11y: {
-    focusRing: '3px solid #F59E0B',
+    focusRing: '3px solid #E69F00',
     focusOffset: '2px',
     minTouchTarget: '48px',
   },

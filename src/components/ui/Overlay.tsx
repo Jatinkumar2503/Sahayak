@@ -1,26 +1,22 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Sun,
   Moon,
-  Camera,
   CheckCircle2,
   AlertTriangle,
   XCircle,
   GitBranch,
-  Volume2,
   Accessibility,
   Languages,
   RotateCcw,
 } from 'lucide-react';
 import { useJourneyStore, STATIONS } from '@/store/journeyStore';
-import { tokens } from '@/styles/tokens';
+import { journeyPhysics } from '@/store/journeyPhysics';
 
 export function Overlay() {
   const status = useJourneyStore((s) => s.status);
-  const progress = useJourneyStore((s) => s.progress);
-  const speed = useJourneyStore((s) => s.speed);
   const timeOfDay = useJourneyStore((s) => s.timeOfDay);
   const cameraMode = useJourneyStore((s) => s.cameraMode);
   const language = useJourneyStore((s) => s.language);
@@ -34,47 +30,63 @@ export function Overlay() {
   const setDisruptionType = useJourneyStore((s) => s.setDisruptionType);
   const resetJourney = useJourneyStore((s) => s.resetJourney);
 
+  // Throttled HUD metrics (updated at 4Hz to prevent 60fps React re-renders)
+  const [hudState, setHudState] = useState({
+    progress: 0.02,
+    speed: 0.25,
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHudState({
+        progress: journeyPhysics.progress,
+        speed: journeyPhysics.speed,
+      });
+    }, 250);
+    return () => clearInterval(interval);
+  }, []);
+
   const isHindi = language === 'hi';
 
   // Find next station
   const nextStation =
-    STATIONS.find((st) => st.progress > progress) || STATIONS[STATIONS.length - 1];
+    STATIONS.find((st) => st.progress > hudState.progress) || STATIONS[STATIONS.length - 1];
 
-  // Status badge config (colorblind-safe icons + patterns)
+  // Authentic Okabe-Ito status badge config (colorblind-safe icons + patterns + text)
   const getStatusBadge = () => {
     switch (status) {
       case 'delay':
         return {
-          icon: <AlertTriangle className="w-4 h-4 text-amber-300" aria-hidden="true" />,
+          icon: <AlertTriangle className="w-4 h-4 text-[#E69F00]" aria-hidden="true" />,
           labelEn: 'DELAYED (+25m)',
           labelHi: 'विलंबित (+२५ मि.)',
-          classes: 'bg-amber-950/80 text-amber-200 border-amber-500/80 shadow-amber-500/20',
-          pattern: 'border-dashed',
+          classes: 'bg-[#7A5400]/40 text-[#FEF3C7] border-[#E69F00] shadow-[#E69F00]/20',
+          pattern: 'border-dashed border-2',
         };
       case 'cancelled':
         return {
-          icon: <XCircle className="w-4 h-4 text-rose-300" aria-hidden="true" />,
+          icon: <XCircle className="w-4 h-4 text-[#D55E00]" aria-hidden="true" />,
           labelEn: 'SECTION HALT',
           labelHi: 'खंड रोक',
-          classes: 'bg-rose-950/80 text-rose-200 border-rose-500/80 shadow-rose-500/20',
-          pattern: 'border-dotted',
+          classes: 'bg-[#6E3100]/40 text-[#FFE4E6] border-[#D55E00] shadow-[#D55E00]/20',
+          pattern: 'border-dotted border-2',
         };
       case 'rerouted':
         return {
-          icon: <GitBranch className="w-4 h-4 text-blue-300" aria-hidden="true" />,
+          icon: <GitBranch className="w-4 h-4 text-[#56B4E9]" aria-hidden="true" />,
           labelEn: 'REROUTED (BRANCH)',
           labelHi: 'मार्ग परिवर्तित (शाखा)',
-          classes: 'bg-blue-950/80 text-blue-200 border-blue-500/80 shadow-blue-500/20',
-          pattern: 'border-double',
+          classes: 'bg-[#003B5C]/40 text-[#DBEAFE] border-[#0072B2] shadow-[#0072B2]/20',
+          pattern: 'border-double border-4',
         };
       case 'on-time':
       default:
         return {
-          icon: <CheckCircle2 className="w-4 h-4 text-emerald-300" aria-hidden="true" />,
+          icon: <CheckCircle2 className="w-4 h-4 text-[#009E73]" aria-hidden="true" />,
           labelEn: 'ON TIME',
           labelHi: 'समय पर',
-          classes: 'bg-emerald-950/80 text-emerald-200 border-emerald-500/80 shadow-emerald-500/20',
-          pattern: 'border-solid',
+          classes: 'bg-[#004D38]/40 text-[#D1FAE5] border-[#009E73] shadow-[#009E73]/20',
+          pattern: 'border-solid border-2',
         };
     }
   };
@@ -86,7 +98,7 @@ export function Overlay() {
       {/* Skip to Content for Screen Readers & Keyboard Nav */}
       <a
         href="#main-controls"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded shadow-lg"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-[#E69F00] text-slate-950 font-bold px-4 py-2 rounded shadow-lg"
       >
         Skip to Journey Controls
       </a>
@@ -94,20 +106,20 @@ export function Overlay() {
       {/* Screen Reader Live Region for Status Changes */}
       <div className="sr-only" aria-live="assertive" role="status">
         {isHindi
-          ? `वर्तमान स्थिति: ${statusBadge.labelHi}, गति: ${(speed * 440).toFixed(0)} किमी प्रति घंटा`
-          : `Current Journey Status: ${statusBadge.labelEn}, Speed: ${(speed * 440).toFixed(0)} km/h`}
+          ? `वर्तमान स्थिति: ${statusBadge.labelHi}, गति: ${(hudState.speed * 440).toFixed(0)} किमी प्रति घंटा`
+          : `Current Journey Status: ${statusBadge.labelEn}, Speed: ${(hudState.speed * 440).toFixed(0)} km/h`}
       </div>
 
       {/* Top Navigation & Status Bar */}
       <header className="flex flex-wrap items-center justify-between gap-3 pointer-events-auto">
         {/* Brand & Train Badge */}
         <div className="flex items-center gap-3 bg-slate-950/80 backdrop-blur-md border border-slate-700/50 px-4 py-2 rounded-xl shadow-2xl">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-700 to-amber-500 flex items-center justify-center font-black text-slate-950 text-sm shadow-md">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#0072B2] to-[#E69F00] flex items-center justify-center font-black text-slate-950 text-sm shadow-md">
             IR
           </div>
           <div>
             <h1 className="text-base font-extrabold tracking-tight text-slate-100 leading-tight">
-              Sahayak 3D <span className="text-xs font-semibold text-amber-400">/ सहायक ३डी</span>
+              Sahayak 3D <span className="text-xs font-semibold text-[#E69F00]">/ सहायक ३डी</span>
             </h1>
             <p className="text-[11px] text-slate-400 font-medium">
               12001 Vande Bharat Corridor • Delhi ➔ Ambala
@@ -115,9 +127,9 @@ export function Overlay() {
           </div>
         </div>
 
-        {/* Live Status Pill with Colorblind-safe styling */}
+        {/* Live Status Pill with Authentic Okabe-Ito colorblind-safe styling */}
         <div
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full border-2 text-xs font-black shadow-lg backdrop-blur-md transition-all duration-300 ${statusBadge.classes} ${statusBadge.pattern}`}
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-black shadow-lg backdrop-blur-md transition-all duration-300 ${statusBadge.classes} ${statusBadge.pattern}`}
         >
           {statusBadge.icon}
           <span>{isHindi ? statusBadge.labelHi : statusBadge.labelEn}</span>
@@ -130,12 +142,12 @@ export function Overlay() {
             onClick={toggleTimeOfDay}
             title={timeOfDay === 'day' ? 'Switch to Dusk Mode' : 'Switch to Day Mode'}
             aria-label={`Current lighting is ${timeOfDay}. Click to toggle.`}
-            className="p-2 rounded-lg text-slate-300 hover:text-amber-400 hover:bg-slate-800/80 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400"
+            className="p-2 rounded-lg text-slate-300 hover:text-[#E69F00] hover:bg-slate-800/80 transition-colors focus-visible:ring-2 focus-visible:ring-[#E69F00]"
           >
             {timeOfDay === 'day' ? (
-              <Sun className="w-4 h-4 text-amber-400" />
+              <Sun className="w-4 h-4 text-[#E69F00]" />
             ) : (
-              <Moon className="w-4 h-4 text-indigo-400" />
+              <Moon className="w-4 h-4 text-[#56B4E9]" />
             )}
           </button>
 
@@ -147,7 +159,7 @@ export function Overlay() {
                 onClick={() => setCameraMode(mode)}
                 className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${
                   cameraMode === mode
-                    ? 'bg-blue-600 text-white shadow-sm'
+                    ? 'bg-[#0072B2] text-white shadow-sm'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
                 title={`Switch to ${mode} camera view`}
@@ -161,7 +173,7 @@ export function Overlay() {
           <button
             onClick={toggleLanguage}
             title="Toggle Hindi/English Language"
-            className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg text-slate-300 hover:text-amber-400 hover:bg-slate-800/80 transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg text-slate-300 hover:text-[#E69F00] hover:bg-slate-800/80 transition-colors"
           >
             <Languages className="w-3.5 h-3.5" />
             <span>{isHindi ? 'EN' : 'हिन्दी'}</span>
@@ -173,7 +185,7 @@ export function Overlay() {
             title="Elderly Accessibility Mode (Large text, high contrast)"
             className={`p-2 rounded-lg transition-colors ${
               elderMode
-                ? 'bg-amber-400 text-slate-950 font-bold'
+                ? 'bg-[#E69F00] text-slate-950 font-bold'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
             }`}
           >
@@ -182,29 +194,29 @@ export function Overlay() {
         </div>
       </header>
 
-      {/* Middle Floating Quick Corridor Indicator */}
+      {/* Middle Corridor Indicator */}
       <div className="flex flex-col items-center gap-2 my-auto pointer-events-none">
         {/* Station Journey Bar */}
         <div className="pointer-events-auto bg-slate-950/80 backdrop-blur-md border border-slate-700/60 px-5 py-2.5 rounded-2xl shadow-2xl flex items-center gap-4 text-xs">
           {STATIONS.map((st, i) => {
-            const isPassed = progress >= st.progress;
-            const isCurrent = Math.abs(progress - st.progress) < 0.1;
+            const isPassed = hudState.progress >= st.progress;
+            const isCurrent = Math.abs(hudState.progress - st.progress) < 0.1;
             return (
               <React.Fragment key={st.id}>
                 <div className="flex flex-col items-center">
                   <div
                     className={`w-3.5 h-3.5 rounded-full border-2 transition-all ${
                       isCurrent
-                        ? 'bg-amber-400 border-amber-300 ring-4 ring-amber-400/30 scale-125'
+                        ? 'bg-[#E69F00] border-[#FEF3C7] ring-4 ring-[#E69F00]/30 scale-125'
                         : isPassed
-                        ? 'bg-emerald-500 border-emerald-400'
+                        ? 'bg-[#009E73] border-[#D1FAE5]'
                         : 'bg-slate-800 border-slate-600'
                     }`}
                   />
                   <span
                     className={`mt-1 font-bold ${
                       isCurrent
-                        ? 'text-amber-300'
+                        ? 'text-[#E69F00]'
                         : isPassed
                         ? 'text-slate-200'
                         : 'text-slate-500'
@@ -216,13 +228,13 @@ export function Overlay() {
                 {i < STATIONS.length - 1 && (
                   <div className="w-12 sm:w-20 h-0.5 bg-slate-700 relative">
                     <div
-                      className="absolute left-0 top-0 h-full bg-emerald-500 transition-all duration-300"
+                      className="absolute left-0 top-0 h-full bg-[#009E73] transition-all duration-300"
                       style={{
                         width: `${Math.max(
                           0,
                           Math.min(
                             100,
-                            ((progress - st.progress) /
+                            ((hudState.progress - st.progress) /
                               (STATIONS[i + 1].progress - st.progress)) *
                               100
                           )
@@ -247,9 +259,9 @@ export function Overlay() {
             </span>
             <div className="flex items-baseline gap-1">
               <span className="text-2xl font-black text-slate-100 font-mono">
-                {(speed * 440).toFixed(0)}
+                {(hudState.speed * 440).toFixed(0)}
               </span>
-              <span className="text-xs text-amber-400 font-bold">km/h</span>
+              <span className="text-xs text-[#E69F00] font-bold">km/h</span>
             </div>
           </div>
 
@@ -275,7 +287,7 @@ export function Overlay() {
             onClick={() => setDisruptionType('none')}
             className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
               disruptionType === 'none'
-                ? 'bg-emerald-600 text-white shadow-md'
+                ? 'bg-[#009E73] text-white shadow-md'
                 : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
             }`}
           >
@@ -286,7 +298,7 @@ export function Overlay() {
             onClick={() => setDisruptionType('delay')}
             className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
               disruptionType === 'delay'
-                ? 'bg-amber-600 text-white shadow-md'
+                ? 'bg-[#E69F00] text-slate-950 shadow-md'
                 : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
             }`}
           >
@@ -300,7 +312,7 @@ export function Overlay() {
             }}
             className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
               disruptionType === 'missed_connection'
-                ? 'bg-blue-600 text-white shadow-md'
+                ? 'bg-[#0072B2] text-white shadow-md'
                 : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
             }`}
           >
@@ -310,7 +322,7 @@ export function Overlay() {
           <button
             onClick={resetJourney}
             title="Reset Train to Start"
-            className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-400 rounded-lg transition-colors ml-1"
+            className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-[#E69F00] rounded-lg transition-colors ml-1"
           >
             <RotateCcw className="w-4 h-4" />
           </button>

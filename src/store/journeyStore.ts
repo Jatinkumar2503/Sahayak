@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { journeyPhysics } from './journeyPhysics';
 
 export type JourneyStatus = 'on-time' | 'delay' | 'cancelled' | 'rerouted';
 export type DisruptionType = 'none' | 'delay' | 'cancellation' | 'missed_connection' | 'platform_change';
@@ -43,28 +44,23 @@ export const STATIONS: StationInfo[] = [
 ];
 
 export interface JourneyState {
-  // Core state requested in Phase 1
   status: JourneyStatus;
   progress: number;
   speed: number;
   targetSpeed: number;
   disruptionType: DisruptionType;
 
-  // Environment and visual toggles
   timeOfDay: TimeOfDay;
   cameraMode: CameraMode;
   showFps: boolean;
 
-  // A11y and UX preferences
   language: Language;
   elderMode: boolean;
   reducedMotion: boolean;
 
-  // Active track branch
   activeBranch: 'main' | 'branch';
   branchProgress: number;
 
-  // Actions
   setProgress: (progress: number) => void;
   setSpeed: (speed: number) => void;
   setTargetSpeed: (targetSpeed: number) => void;
@@ -98,9 +94,18 @@ export const useJourneyStore = create<JourneyState>((set) => ({
   activeBranch: 'main',
   branchProgress: 0,
 
-  setProgress: (progress) => set({ progress: Math.max(0, Math.min(1, progress)) }),
-  setSpeed: (speed) => set({ speed }),
-  setTargetSpeed: (targetSpeed) => set({ targetSpeed }),
+  setProgress: (progress) => {
+    journeyPhysics.progress = progress;
+    set({ progress });
+  },
+  setSpeed: (speed) => {
+    journeyPhysics.speed = speed;
+    set({ speed });
+  },
+  setTargetSpeed: (targetSpeed) => {
+    journeyPhysics.targetSpeed = targetSpeed;
+    set({ targetSpeed });
+  },
   setStatus: (status) => set({ status }),
   setDisruptionType: (disruptionType) => {
     let nextStatus: JourneyStatus = 'on-time';
@@ -117,6 +122,8 @@ export const useJourneyStore = create<JourneyState>((set) => ({
       targetSpeed = 0.15;
     }
 
+    journeyPhysics.targetSpeed = targetSpeed;
+
     set({
       disruptionType,
       status: nextStatus,
@@ -131,8 +138,16 @@ export const useJourneyStore = create<JourneyState>((set) => ({
     set((state) => ({ language: state.language === 'en' ? 'hi' : 'en' })),
   toggleElderMode: () => set((state) => ({ elderMode: !state.elderMode })),
   setReducedMotion: (reducedMotion) => set({ reducedMotion }),
-  setActiveBranch: (activeBranch) => set({ activeBranch }),
-  resetJourney: () =>
+  setActiveBranch: (activeBranch) => {
+    journeyPhysics.activeBranch = activeBranch;
+    set({ activeBranch });
+  },
+  resetJourney: () => {
+    journeyPhysics.progress = 0.02;
+    journeyPhysics.speed = 0.25;
+    journeyPhysics.targetSpeed = 0.25;
+    journeyPhysics.activeBranch = 'main';
+
     set({
       status: 'on-time',
       progress: 0.02,
@@ -140,5 +155,6 @@ export const useJourneyStore = create<JourneyState>((set) => ({
       targetSpeed: 0.25,
       disruptionType: 'none',
       activeBranch: 'main',
-    }),
+    });
+  },
 }));

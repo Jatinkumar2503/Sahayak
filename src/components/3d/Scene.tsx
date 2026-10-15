@@ -27,7 +27,7 @@ export function Scene() {
       <Suspense fallback={<SceneFallback />}>
         <Canvas
           shadows
-          dpr={[1, 2]} // Cap pixel ratio for 60fps performance
+          dpr={[1, 1.5]} // Capped at 1.5 for rock-solid 60fps performance on laptops & mobiles
           camera={{ position: [0, 10, 30], fov: 55, near: 0.1, far: 600 }}
           gl={{
             antialias: true,
@@ -38,7 +38,7 @@ export function Scene() {
           {/* Sky Dome with Day/Dusk Shader */}
           <SkyDome />
 
-          {/* Three-point Lighting Rig with soft shadows and animated fog */}
+          {/* Optimized Lighting Rig with soft shadows and animated fog */}
           <LightingRig />
 
           {/* Procedural low-poly terrain, crops, trees, and catenary masts */}

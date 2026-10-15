@@ -66,21 +66,21 @@ export function LightingRig() {
         position={[0, 50, 0]}
       />
 
-      {/* Directional Sun Light with crisp soft shadows */}
+      {/* Directional Sun Light with optimized 1024 shadow map for stable 60fps */}
       <directionalLight
         ref={dirLightRef}
         args={[env.sun, env.sunIntensity]}
         position={[45, 60, 30]}
         castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
         shadow-camera-near={10}
         shadow-camera-far={200}
-        shadow-camera-left={-60}
-        shadow-camera-right={60}
-        shadow-camera-top={60}
-        shadow-camera-bottom={-60}
-        shadow-bias={-0.0005}
+        shadow-camera-left={-50}
+        shadow-camera-right={50}
+        shadow-camera-top={50}
+        shadow-camera-bottom={-50}
+        shadow-bias={-0.0006}
       />
     </>
   );

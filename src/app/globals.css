@@ -1,32 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  /* Colorblind-Safe Status Palette */
-  --status-on-time: #059669;
+  /* Authentic Okabe-Ito Colorblind-Safe Status Palette */
+  --status-on-time: #009E73;
   --status-on-time-light: #D1FAE5;
-  --status-on-time-dark: #065F46;
-  --status-on-time-glow: rgba(16, 185, 129, 0.4);
+  --status-on-time-dark: #004D38;
+  --status-on-time-glow: rgba(0, 158, 115, 0.4);
 
-  --status-delay: #D97706;
+  --status-delay: #E69F00;
   --status-delay-light: #FEF3C7;
-  --status-delay-dark: #78350F;
-  --status-delay-glow: rgba(217, 119, 6, 0.4);
+  --status-delay-dark: #7A5400;
+  --status-delay-glow: rgba(230, 159, 0, 0.4);
 
-  --status-cancelled: #E11D48;
+  --status-cancelled: #D55E00;
   --status-cancelled-light: #FFE4E6;
-  --status-cancelled-dark: #881337;
-  --status-cancelled-glow: rgba(225, 29, 72, 0.4);
+  --status-cancelled-dark: #6E3100;
+  --status-cancelled-glow: rgba(213, 94, 0, 0.4);
 
-  --status-rerouted: #2563EB;
+  --status-rerouted: #0072B2;
   --status-rerouted-light: #DBEAFE;
-  --status-rerouted-dark: #1E40AF;
-  --status-rerouted-glow: rgba(37, 99, 235, 0.4);
+  --status-rerouted-dark: #003B5C;
+  --status-rerouted-glow: rgba(0, 114, 178, 0.4);
 
   /* Railway Theming */
   --railway-navy: #0F172A;
   --railway-deep-blue: #1E3A8A;
-  --railway-coach-blue: #2563EB;
-  --railway-yellow: #F59E0B;
+  --railway-coach-blue: #0072B2;
+  --railway-yellow: #E69F00;
   --railway-crimson: #B91C1C;
   --railway-steel: #94A3B8;
 
@@ -43,7 +43,7 @@
   --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* A11y tokens */
-  --focus-ring: 0 0 0 3px #F59E0B;
+  --focus-ring: 0 0 0 3px #E69F00;
   --min-touch-target: 48px;
 
   /* Background & foreground */

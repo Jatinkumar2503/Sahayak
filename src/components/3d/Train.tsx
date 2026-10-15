@@ -4,37 +4,38 @@ import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useJourneyStore } from '@/store/journeyStore';
+import { journeyPhysics } from '@/store/journeyPhysics';
 import { mainTrackCurve, branchTrackCurve } from './trackCurves';
 
 export function Train() {
   const groupRef = useRef<THREE.Group>(null);
-  const progress = useJourneyStore((s) => s.progress);
-  const setProgress = useJourneyStore((s) => s.setProgress);
-  const speed = useJourneyStore((s) => s.speed);
-  const targetSpeed = useJourneyStore((s) => s.targetSpeed);
-  const setSpeed = useJourneyStore((s) => s.setSpeed);
-  const activeBranch = useJourneyStore((s) => s.activeBranch);
   const disruptionType = useJourneyStore((s) => s.disruptionType);
+  const activeBranch = useJourneyStore((s) => s.activeBranch);
 
   useFrame((_, delta) => {
-    // Lerp actual speed towards target speed for realistic train braking/acceleration
-    const currentSpeed = THREE.MathUtils.lerp(speed, targetSpeed, delta * 2);
-    setSpeed(currentSpeed);
+    // Read from and write to mutable journeyPhysics (ZERO React re-renders!)
+    const currentSpeed = THREE.MathUtils.lerp(
+      journeyPhysics.speed,
+      journeyPhysics.targetSpeed,
+      delta * 2
+    );
+    journeyPhysics.speed = currentSpeed;
 
     // Advance progress along track
-    const newProgress = (progress + (currentSpeed * 0.05 * delta)) % 1;
-    setProgress(newProgress);
+    journeyPhysics.progress = (journeyPhysics.progress + currentSpeed * 0.05 * delta) % 1;
 
     if (!groupRef.current) return;
 
     // Pick active curve
     const isBranching =
-      activeBranch === 'branch' && newProgress > 0.45 && newProgress < 0.95;
+      activeBranch === 'branch' &&
+      journeyPhysics.progress > 0.45 &&
+      journeyPhysics.progress < 0.95;
     const curve = isBranching ? branchTrackCurve : mainTrackCurve;
 
-    // Sample position and tangent
-    const pt = curve.getPointAt(newProgress);
-    const tangent = curve.getTangentAt(newProgress).normalize();
+    // Arc-length parameterization using getPointAt
+    const pt = curve.getPointAt(journeyPhysics.progress);
+    const tangent = curve.getTangentAt(journeyPhysics.progress).normalize();
 
     groupRef.current.position.set(pt.x, pt.y + 0.45, pt.z);
 
@@ -95,8 +96,8 @@ export function Train() {
       <mesh position={[0, 0.8, -2.65]}>
         <sphereGeometry args={[0.12, 8, 8]} />
         <meshStandardMaterial
-          color={isBraking ? '#EF4444' : '#7F1D1D'}
-          emissive={isBraking ? '#EF4444' : '#450A0A'}
+          color={isBraking ? '#D55E00' : '#7F1D1D'}
+          emissive={isBraking ? '#D55E00' : '#450A0A'}
           emissiveIntensity={isBraking ? 2.5 : 0.2}
         />
       </mesh>

@@ -4,24 +4,27 @@ import { useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useJourneyStore } from '@/store/journeyStore';
+import { journeyPhysics } from '@/store/journeyPhysics';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { mainTrackCurve, branchTrackCurve } from './trackCurves';
 
 export function FollowCamera() {
   const { camera } = useThree();
-  const progress = useJourneyStore((s) => s.progress);
   const cameraMode = useJourneyStore((s) => s.cameraMode);
   const activeBranch = useJourneyStore((s) => s.activeBranch);
-  const reducedMotion = useJourneyStore((s) => s.reducedMotion);
+  const isReducedMotion = useReducedMotion();
 
   const currentLookAt = useRef(new THREE.Vector3(0, 0, 0));
 
   useFrame((_, delta) => {
     const isBranching =
-      activeBranch === 'branch' && progress > 0.45 && progress < 0.95;
+      activeBranch === 'branch' &&
+      journeyPhysics.progress > 0.45 &&
+      journeyPhysics.progress < 0.95;
     const curve = isBranching ? branchTrackCurve : mainTrackCurve;
 
-    const trainPos = curve.getPointAt(progress);
-    const tangent = curve.getTangentAt(progress).normalize();
+    const trainPos = curve.getPointAt(journeyPhysics.progress);
+    const tangent = curve.getTangentAt(journeyPhysics.progress).normalize();
     const up = new THREE.Vector3(0, 1, 0);
     const normal = new THREE.Vector3().crossVectors(tangent, up).normalize();
 
@@ -32,7 +35,7 @@ export function FollowCamera() {
       // Behind and slightly above the train
       targetPos
         .copy(trainPos)
-        .addScaledVector(tangent, 16) // Behind direction
+        .addScaledVector(tangent, 16)
         .add(new THREE.Vector3(0, 7.5, 0))
         .addScaledVector(normal, 3.5);
     } else if (cameraMode === 'cinematic') {
@@ -49,12 +52,12 @@ export function FollowCamera() {
         .add(new THREE.Vector3(0, 48, 12));
     }
 
-    if (reducedMotion) {
-      // Static placement without aggressive lerp
+    if (isReducedMotion) {
+      // Fixed position without rapid swinging/lerping
       camera.position.copy(targetPos);
       camera.lookAt(targetLookAt);
     } else {
-      // Smooth lerp for fluid 60fps tracking
+      // Fluid lerp for 60fps tracking
       const factor = Math.min(delta * 4, 1);
       camera.position.lerp(targetPos, factor);
       currentLookAt.current.lerp(targetLookAt, factor);
