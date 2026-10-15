@@ -20,11 +20,11 @@ export function TrackSpline() {
   );
 
   const mainLeftRailGeo = useMemo(
-    () => new THREE.TubeGeometry(mainLeft, 300, 0.05, 6, false),
+    () => new THREE.TubeGeometry(mainLeft, 180, 0.05, 4, false),
     [mainLeft]
   );
   const mainRightRailGeo = useMemo(
-    () => new THREE.TubeGeometry(mainRight, 300, 0.05, 6, false),
+    () => new THREE.TubeGeometry(mainRight, 180, 0.05, 4, false),
     [mainRight]
   );
 
@@ -35,11 +35,11 @@ export function TrackSpline() {
   );
 
   const branchLeftRailGeo = useMemo(
-    () => new THREE.TubeGeometry(branchLeft, 200, 0.05, 6, false),
+    () => new THREE.TubeGeometry(branchLeft, 120, 0.05, 4, false),
     [branchLeft]
   );
   const branchRightRailGeo = useMemo(
-    () => new THREE.TubeGeometry(branchRight, 200, 0.05, 6, false),
+    () => new THREE.TubeGeometry(branchRight, 120, 0.05, 4, false),
     [branchRight]
   );
 
@@ -152,7 +152,6 @@ export function TrackSpline() {
       <instancedMesh
         ref={sleepersRef}
         args={[undefined, undefined, sleeperCount]}
-        castShadow
         receiveShadow
       >
         <boxGeometry args={[2.0, 0.12, 0.28]} />
@@ -160,14 +159,14 @@ export function TrackSpline() {
       </instancedMesh>
 
       {/* Main Steel Rails */}
-      <mesh geometry={mainLeftRailGeo} castShadow receiveShadow>
+      <mesh geometry={mainLeftRailGeo} receiveShadow>
         <meshStandardMaterial
           color="#E2E8F0"
           metalness={0.85}
           roughness={0.2}
         />
       </mesh>
-      <mesh geometry={mainRightRailGeo} castShadow receiveShadow>
+      <mesh geometry={mainRightRailGeo} receiveShadow>
         <meshStandardMaterial
           color="#E2E8F0"
           metalness={0.85}
@@ -179,7 +178,6 @@ export function TrackSpline() {
       <instancedMesh
         ref={branchSleepersRef}
         args={[undefined, undefined, branchSleeperCount]}
-        castShadow
         receiveShadow
       >
         <boxGeometry args={[2.0, 0.12, 0.28]} />

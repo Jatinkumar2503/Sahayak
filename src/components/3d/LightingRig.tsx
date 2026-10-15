@@ -4,6 +4,8 @@ import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useJourneyStore } from '@/store/journeyStore';
+import { journeyPhysics } from '@/store/journeyPhysics';
+import { mainTrackCurve } from './trackCurves';
 import { tokens } from '@/styles/tokens';
 
 export function LightingRig() {
@@ -11,15 +13,16 @@ export function LightingRig() {
   const dirLightRef = useRef<THREE.DirectionalLight>(null);
   const hemiLightRef = useRef<THREE.HemisphereLight>(null);
 
-  // Target values based on time of day
   const env = tokens.colors.environment[timeOfDay];
   const targetSunColor = new THREE.Color(env.sun);
   const targetAmbientColor = new THREE.Color(env.ambient);
   const targetFogColor = new THREE.Color(env.fog);
 
   useFrame((state, delta) => {
-    // Smooth lerp for light color transitions
     const lerpFactor = Math.min(delta * 2.5, 1);
+
+    // Keep directional shadow frustum tightly following the train
+    const trainPt = mainTrackCurve.getPointAt(journeyPhysics.progress);
 
     if (dirLightRef.current) {
       dirLightRef.current.color.lerp(targetSunColor, lerpFactor);
@@ -28,6 +31,10 @@ export function LightingRig() {
         env.sunIntensity,
         lerpFactor
       );
+
+      dirLightRef.current.position.set(trainPt.x + 25, 40, trainPt.z + 18);
+      dirLightRef.current.target.position.set(trainPt.x, trainPt.y, trainPt.z);
+      dirLightRef.current.target.updateMatrixWorld();
     }
 
     if (hemiLightRef.current) {
@@ -56,31 +63,29 @@ export function LightingRig() {
 
   return (
     <>
-      {/* Three.js Fog for atmospheric depth */}
       <fog attach="fog" args={[env.fog, env.fogNear, env.fogFar]} />
 
-      {/* Hemisphere Light for soft sky/ground ambient fill */}
       <hemisphereLight
         ref={hemiLightRef}
         args={[env.ambient, '#1E293B', env.ambientIntensity]}
         position={[0, 50, 0]}
       />
 
-      {/* Directional Sun Light with optimized 1024 shadow map for stable 60fps */}
+      {/* Dynamic tight-frustum directional light for train shadows */}
       <directionalLight
         ref={dirLightRef}
         args={[env.sun, env.sunIntensity]}
-        position={[45, 60, 30]}
+        position={[25, 40, 18]}
         castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-        shadow-camera-near={10}
-        shadow-camera-far={200}
-        shadow-camera-left={-50}
-        shadow-camera-right={50}
-        shadow-camera-top={50}
-        shadow-camera-bottom={-50}
-        shadow-bias={-0.0006}
+        shadow-mapSize-width={512}
+        shadow-mapSize-height={512}
+        shadow-camera-near={5}
+        shadow-camera-far={80}
+        shadow-camera-left={-16}
+        shadow-camera-right={16}
+        shadow-camera-top={16}
+        shadow-camera-bottom={-16}
+        shadow-bias={-0.0008}
       />
     </>
   );

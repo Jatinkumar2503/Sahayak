@@ -79,7 +79,6 @@ export function Train() {
         distance={45}
         angle={0.45}
         penumbra={0.6}
-        castShadow
       />
       <mesh position={[0, 0.8, 3.2]}>
         <sphereGeometry args={[0.15, 12, 12]} />

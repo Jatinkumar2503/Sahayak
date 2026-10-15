@@ -27,7 +27,7 @@ export function Scene() {
       <Suspense fallback={<SceneFallback />}>
         <Canvas
           shadows
-          dpr={[1, 1.5]} // Capped at 1.5 for rock-solid 60fps performance on laptops & mobiles
+          dpr={[1, 1.25]} // Capped at 1.25 for guaranteed 60fps on all laptop displays
           camera={{ position: [0, 10, 30], fov: 55, near: 0.1, far: 600 }}
           gl={{
             antialias: true,

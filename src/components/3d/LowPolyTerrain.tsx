@@ -5,8 +5,8 @@ import * as THREE from 'three';
 import { useJourneyStore } from '@/store/journeyStore';
 import { tokens } from '@/styles/tokens';
 
-const TREE_COUNT = 240;
-const POLE_COUNT = 50;
+const TREE_COUNT = 140;
+const POLE_COUNT = 45;
 
 export function LowPolyTerrain() {
   const timeOfDay = useJourneyStore((s) => s.timeOfDay);
@@ -179,7 +179,6 @@ export function LowPolyTerrain() {
       <instancedMesh
         ref={treeCanopyRef}
         args={[undefined, undefined, TREE_COUNT]}
-        castShadow
         receiveShadow
       >
         <coneGeometry args={[1.4, 2.8, 5]} />
@@ -190,7 +189,6 @@ export function LowPolyTerrain() {
       <instancedMesh
         ref={treeTrunkRef}
         args={[undefined, undefined, TREE_COUNT]}
-        castShadow
         receiveShadow
       >
         <cylinderGeometry args={[0.2, 0.3, 1.6, 5]} />
@@ -201,7 +199,6 @@ export function LowPolyTerrain() {
       <instancedMesh
         ref={poleRef}
         args={[undefined, undefined, POLE_COUNT]}
-        castShadow
       >
         <cylinderGeometry args={[0.08, 0.1, 5, 4]} />
         <meshStandardMaterial color="#64748B" metalness={0.7} roughness={0.3} />
