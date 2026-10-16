@@ -11,9 +11,13 @@ import {
   Accessibility,
   Languages,
   RotateCcw,
+  Volume2,
+  VolumeX,
+  Megaphone,
 } from 'lucide-react';
 import { useJourneyStore, STATIONS } from '@/store/journeyStore';
 import { journeyPhysics } from '@/store/journeyPhysics';
+import { railwayAudio } from '@/utils/audioEngine';
 
 export function Overlay() {
   const status = useJourneyStore((s) => s.status);
@@ -35,6 +39,7 @@ export function Overlay() {
     progress: 0.02,
     speed: 0.25,
   });
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -190,6 +195,26 @@ export function Overlay() {
             }`}
           >
             {useJourneyStore.getState().scrollMode ? 'Scroll: ON' : 'Scroll: OFF'}
+          </button>
+
+          {/* Train Horn Button */}
+          <button
+            onClick={() => railwayAudio.playHorn()}
+            title="Sound Indian Railways Dual-Tone Horn (भोपू)"
+            className="p-2 rounded-lg text-amber-400 hover:text-amber-300 hover:bg-slate-800/80 transition-colors"
+          >
+            <Megaphone className="w-4 h-4" />
+          </button>
+
+          {/* Sound Mute / Unmute Toggle */}
+          <button
+            onClick={() => {
+              setIsMuted(railwayAudio.toggleMute());
+            }}
+            title={isMuted ? 'Unmute Track Audio' : 'Mute Track Audio'}
+            className="p-2 rounded-lg text-slate-300 hover:text-[#E69F00] hover:bg-slate-800/80 transition-colors"
+          >
+            {isMuted ? <VolumeX className="w-4 h-4 text-slate-400" /> : <Volume2 className="w-4 h-4 text-[#009E73]" />}
           </button>
 
           {/* Elder Mode Toggle */}
