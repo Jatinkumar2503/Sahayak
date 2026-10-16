@@ -25,17 +25,55 @@ export function JourneyTimelineA11y() {
 
   const t = translations[language];
   const isHindi = language === 'hi';
+  const modalRef = React.useRef<HTMLDivElement>(null);
+  const previousFocusRef = React.useRef<HTMLElement | null>(null);
 
-  // Keyboard Escape listener
+  // Trap focus and restore focus on close
   useEffect(() => {
     if (!isTimelineOpen) return;
+    previousFocusRef.current = document.activeElement as HTMLElement;
+
+    const focusTimer = setTimeout(() => {
+      const focusable = modalRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable && focusable.length > 0) {
+        focusable[0].focus();
+      }
+    }, 50);
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setTimelineOpen(false);
+        previousFocusRef.current?.focus();
+        return;
+      }
+
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusables = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusables || focusables.length === 0) return;
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      clearTimeout(focusTimer);
+      window.removeEventListener('keydown', handleKeyDown);
+      previousFocusRef.current?.focus();
+    };
   }, [isTimelineOpen, setTimelineOpen]);
 
   const getStatusText = () => {
@@ -105,7 +143,10 @@ export function JourneyTimelineA11y() {
           aria-label={t.timelineTitle}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md pointer-events-auto"
         >
-          <div className="relative w-full max-w-md bg-slate-950 border-2 border-amber-400/80 rounded-3xl p-6 shadow-2xl text-slate-100 flex flex-col justify-between max-h-[90vh] overflow-y-auto">
+          <div
+            ref={modalRef}
+            className="relative w-full max-w-md bg-slate-950 border-2 border-amber-400/80 rounded-3xl p-6 shadow-2xl text-slate-100 flex flex-col justify-between max-h-[90vh] overflow-y-auto"
+          >
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2">

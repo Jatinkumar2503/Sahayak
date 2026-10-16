@@ -34,6 +34,9 @@ export function FamilyShareModal({ isOpen, onClose }: FamilyShareModalProps) {
   const t = translations[language];
   const isHindi = language === 'hi';
 
+  const modalRef = React.useRef<HTMLDivElement>(null);
+  const previousFocusRef = React.useRef<HTMLElement | null>(null);
+
   // Live updated seconds ticker
   useEffect(() => {
     const timer = setInterval(() => {
@@ -42,16 +45,52 @@ export function FamilyShareModal({ isOpen, onClose }: FamilyShareModalProps) {
     return () => clearInterval(timer);
   }, []);
 
-  // Keyboard Escape listener to dismiss modal (WCAG Modal requirement)
+  // Trap focus and restore focus on close (WCAG Modal requirement)
   useEffect(() => {
     if (!isOpen) return;
+    previousFocusRef.current = document.activeElement as HTMLElement;
+
+    const focusTimer = setTimeout(() => {
+      const focusable = modalRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable && focusable.length > 0) {
+        focusable[0].focus();
+      }
+    }, 50);
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
+        previousFocusRef.current?.focus();
+        return;
+      }
+
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusables = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusables || focusables.length === 0) return;
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      clearTimeout(focusTimer);
+      window.removeEventListener('keydown', handleKeyDown);
+      previousFocusRef.current?.focus();
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -81,7 +120,10 @@ export function FamilyShareModal({ isOpen, onClose }: FamilyShareModalProps) {
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm pointer-events-auto"
     >
       {/* Smartphone Frame Mockup */}
-      <div className="relative w-full max-w-[340px] bg-slate-950 rounded-[40px] p-3 border-4 border-slate-700 shadow-2xl ring-1 ring-white/10 overflow-hidden">
+      <div
+        ref={modalRef}
+        className="relative w-full max-w-[340px] bg-slate-950 rounded-[40px] p-3 border-4 border-slate-700 shadow-2xl ring-1 ring-white/10 overflow-hidden"
+      >
         {/* Phone Speaker & Camera Notch */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-4 bg-slate-900 rounded-full z-20 flex items-center justify-center">
           <div className="w-2.5 h-2.5 rounded-full bg-slate-950" />

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles,
   Compass,
@@ -20,6 +20,8 @@ export function OnboardingModal() {
   const setIsOnboardingOpen = useJourneyStore((s) => s.setIsOnboardingOpen);
 
   const [step, setStep] = useState(1);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const t = translations[language];
 
   // Auto-open on first visit if not previously seen
@@ -32,16 +34,51 @@ export function OnboardingModal() {
     }
   }, [setIsOnboardingOpen]);
 
-  // Escape key listener to dismiss
+  // Trap focus and restore focus on close
   useEffect(() => {
     if (!isOnboardingOpen) return;
+    previousFocusRef.current = document.activeElement as HTMLElement;
+
+    const focusTimer = setTimeout(() => {
+      const focusable = modalRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable && focusable.length > 0) {
+        focusable[0].focus();
+      }
+    }, 50);
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         handleFinish();
+        return;
+      }
+
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusables = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusables || focusables.length === 0) return;
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      clearTimeout(focusTimer);
+      window.removeEventListener('keydown', handleKeyDown);
+      previousFocusRef.current?.focus();
+    };
   }, [isOnboardingOpen]);
 
   const handleFinish = () => {
@@ -49,6 +86,7 @@ export function OnboardingModal() {
       localStorage.setItem('sahayak_onboarding_seen', 'true');
     }
     setIsOnboardingOpen(false);
+    previousFocusRef.current?.focus();
   };
 
   if (!isOnboardingOpen) return null;
@@ -60,7 +98,10 @@ export function OnboardingModal() {
       aria-label={t.onboardingTitle}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md pointer-events-auto"
     >
-      <div className="relative w-full max-w-lg bg-slate-950 border-2 border-amber-400/80 rounded-3xl p-6 shadow-2xl ring-1 ring-white/10 text-slate-100 flex flex-col justify-between min-h-[420px]">
+      <div
+        ref={modalRef}
+        className="relative w-full max-w-lg bg-slate-950 border-2 border-amber-400/80 rounded-3xl p-6 shadow-2xl ring-1 ring-white/10 text-slate-100 flex flex-col justify-between min-h-[420px]"
+      >
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-800">
           <div className="flex items-center gap-2">
@@ -126,7 +167,7 @@ export function OnboardingModal() {
 
         {/* Step Indicators & Action Buttons */}
         <div className="flex items-center justify-between pt-4 border-t border-slate-800">
-          <div className="flex items-center gap-1.5" aria-label={`Step ${step} of 3`}>
+          <div role="group" className="flex items-center gap-1.5" aria-label={`Step ${step} of 3`}>
             {[1, 2, 3].map((s) => (
               <div
                 key={s}

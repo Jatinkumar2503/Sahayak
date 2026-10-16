@@ -18,6 +18,8 @@ export function VoiceAssistantModal() {
   const [isSupported, setIsSupported] = useState(true);
 
   const recognitionRef = useRef<any>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const t = translations[language];
   const isHindi = language === 'hi';
 
@@ -32,17 +34,54 @@ export function VoiceAssistantModal() {
     }
   }, []);
 
-  // Escape key listener to dismiss
+  // Trap focus and restore focus on close
   useEffect(() => {
     if (!isVoiceAssistantOpen) return;
+    previousFocusRef.current = document.activeElement as HTMLElement;
+
+    // Focus first focusable element in modal
+    const focusTimer = setTimeout(() => {
+      const focusable = modalRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable && focusable.length > 0) {
+        focusable[0].focus();
+      }
+    }, 50);
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         stopListening();
         setVoiceAssistantOpen(false);
+        previousFocusRef.current?.focus();
+        return;
+      }
+
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusables = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusables || focusables.length === 0) return;
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      clearTimeout(focusTimer);
+      window.removeEventListener('keydown', handleKeyDown);
+      previousFocusRef.current?.focus();
+    };
   }, [isVoiceAssistantOpen, setVoiceAssistantOpen]);
 
   const speakText = (text: string) => {
@@ -170,7 +209,10 @@ export function VoiceAssistantModal() {
       aria-label={t.voiceTitle}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md pointer-events-auto"
     >
-      <div className="relative w-full max-w-md bg-slate-950 border-2 border-amber-400/80 rounded-3xl p-6 shadow-2xl text-slate-100 flex flex-col justify-between min-h-[380px]">
+      <div
+        ref={modalRef}
+        className="relative w-full max-w-md bg-slate-950 border-2 border-amber-400/80 rounded-3xl p-6 shadow-2xl text-slate-100 flex flex-col justify-between min-h-[380px]"
+      >
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-800">
           <div className="flex items-center gap-2">
@@ -219,9 +261,14 @@ export function VoiceAssistantModal() {
                 )}
               </button>
 
-              <p className="text-xs font-semibold text-slate-300 max-w-xs">
-                {isListening ? t.voiceListening : t.voicePrompt}
-              </p>
+              <div className="flex flex-col items-center gap-1 max-w-xs">
+                <p className="text-xs font-semibold text-slate-300">
+                  {isListening ? t.voiceListening : t.voicePrompt}
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  {t.voicePrivacyNote}
+                </p>
+              </div>
 
               {/* Transcript Display */}
               {transcript && (

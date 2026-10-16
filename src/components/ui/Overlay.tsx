@@ -21,7 +21,10 @@ import {
   Compass,
   HelpCircle,
   Eye,
+  Zap,
+  Palette,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useJourneyStore, STATIONS } from '@/store/journeyStore';
 import { journeyPhysics } from '@/store/journeyPhysics';
 import { railwayAudio } from '@/utils/audioEngine';
@@ -35,11 +38,14 @@ export function Overlay() {
   const elderMode = useJourneyStore((s) => s.elderMode);
   const reducedMotion = useJourneyStore((s) => s.reducedMotion);
   const disruptionType = useJourneyStore((s) => s.disruptionType);
+  const isLiteMode = useJourneyStore((s) => s.isLiteMode);
+  const isLowPowerDetected = useJourneyStore((s) => s.isLowPowerDetected);
 
   const toggleTimeOfDay = useJourneyStore((s) => s.toggleTimeOfDay);
   const setCameraMode = useJourneyStore((s) => s.setCameraMode);
   const toggleLanguage = useJourneyStore((s) => s.toggleLanguage);
   const toggleElderMode = useJourneyStore((s) => s.toggleElderMode);
+  const toggleLiteMode = useJourneyStore((s) => s.toggleLiteMode);
   const setReducedMotion = useJourneyStore((s) => s.setReducedMotion);
   const resetJourney = useJourneyStore((s) => s.resetJourney);
 
@@ -234,11 +240,20 @@ export function Overlay() {
           {/* Onboarding Help Guide Button */}
           <button
             onClick={() => useJourneyStore.getState().setIsOnboardingOpen(true)}
-            className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400"
+            className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 flex items-center justify-center min-h-[36px] min-w-[36px]"
             title={t.onboardingTitle}
           >
             <HelpCircle className="w-4 h-4" />
           </button>
+
+          {/* Design System Link */}
+          <Link
+            href="/design-system"
+            className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 flex items-center justify-center min-h-[36px] min-w-[36px]"
+            title="Design System & Tokens"
+          >
+            <Palette className="w-4 h-4" />
+          </Link>
         </div>
 
         {/* Accessibility & Environment Controls */}
@@ -302,13 +317,28 @@ export function Overlay() {
           <button
             onClick={toggleElderMode}
             title={elderMode ? t.elderModeOn : t.elderModeOff}
-            className={`p-2 rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-[#E69F00] ${
+            aria-label={elderMode ? t.elderModeOn : t.elderModeOff}
+            className={`min-h-[44px] min-w-[44px] flex items-center justify-center p-2 rounded-xl transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E69F00] ${
               elderMode
                 ? 'bg-[#E69F00] text-slate-950 font-bold'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
             }`}
           >
             <Accessibility className="w-4 h-4" />
+          </button>
+
+          {/* Lite Mode Toggle (Low Power Fallback) */}
+          <button
+            onClick={toggleLiteMode}
+            title={isLiteMode ? t.liteModeOn : t.liteModeOff}
+            aria-label={isLiteMode ? t.liteModeOn : t.liteModeOff}
+            className={`min-h-[44px] min-w-[44px] flex items-center justify-center p-2 rounded-xl transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E69F00] ${
+              isLiteMode
+                ? 'bg-emerald-600 text-white font-bold ring-2 ring-emerald-400'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+            }`}
+          >
+            <Zap className="w-4 h-4" />
           </button>
 
           {/* Sound Mute / Unmute Toggle */}

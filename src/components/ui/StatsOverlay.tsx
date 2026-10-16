@@ -101,8 +101,8 @@ export function StatsOverlay() {
           title="Click to toggle between Blob (Fast) and Dynamic (1024) shadows"
           className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase transition-all ${
             shadowTier === 'dynamic'
-              ? 'bg-blue-950 text-[#56B4E9] border border-[#0072B2]/60'
-              : 'bg-emerald-950 text-[#009E73] border border-[#009E73]/60'
+              ? 'bg-blue-950 text-sky-200 border border-sky-500/60'
+              : 'bg-emerald-950 text-emerald-200 border border-emerald-500/60'
           }`}
         >
           {shadowTier === 'dynamic' ? 'Dynamic 1024' : 'Blob (Fast)'}
