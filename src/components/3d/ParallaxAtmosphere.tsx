@@ -5,11 +5,15 @@ import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { journeyPhysics } from '@/store/journeyPhysics';
 
+import { useJourneyStore } from '@/store/journeyStore';
+
 const CLOUD_COUNT = 18;
 const PARTICLE_COUNT = 45;
 
 export function ParallaxAtmosphere() {
   const { camera } = useThree();
+  const isLiteMode = useJourneyStore((s) => s.isLiteMode);
+  const activeCloudCount = isLiteMode ? 6 : CLOUD_COUNT;
   const cloudsRef = useRef<THREE.InstancedMesh>(null);
   const particlesRef = useRef<THREE.Points>(null);
 
@@ -56,7 +60,7 @@ export function ParallaxAtmosphere() {
     if (!cloudsRef.current) return;
     const dummy = new THREE.Object3D();
 
-    cloudData.forEach((c, i) => {
+    cloudData.slice(0, activeCloudCount).forEach((c, i) => {
       dummy.position.copy(c.pos);
       dummy.scale.copy(c.scale);
       dummy.updateMatrix();
@@ -64,13 +68,13 @@ export function ParallaxAtmosphere() {
     });
 
     cloudsRef.current.instanceMatrix.needsUpdate = true;
-  }, [cloudData]);
+  }, [cloudData, activeCloudCount]);
 
   useFrame((_, delta) => {
     // 1. Drifting Clouds Parallax
     if (cloudsRef.current) {
       const dummy = new THREE.Object3D();
-      cloudData.forEach((c, i) => {
+      cloudData.slice(0, activeCloudCount).forEach((c, i) => {
         // Drift along X and slowly along Z
         c.pos.x += delta * c.speed;
         if (c.pos.x > 80) c.pos.x = -80;
@@ -97,7 +101,7 @@ export function ParallaxAtmosphere() {
       {/* Low-Poly Drifting Clouds (Instanced) */}
       <instancedMesh
         ref={cloudsRef}
-        args={[undefined, undefined, CLOUD_COUNT]}
+        args={[undefined, undefined, activeCloudCount]}
       >
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial

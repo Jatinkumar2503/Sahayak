@@ -66,6 +66,10 @@ export interface JourneyState {
   shadowTier: ShadowTier;
   scrollMode: boolean;
 
+  // Lite mode & Low-power fallback
+  isLiteMode: boolean;
+  isLowPowerDetected: boolean;
+
   // Modals
   isFamilyShareOpen: boolean;
   isDisruptionPanelOpen: boolean;
@@ -97,6 +101,9 @@ export interface JourneyState {
   setTimelineOpen: (open: boolean) => void;
   toggleVoiceAssistant: () => void;
   setVoiceAssistantOpen: (open: boolean) => void;
+  toggleLiteMode: () => void;
+  setLiteMode: (lite: boolean) => void;
+  setLowPowerDetected: (detected: boolean) => void;
   setIsOnboardingOpen: (open: boolean) => void;
   resetJourney: () => void;
 }
@@ -121,6 +128,9 @@ export const useJourneyStore = create<JourneyState>((set) => ({
 
   shadowTier: 'blob', // Default fast contact blob shadows
   scrollMode: false,
+
+  isLiteMode: false,
+  isLowPowerDetected: false,
 
   isFamilyShareOpen: false,
   isDisruptionPanelOpen: true,
@@ -230,6 +240,23 @@ export const useJourneyStore = create<JourneyState>((set) => ({
   toggleVoiceAssistant: () =>
     set((state) => ({ isVoiceAssistantOpen: !state.isVoiceAssistantOpen })),
   setVoiceAssistantOpen: (open) => set({ isVoiceAssistantOpen: open }),
+  toggleLiteMode: () =>
+    set((state) => {
+      const next = !state.isLiteMode;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('sahayak_lite_mode', String(next));
+      }
+      journeyPhysics.shadowQuality = 'blob';
+      return { isLiteMode: next, shadowTier: 'blob' };
+    }),
+  setLiteMode: (isLiteMode) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sahayak_lite_mode', String(isLiteMode));
+    }
+    journeyPhysics.shadowQuality = 'blob';
+    set({ isLiteMode, shadowTier: 'blob' });
+  },
+  setLowPowerDetected: (isLowPowerDetected) => set({ isLowPowerDetected }),
   setIsOnboardingOpen: (open) => set({ isOnboardingOpen: open }),
   resetJourney: () => {
     journeyPhysics.progress = 0.02;

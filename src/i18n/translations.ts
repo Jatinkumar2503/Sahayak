@@ -128,6 +128,7 @@ export const translations = {
     voiceRecognized: 'Recognized: ',
     voiceSpeaking: 'Reading recommendation aloud...',
     voiceUnsupported: 'Speech Recognition unavailable in this browser',
+    voicePrivacyNote: "Voice uses your browser's speech service",
 
     // 3-Step Onboarding Modal
     onboardingTitle: 'Welcome to Sahayak 3D',
@@ -151,6 +152,9 @@ export const translations = {
     elderMode: 'Elder Accessibility Mode',
     elderModeOn: 'Elder Mode: ON (High Contrast, Slower Motion)',
     elderModeOff: 'Elder Mode: OFF',
+    liteMode: 'Lite Mode',
+    liteModeOn: 'Lite Mode: Active (Low Power)',
+    liteModeOff: 'Lite Mode: OFF',
     reducedMotionLabel: 'Motion: ',
     reducedMotionOn: 'Reduced Motion: ON',
     reducedMotionOff: 'Reduced Motion: OFF',
@@ -159,6 +163,11 @@ export const translations = {
     languageToggle: 'Switch to Hindi (हिन्दी)',
     skipToContent: 'Skip to Main Controls',
     closeModal: 'Close Dialog (Escape)',
+
+    // WebGL Fallback & Loading
+    webglFallbackTitle: '2D Accessible Corridor Mode',
+    webglFallbackDesc: '3D WebGL acceleration is unavailable or disabled. All decision intelligence, live status, and family sharing remain 100% accessible.',
+    loadingProgress: 'Initializing Sahayak 3D Corridor...',
   },
 
   hi: {
@@ -285,6 +294,7 @@ export const translations = {
     voiceRecognized: 'पहचाना गया: ',
     voiceSpeaking: 'अनुशंसा सुनाई जा रही है...',
     voiceUnsupported: 'इस ब्राउज़र में वाक् पहचान उपलब्ध नहीं है',
+    voicePrivacyNote: 'आवाज आपके ब्राउज़र की वाक् सेवा का उपयोग करती है',
 
     // 3-Step Onboarding Modal
     onboardingTitle: 'सहायक ३डी में आपका स्वागत है',
@@ -308,6 +318,9 @@ export const translations = {
     elderMode: 'वरिष्ठ नागरिक सुलभ मोड',
     elderModeOn: 'वरिष्ठ नागरिक मोड: चालू (उच्च कंट्रास्ट, धीमी गति)',
     elderModeOff: 'वरिष्ठ नागरिक मोड: बंद',
+    liteMode: 'लाइट मोड',
+    liteModeOn: 'लाइट मोड: सक्रिय (कम पावर)',
+    liteModeOff: 'लाइट मोड: बंद',
     reducedMotionLabel: 'मोशन: ',
     reducedMotionOn: 'मोशन नियंत्रण: चालू',
     reducedMotionOff: 'मोशन नियंत्रण: बंद',
@@ -316,6 +329,11 @@ export const translations = {
     languageToggle: 'Switch to English',
     skipToContent: 'मुख्य नियंत्रणों पर जाएं',
     closeModal: 'संवाद बंद करें (Escape)',
+
+    // WebGL Fallback & Loading
+    webglFallbackTitle: '२डी सुलभ कॉरिडोर मोड',
+    webglFallbackDesc: '३डी WebGL त्वरण अनुपलब्ध या बंद है। सभी निर्णय, लाइव स्थिति और परिवार शेयर १००% सुलभ हैं।',
+    loadingProgress: 'सहायक ३डी कॉरिडोर लोड हो रहा है...',
   },
 } as const;
 

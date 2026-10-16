@@ -10,10 +10,12 @@ const POLE_COUNT = 45;
 
 export function LowPolyTerrain() {
   const timeOfDay = useJourneyStore((s) => s.timeOfDay);
+  const isLiteMode = useJourneyStore((s) => s.isLiteMode);
   const treeCanopyRef = useRef<THREE.InstancedMesh>(null);
   const treeTrunkRef = useRef<THREE.InstancedMesh>(null);
   const poleRef = useRef<THREE.InstancedMesh>(null);
 
+  const activeTreeCount = isLiteMode ? 45 : TREE_COUNT;
   const env = tokens.colors.environment[timeOfDay];
 
   // Procedural low-poly terrain mesh with flat corridor along center
@@ -102,7 +104,7 @@ export function LowPolyTerrain() {
     if (!treeCanopyRef.current || !treeTrunkRef.current) return;
     const dummy = new THREE.Object3D();
 
-    treeTransforms.forEach((t, i) => {
+    treeTransforms.slice(0, activeTreeCount).forEach((t, i) => {
       // Trunk
       dummy.position.set(t.pos.x, t.pos.y + 0.8 * t.scale, t.pos.z);
       dummy.rotation.set(0, t.rot, 0);
@@ -120,7 +122,7 @@ export function LowPolyTerrain() {
 
     treeTrunkRef.current.instanceMatrix.needsUpdate = true;
     treeCanopyRef.current.instanceMatrix.needsUpdate = true;
-  }, [treeTransforms]);
+  }, [treeTransforms, activeTreeCount]);
 
   // Apply pole matrices
   useLayoutEffect(() => {
@@ -149,36 +151,40 @@ export function LowPolyTerrain() {
         />
       </mesh>
 
-      {/* Decorative Agricultural Mustard / Crop Field Patches */}
-      <mesh
-        position={[-35, 0.08, -120]}
-        rotation={[-Math.PI / 2, 0, 0.15]}
-        receiveShadow
-      >
-        <planeGeometry args={[35, 70]} />
-        <meshStandardMaterial color="#EAB308" roughness={0.9} />
-      </mesh>
-      <mesh
-        position={[38, 0.08, -260]}
-        rotation={[-Math.PI / 2, 0, -0.1]}
-        receiveShadow
-      >
-        <planeGeometry args={[40, 85]} />
-        <meshStandardMaterial color="#84CC16" roughness={0.9} />
-      </mesh>
-      <mesh
-        position={[-42, 0.08, -350]}
-        rotation={[-Math.PI / 2, 0, 0.05]}
-        receiveShadow
-      >
-        <planeGeometry args={[45, 90]} />
-        <meshStandardMaterial color="#CA8A04" roughness={0.9} />
-      </mesh>
+      {/* Decorative Agricultural Mustard / Crop Field Patches (Omitted in Lite Mode) */}
+      {!isLiteMode && (
+        <>
+          <mesh
+            position={[-35, 0.08, -120]}
+            rotation={[-Math.PI / 2, 0, 0.15]}
+            receiveShadow
+          >
+            <planeGeometry args={[35, 70]} />
+            <meshStandardMaterial color="#EAB308" roughness={0.9} />
+          </mesh>
+          <mesh
+            position={[38, 0.08, -260]}
+            rotation={[-Math.PI / 2, 0, -0.1]}
+            receiveShadow
+          >
+            <planeGeometry args={[40, 85]} />
+            <meshStandardMaterial color="#84CC16" roughness={0.9} />
+          </mesh>
+          <mesh
+            position={[-42, 0.08, -350]}
+            rotation={[-Math.PI / 2, 0, 0.05]}
+            receiveShadow
+          >
+            <planeGeometry args={[45, 90]} />
+            <meshStandardMaterial color="#CA8A04" roughness={0.9} />
+          </mesh>
+        </>
+      )}
 
       {/* Low-Poly Tree Canopies (Instanced) */}
       <instancedMesh
         ref={treeCanopyRef}
-        args={[undefined, undefined, TREE_COUNT]}
+        args={[undefined, undefined, activeTreeCount]}
         receiveShadow
       >
         <coneGeometry args={[1.4, 2.8, 5]} />
@@ -188,7 +194,7 @@ export function LowPolyTerrain() {
       {/* Tree Trunks (Instanced) */}
       <instancedMesh
         ref={treeTrunkRef}
-        args={[undefined, undefined, TREE_COUNT]}
+        args={[undefined, undefined, activeTreeCount]}
         receiveShadow
       >
         <cylinderGeometry args={[0.2, 0.3, 1.6, 5]} />

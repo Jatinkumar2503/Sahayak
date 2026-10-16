@@ -17,12 +17,14 @@ const SPARK_COUNT = 24;
 export function BrakeSparks() {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const disruptionType = useJourneyStore((s) => s.disruptionType);
+  const isLiteMode = useJourneyStore((s) => s.isLiteMode);
 
-  // Sparks only active when braking or decelerating into station
+  // Sparks only active when braking or decelerating into station and not in Lite Mode
   const isBraking =
-    disruptionType === 'delay' ||
-    disruptionType === 'cancellation' ||
-    (journeyPhysics.speed < journeyPhysics.targetSpeed && journeyPhysics.speed > 0.01);
+    !isLiteMode &&
+    (disruptionType === 'delay' ||
+      disruptionType === 'cancellation' ||
+      (journeyPhysics.speed < journeyPhysics.targetSpeed && journeyPhysics.speed > 0.01));
 
   const particles = useMemo(() => {
     return Array.from({ length: SPARK_COUNT }, (_, i) => ({
