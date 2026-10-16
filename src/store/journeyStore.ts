@@ -1,11 +1,12 @@
 import { create } from 'zustand';
-import { journeyPhysics } from './journeyPhysics';
+import { journeyPhysics, ShadowQualityTier } from './journeyPhysics';
 
 export type JourneyStatus = 'on-time' | 'delay' | 'cancelled' | 'rerouted';
 export type DisruptionType = 'none' | 'delay' | 'cancellation' | 'missed_connection' | 'platform_change';
 export type TimeOfDay = 'day' | 'dusk';
 export type CameraMode = 'chase' | 'cinematic' | 'map';
 export type Language = 'en' | 'hi';
+export type ShadowTier = 'blob' | 'dynamic' | 'auto';
 
 export interface StationInfo {
   id: string;
@@ -61,6 +62,10 @@ export interface JourneyState {
   activeBranch: 'main' | 'branch';
   branchProgress: number;
 
+  // Shadow tier management
+  shadowTier: ShadowTier;
+  scrollMode: boolean;
+
   setProgress: (progress: number) => void;
   setSpeed: (speed: number) => void;
   setTargetSpeed: (targetSpeed: number) => void;
@@ -73,6 +78,8 @@ export interface JourneyState {
   toggleElderMode: () => void;
   setReducedMotion: (reduced: boolean) => void;
   setActiveBranch: (branch: 'main' | 'branch') => void;
+  setShadowTier: (tier: ShadowTier) => void;
+  toggleScrollMode: () => void;
   resetJourney: () => void;
 }
 
@@ -93,6 +100,9 @@ export const useJourneyStore = create<JourneyState>((set) => ({
 
   activeBranch: 'main',
   branchProgress: 0,
+
+  shadowTier: 'blob', // Default fast contact blob shadows
+  scrollMode: false,
 
   setProgress: (progress) => {
     journeyPhysics.progress = progress;
@@ -142,6 +152,16 @@ export const useJourneyStore = create<JourneyState>((set) => ({
     journeyPhysics.activeBranch = activeBranch;
     set({ activeBranch });
   },
+  setShadowTier: (shadowTier) => {
+    journeyPhysics.shadowQuality = shadowTier === 'dynamic' ? 'dynamic' : 'blob';
+    set({ shadowTier });
+  },
+  toggleScrollMode: () =>
+    set((state) => {
+      const next = !state.scrollMode;
+      journeyPhysics.scrollDriven = next;
+      return { scrollMode: next };
+    }),
   resetJourney: () => {
     journeyPhysics.progress = 0.02;
     journeyPhysics.speed = 0.25;

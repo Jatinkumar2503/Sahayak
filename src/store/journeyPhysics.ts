@@ -4,6 +4,14 @@
  * Eliminates 60fps React component re-rendering overhead.
  */
 
+export type ShadowQualityTier = 'blob' | 'dynamic';
+
+export interface StationDwellState {
+  currentStation: string;
+  phase: 'running' | 'decelerating' | 'stopped' | 'accelerating';
+  timer: number;
+}
+
 export interface JourneyPhysicsState {
   progress: number;
   speed: number;
@@ -16,6 +24,17 @@ export interface JourneyPhysicsState {
   stationStopTimer: number;
   doorsOpen: boolean;
   activeBranch: 'main' | 'branch';
+
+  // Rendering telemetry & shadow tier
+  shadowQuality: ShadowQualityTier;
+  renderInfo: {
+    calls: number;
+    triangles: number;
+  };
+
+  // Station sequence & scroll control
+  stationDwell: StationDwellState;
+  scrollDriven: boolean;
 }
 
 // 1 Engine + 4 Coaches. Arc-length offsets (in normalized 0-1 curve progress)
@@ -35,4 +54,17 @@ export const journeyPhysics: JourneyPhysicsState = {
   stationStopTimer: 0,
   doorsOpen: false,
   activeBranch: 'main',
+
+  shadowQuality: 'blob', // Default fast contact-blob tier for guaranteed 60fps
+  renderInfo: {
+    calls: 0,
+    triangles: 0,
+  },
+
+  stationDwell: {
+    currentStation: '',
+    phase: 'running',
+    timer: 0,
+  },
+  scrollDriven: false,
 };

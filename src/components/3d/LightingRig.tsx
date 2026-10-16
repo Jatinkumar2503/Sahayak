@@ -10,6 +10,7 @@ import { tokens } from '@/styles/tokens';
 
 export function LightingRig() {
   const timeOfDay = useJourneyStore((s) => s.timeOfDay);
+  const shadowTier = useJourneyStore((s) => s.shadowTier);
   const dirLightRef = useRef<THREE.DirectionalLight>(null);
   const hemiLightRef = useRef<THREE.HemisphereLight>(null);
 
@@ -18,8 +19,15 @@ export function LightingRig() {
   const targetAmbientColor = new THREE.Color(env.ambient);
   const targetFogColor = new THREE.Color(env.fog);
 
+  const isDynamicShadow = shadowTier === 'dynamic';
+
   useFrame((state, delta) => {
     const lerpFactor = Math.min(delta * 2.5, 1);
+
+    // Toggle shadow map dynamically on WebGLRenderer
+    if (state.gl.shadowMap.enabled !== isDynamicShadow) {
+      state.gl.shadowMap.enabled = isDynamicShadow;
+    }
 
     // Keep directional shadow frustum tightly following the train
     const trainPt = mainTrackCurve.getPointAt(journeyPhysics.progress);
@@ -32,6 +40,7 @@ export function LightingRig() {
         lerpFactor
       );
 
+      dirLightRef.current.castShadow = isDynamicShadow;
       dirLightRef.current.position.set(trainPt.x + 25, 40, trainPt.z + 18);
       dirLightRef.current.target.position.set(trainPt.x, trainPt.y, trainPt.z);
       dirLightRef.current.target.updateMatrixWorld();
@@ -71,14 +80,14 @@ export function LightingRig() {
         position={[0, 50, 0]}
       />
 
-      {/* Dynamic tight-frustum directional light for train shadows */}
+      {/* Directional Sun Light with hybrid shadow tier */}
       <directionalLight
         ref={dirLightRef}
         args={[env.sun, env.sunIntensity]}
         position={[25, 40, 18]}
-        castShadow
-        shadow-mapSize-width={512}
-        shadow-mapSize-height={512}
+        castShadow={isDynamicShadow}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
         shadow-camera-near={5}
         shadow-camera-far={80}
         shadow-camera-left={-16}
