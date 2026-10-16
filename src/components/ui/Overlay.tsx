@@ -179,6 +179,19 @@ export function Overlay() {
             <span>{isHindi ? 'EN' : 'हिन्दी'}</span>
           </button>
 
+          {/* Scroll-Driven Mode Toggle */}
+          <button
+            onClick={useJourneyStore.getState().toggleScrollMode}
+            title={useJourneyStore.getState().scrollMode ? 'Switch to Continuous Train Movement' : 'Switch to Mouse/Touch Scroll-Driven Journey'}
+            className={`px-2 py-1 text-xs font-bold rounded-lg transition-colors ${
+              useJourneyStore.getState().scrollMode
+                ? 'bg-blue-600 text-white'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
+            }`}
+          >
+            {useJourneyStore.getState().scrollMode ? 'Scroll: ON' : 'Scroll: OFF'}
+          </button>
+
           {/* Elder Mode Toggle */}
           <button
             onClick={toggleElderMode}
