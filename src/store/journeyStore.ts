@@ -69,6 +69,9 @@ export interface JourneyState {
   // Modals
   isFamilyShareOpen: boolean;
   isDisruptionPanelOpen: boolean;
+  isTimelineOpen: boolean;
+  isOnboardingOpen: boolean;
+  isVoiceAssistantOpen: boolean;
 
   setProgress: (progress: number) => void;
   setSpeed: (speed: number) => void;
@@ -79,7 +82,9 @@ export interface JourneyState {
   setCameraMode: (mode: CameraMode) => void;
   setShowFps: (show: boolean) => void;
   toggleLanguage: () => void;
+  setLanguage: (lang: Language) => void;
   toggleElderMode: () => void;
+  setElderMode: (elder: boolean) => void;
   setReducedMotion: (reduced: boolean) => void;
   setActiveBranch: (branch: 'main' | 'branch') => void;
   setShadowTier: (tier: ShadowTier) => void;
@@ -88,6 +93,11 @@ export interface JourneyState {
   setFamilyShareOpen: (open: boolean) => void;
   toggleDisruptionPanel: () => void;
   setDisruptionPanelOpen: (open: boolean) => void;
+  toggleTimeline: () => void;
+  setTimelineOpen: (open: boolean) => void;
+  toggleVoiceAssistant: () => void;
+  setVoiceAssistantOpen: (open: boolean) => void;
+  setIsOnboardingOpen: (open: boolean) => void;
   resetJourney: () => void;
 }
 
@@ -114,6 +124,9 @@ export const useJourneyStore = create<JourneyState>((set) => ({
 
   isFamilyShareOpen: false,
   isDisruptionPanelOpen: true,
+  isTimelineOpen: false,
+  isOnboardingOpen: false,
+  isVoiceAssistantOpen: false,
 
   setProgress: (progress) => {
     journeyPhysics.progress = progress;
@@ -156,9 +169,41 @@ export const useJourneyStore = create<JourneyState>((set) => ({
   setCameraMode: (cameraMode) => set({ cameraMode }),
   setShowFps: (showFps) => set({ showFps }),
   toggleLanguage: () =>
-    set((state) => ({ language: state.language === 'en' ? 'hi' : 'en' })),
-  toggleElderMode: () => set((state) => ({ elderMode: !state.elderMode })),
-  setReducedMotion: (reducedMotion) => set({ reducedMotion }),
+    set((state) => {
+      const next = state.language === 'en' ? 'hi' : 'en';
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('sahayak_language', next);
+      }
+      return { language: next };
+    }),
+  setLanguage: (language) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sahayak_language', language);
+    }
+    set({ language });
+  },
+  toggleElderMode: () =>
+    set((state) => {
+      const next = !state.elderMode;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('sahayak_elder_mode', String(next));
+      }
+      journeyPhysics.targetSpeed = next ? 0.16 : 0.25;
+      return { elderMode: next };
+    }),
+  setElderMode: (elderMode) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sahayak_elder_mode', String(elderMode));
+    }
+    journeyPhysics.targetSpeed = elderMode ? 0.16 : 0.25;
+    set({ elderMode });
+  },
+  setReducedMotion: (reducedMotion) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sahayak_reduced_motion', String(reducedMotion));
+    }
+    set({ reducedMotion });
+  },
   setActiveBranch: (activeBranch) => {
     journeyPhysics.activeBranch = activeBranch;
     set({ activeBranch });
@@ -179,6 +224,13 @@ export const useJourneyStore = create<JourneyState>((set) => ({
   toggleDisruptionPanel: () =>
     set((state) => ({ isDisruptionPanelOpen: !state.isDisruptionPanelOpen })),
   setDisruptionPanelOpen: (open) => set({ isDisruptionPanelOpen: open }),
+  toggleTimeline: () =>
+    set((state) => ({ isTimelineOpen: !state.isTimelineOpen })),
+  setTimelineOpen: (open) => set({ isTimelineOpen: open }),
+  toggleVoiceAssistant: () =>
+    set((state) => ({ isVoiceAssistantOpen: !state.isVoiceAssistantOpen })),
+  setVoiceAssistantOpen: (open) => set({ isVoiceAssistantOpen: open }),
+  setIsOnboardingOpen: (open) => set({ isOnboardingOpen: open }),
   resetJourney: () => {
     journeyPhysics.progress = 0.02;
     journeyPhysics.speed = 0.25;

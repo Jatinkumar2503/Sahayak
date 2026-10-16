@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
+  OctagonAlert,
   GitBranch,
   Accessibility,
   Languages,
@@ -16,10 +17,15 @@ import {
   Megaphone,
   Users,
   Sparkles,
+  Mic,
+  Compass,
+  HelpCircle,
+  Eye,
 } from 'lucide-react';
 import { useJourneyStore, STATIONS } from '@/store/journeyStore';
 import { journeyPhysics } from '@/store/journeyPhysics';
 import { railwayAudio } from '@/utils/audioEngine';
+import { translations } from '@/i18n/translations';
 
 export function Overlay() {
   const status = useJourneyStore((s) => s.status);
@@ -27,14 +33,17 @@ export function Overlay() {
   const cameraMode = useJourneyStore((s) => s.cameraMode);
   const language = useJourneyStore((s) => s.language);
   const elderMode = useJourneyStore((s) => s.elderMode);
+  const reducedMotion = useJourneyStore((s) => s.reducedMotion);
   const disruptionType = useJourneyStore((s) => s.disruptionType);
 
   const toggleTimeOfDay = useJourneyStore((s) => s.toggleTimeOfDay);
   const setCameraMode = useJourneyStore((s) => s.setCameraMode);
   const toggleLanguage = useJourneyStore((s) => s.toggleLanguage);
   const toggleElderMode = useJourneyStore((s) => s.toggleElderMode);
-  const setDisruptionType = useJourneyStore((s) => s.setDisruptionType);
+  const setReducedMotion = useJourneyStore((s) => s.setReducedMotion);
   const resetJourney = useJourneyStore((s) => s.resetJourney);
+
+  const t = translations[language];
 
   // Throttled HUD metrics (updated at 4Hz to prevent 60fps React re-renders)
   const [hudState, setHudState] = useState({
@@ -106,29 +115,29 @@ export function Overlay() {
     }
   };
 
-  // Signal 104 HTML Aspect (Accessible text/icon alternative to 3D lamp color)
+  // Signal 104 HTML Aspect (SVG Icon & Text Fallback, never relying on color alone)
   const getSignalAspect = () => {
     if (disruptionType === 'delay' || disruptionType === 'cancellation') {
       return {
-        icon: '🛑',
+        icon: <OctagonAlert className="w-3.5 h-3.5 text-[#D55E00]" aria-hidden="true" />,
         textEn: 'Signal 104: STOP (Red)',
         textHi: 'सिग्नल १०४: रोकें (लाल)',
-        colorClass: 'text-rose-400 bg-rose-950/70 border-rose-500/50',
+        colorClass: 'text-[#FEF3C7] bg-[#6E3100]/70 border-[#D55E00]',
       };
     }
     if (disruptionType === 'missed_connection' || disruptionType === 'platform_change') {
       return {
-        icon: '⚠️',
+        icon: <AlertTriangle className="w-3.5 h-3.5 text-[#E69F00]" aria-hidden="true" />,
         textEn: 'Signal 104: CAUTION (Yellow)',
         textHi: 'सिग्नल १०४: सावधानी (पीला)',
-        colorClass: 'text-amber-400 bg-amber-950/70 border-amber-500/50',
+        colorClass: 'text-[#FEF3C7] bg-[#7A5400]/70 border-[#E69F00]',
       };
     }
     return {
-      icon: '🟢',
+      icon: <CheckCircle2 className="w-3.5 h-3.5 text-[#009E73]" aria-hidden="true" />,
       textEn: 'Signal 104: CLEAR (Green)',
       textHi: 'सिग्नल १०४: साफ़ (हरा)',
-      colorClass: 'text-emerald-400 bg-emerald-950/70 border-emerald-500/50',
+      colorClass: 'text-[#D1FAE5] bg-[#004D38]/70 border-[#009E73]',
     };
   };
 
@@ -136,17 +145,21 @@ export function Overlay() {
   const signalAspect = getSignalAspect();
 
   return (
-    <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-4 sm:p-6 z-30 select-none">
+    <div
+      className={`absolute inset-0 pointer-events-none flex flex-col justify-between p-4 sm:p-6 z-30 select-none ${
+        elderMode ? 'font-sans text-base' : 'text-xs'
+      }`}
+    >
       {/* Skip to Content for Screen Readers & Keyboard Nav */}
       <a
         href="#main-controls"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-[#E69F00] text-slate-950 font-bold px-4 py-2 rounded shadow-lg"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-[#E69F00] text-slate-950 font-bold px-4 py-2 rounded-xl shadow-2xl focus:outline-none focus:ring-4 focus:ring-white"
       >
-        Skip to Journey Controls
+        {t.skipToContent}
       </a>
 
       {/* Screen Reader Live Region for Status Changes */}
-      <div className="sr-only" aria-live="assertive" role="status">
+      <div className="sr-only" aria-live="polite" role="status">
         {isHindi
           ? `वर्तमान स्थिति: ${statusBadge.labelHi}, गति: ${(hudState.speed * 440).toFixed(0)} किमी प्रति घंटा`
           : `Current Journey Status: ${statusBadge.labelEn}, Speed: ${(hudState.speed * 440).toFixed(0)} km/h`}
@@ -155,8 +168,8 @@ export function Overlay() {
       {/* Top Navigation & Status Bar */}
       <header className="flex flex-wrap items-center justify-between gap-3 pointer-events-auto">
         {/* Brand & Train Badge */}
-        <div className="flex items-center gap-3 bg-slate-950/80 backdrop-blur-md border border-slate-700/50 px-4 py-2 rounded-xl shadow-2xl">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#0072B2] to-[#E69F00] flex items-center justify-center font-black text-slate-950 text-sm shadow-md">
+        <div className="flex items-center gap-3 bg-slate-950/85 backdrop-blur-md border border-slate-700/60 px-4 py-2 rounded-2xl shadow-2xl">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#0072B2] to-[#E69F00] flex items-center justify-center font-black text-slate-950 text-sm shadow-md">
             IR
           </div>
           <div>
@@ -164,7 +177,7 @@ export function Overlay() {
               Sahayak 3D <span className="text-xs font-semibold text-[#E69F00]">/ सहायक ३डी</span>
             </h1>
             <p className="text-[11px] text-slate-400 font-medium">
-              12001 Vande Bharat Corridor • Delhi ➔ Ambala
+              {t.appSubtitle}
             </p>
           </div>
         </div>
@@ -177,33 +190,65 @@ export function Overlay() {
           <span>{isHindi ? statusBadge.labelHi : statusBadge.labelEn}</span>
         </div>
 
-        {/* Live Signal 104 Aspect Badge (Text & Icon, never relying on color alone) */}
+        {/* Live Signal 104 Aspect Badge (SVG Icon & Text, never relying on color alone) */}
         <div
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-md shadow-lg transition-all ${signalAspect.colorClass}`}
           title="Trackside Signal 104 aspect status (Accessibility Text Alternative)"
         >
-          <span className="text-sm" aria-hidden="true">{signalAspect.icon}</span>
+          {signalAspect.icon}
           <span>{isHindi ? signalAspect.textHi : signalAspect.textEn}</span>
         </div>
 
-        {/* Family Live Share Phone Trigger Button */}
-        <button
-          onClick={useJourneyStore.getState().toggleFamilyShare}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600/90 hover:bg-blue-500 text-white font-bold text-xs shadow-lg transition-all focus-visible:ring-2 focus-visible:ring-blue-400"
-          title={isHindi ? 'परिवार लाइव शेयर देखें' : 'View Family Live Share'}
-        >
-          <Users className="w-3.5 h-3.5" />
-          <span>{isHindi ? 'परिवार शेयर' : 'Family Share'}</span>
-        </button>
+        {/* Primary Interactive Modules: Family Share, Voice Assistant, Timeline */}
+        <div className="flex items-center gap-1.5">
+          {/* Family Live Share Phone Trigger Button */}
+          <button
+            onClick={useJourneyStore.getState().toggleFamilyShare}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600/90 hover:bg-blue-500 text-white font-bold text-xs shadow-lg transition-all focus-visible:ring-2 focus-visible:ring-[#E69F00]"
+            title={isHindi ? 'परिवार लाइव शेयर देखें' : 'View Family Live Share'}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>{isHindi ? 'परिवार शेयर' : 'Family Share'}</span>
+          </button>
+
+          {/* Voice Assistant Button */}
+          <button
+            onClick={useJourneyStore.getState().toggleVoiceAssistant}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/90 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg transition-all focus-visible:ring-2 focus-visible:ring-white"
+            title={t.voiceTitle}
+          >
+            <Mic className="w-3.5 h-3.5" />
+            <span>{isHindi ? 'वॉयस' : 'Voice'}</span>
+          </button>
+
+          {/* Accessible HTML Timeline Panel Toggle */}
+          <button
+            onClick={useJourneyStore.getState().toggleTimeline}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-emerald-400 font-bold text-xs border border-slate-700 transition-all focus-visible:ring-2 focus-visible:ring-emerald-400"
+            title={t.timelineTitle}
+          >
+            <Compass className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{isHindi ? 'समयरेखा' : 'Timeline'}</span>
+          </button>
+
+          {/* Onboarding Help Guide Button */}
+          <button
+            onClick={() => useJourneyStore.getState().setIsOnboardingOpen(true)}
+            className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400"
+            title={t.onboardingTitle}
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Accessibility & Environment Controls */}
-        <div className="flex items-center gap-2 bg-slate-950/80 backdrop-blur-md border border-slate-700/50 p-1.5 rounded-xl shadow-2xl">
+        <div className="flex items-center gap-2 bg-slate-950/85 backdrop-blur-md border border-slate-700/60 p-1.5 rounded-2xl shadow-2xl">
           {/* Day / Dusk Toggle */}
           <button
             onClick={toggleTimeOfDay}
             title={timeOfDay === 'day' ? 'Switch to Dusk Mode' : 'Switch to Day Mode'}
             aria-label={`Current lighting is ${timeOfDay}. Click to toggle.`}
-            className="p-2 rounded-lg text-slate-300 hover:text-[#E69F00] hover:bg-slate-800/80 transition-colors focus-visible:ring-2 focus-visible:ring-[#E69F00]"
+            className="p-2 rounded-xl text-slate-300 hover:text-[#E69F00] hover:bg-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-[#E69F00]"
           >
             {timeOfDay === 'day' ? (
               <Sun className="w-4 h-4 text-[#E69F00]" />
@@ -213,12 +258,12 @@ export function Overlay() {
           </button>
 
           {/* Camera View Switcher */}
-          <div className="flex bg-slate-900 rounded-lg p-0.5 border border-slate-800">
+          <div className="flex bg-slate-900 rounded-xl p-0.5 border border-slate-800">
             {(['chase', 'cinematic', 'map'] as const).map((mode) => (
               <button
                 key={mode}
                 onClick={() => setCameraMode(mode)}
-                className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${
+                className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-[#E69F00] ${
                   cameraMode === mode
                     ? 'bg-[#0072B2] text-white shadow-sm'
                     : 'text-slate-400 hover:text-slate-200'
@@ -234,32 +279,36 @@ export function Overlay() {
           <button
             onClick={toggleLanguage}
             title="Toggle Hindi/English Language"
-            className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg text-slate-300 hover:text-[#E69F00] hover:bg-slate-800/80 transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-xl text-slate-300 hover:text-[#E69F00] hover:bg-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-[#E69F00]"
           >
             <Languages className="w-3.5 h-3.5" />
             <span>{isHindi ? 'EN' : 'हिन्दी'}</span>
           </button>
 
-          {/* Scroll-Driven Mode Toggle */}
+          {/* Reduced Motion Toggle */}
           <button
-            onClick={useJourneyStore.getState().toggleScrollMode}
-            title={useJourneyStore.getState().scrollMode ? 'Switch to Continuous Train Movement' : 'Switch to Mouse/Touch Scroll-Driven Journey'}
-            className={`px-2 py-1 text-xs font-bold rounded-lg transition-colors ${
-              useJourneyStore.getState().scrollMode
-                ? 'bg-blue-600 text-white'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
+            onClick={() => setReducedMotion(!reducedMotion)}
+            title={reducedMotion ? t.reducedMotionOn : t.reducedMotionOff}
+            className={`p-2 rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-[#E69F00] ${
+              reducedMotion
+                ? 'bg-amber-400 text-slate-950 font-bold'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
             }`}
           >
-            {useJourneyStore.getState().scrollMode ? 'Scroll: ON' : 'Scroll: OFF'}
+            <Eye className="w-4 h-4" />
           </button>
 
-          {/* Train Horn Button */}
+          {/* Elder Mode Toggle */}
           <button
-            onClick={() => railwayAudio.playHorn()}
-            title="Sound Indian Railways Dual-Tone Horn (भोपू)"
-            className="p-2 rounded-lg text-amber-400 hover:text-amber-300 hover:bg-slate-800/80 transition-colors"
+            onClick={toggleElderMode}
+            title={elderMode ? t.elderModeOn : t.elderModeOff}
+            className={`p-2 rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-[#E69F00] ${
+              elderMode
+                ? 'bg-[#E69F00] text-slate-950 font-bold'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+            }`}
           >
-            <Megaphone className="w-4 h-4" />
+            <Accessibility className="w-4 h-4" />
           </button>
 
           {/* Sound Mute / Unmute Toggle */}
@@ -267,23 +316,19 @@ export function Overlay() {
             onClick={() => {
               setIsMuted(railwayAudio.toggleMute());
             }}
-            title={isMuted ? 'Unmute Track Audio' : 'Mute Track Audio'}
-            className="p-2 rounded-lg text-slate-300 hover:text-[#E69F00] hover:bg-slate-800/80 transition-colors"
+            title={isMuted ? t.audioMuted : t.audioUnmuted}
+            className="p-2 rounded-xl text-slate-300 hover:text-[#E69F00] hover:bg-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-[#E69F00]"
           >
             {isMuted ? <VolumeX className="w-4 h-4 text-slate-400" /> : <Volume2 className="w-4 h-4 text-[#009E73]" />}
           </button>
 
-          {/* Elder Mode Toggle */}
+          {/* Train Horn Button */}
           <button
-            onClick={toggleElderMode}
-            title="Elderly Accessibility Mode (Large text, high contrast)"
-            className={`p-2 rounded-lg transition-colors ${
-              elderMode
-                ? 'bg-[#E69F00] text-slate-950 font-bold'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
-            }`}
+            onClick={() => railwayAudio.playHorn()}
+            title={t.hornTitle}
+            className="p-2 rounded-xl text-amber-400 hover:text-amber-300 hover:bg-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-[#E69F00]"
           >
-            <Accessibility className="w-4 h-4" />
+            <Megaphone className="w-4 h-4" />
           </button>
         </div>
       </header>

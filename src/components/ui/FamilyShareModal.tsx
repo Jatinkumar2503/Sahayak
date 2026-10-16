@@ -42,6 +42,18 @@ export function FamilyShareModal({ isOpen, onClose }: FamilyShareModalProps) {
     return () => clearInterval(timer);
   }, []);
 
+  // Keyboard Escape listener to dismiss modal (WCAG Modal requirement)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   // Compute family status message based on live journey store
@@ -101,8 +113,10 @@ export function FamilyShareModal({ isOpen, onClose }: FamilyShareModalProps) {
 
             <button
               onClick={onClose}
-              className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-800"
-              aria-label="Close Family Share dialog"
+              autoFocus
+              className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-[#E69F00]"
+              aria-label={t.closeModal}
+              title={t.closeModal}
             >
               <X className="w-4 h-4" />
             </button>
@@ -117,12 +131,12 @@ export function FamilyShareModal({ isOpen, onClose }: FamilyShareModalProps) {
           ) : viewState === 'offline' ? (
             <div className="my-auto p-4 bg-rose-950/40 rounded-2xl border border-rose-500/50 text-center flex flex-col items-center gap-2">
               <AlertTriangle className="w-8 h-8 text-rose-400" />
-              <p className="text-xs font-bold text-rose-200">Satellite GPS Packet Dropped</p>
+              <p className="text-xs font-bold text-rose-200">{t.familyOfflineTitle}</p>
               <button
                 onClick={() => setViewState('ready')}
-                className="mt-2 text-xs bg-rose-600 text-white px-3 py-1 rounded-lg"
+                className="mt-2 text-xs bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-1.5 rounded-lg focus-visible:ring-2 focus-visible:ring-[#E69F00]"
               >
-                Retry Connection
+                {t.familyOfflineRetry}
               </button>
             </div>
           ) : (
@@ -132,14 +146,14 @@ export function FamilyShareModal({ isOpen, onClose }: FamilyShareModalProps) {
                 <div className="flex items-center gap-2 text-[#009E73] mb-1">
                   <ShieldCheck className="w-5 h-5 shrink-0" />
                   <span className="text-[10px] uppercase font-bold tracking-wider">
-                    IRCTC Verified Passenger Status
+                    {t.familyVerifiedStatus}
                   </span>
                 </div>
                 <h4 className="text-sm font-extrabold text-white leading-tight">
                   {getFamilyStatusMessage()}
                 </h4>
                 <p className="text-[11px] text-slate-300 mt-1">
-                  12001 Vande Bharat Express • Coach C-4, Seat 24 (Window)
+                  {t.familyCoachSeat}
                 </p>
               </div>
 

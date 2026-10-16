@@ -111,7 +111,7 @@ export function DecisionCardsOverlay() {
       {/* 1. Plain-Language Status Banner with Live Region */}
       <div
         role="alert"
-        aria-live="assertive"
+        aria-live={disruptionType === 'cancellation' ? 'assertive' : 'polite'}
         className="mb-3 p-3 rounded-2xl bg-slate-950/95 backdrop-blur-xl border border-amber-400/50 shadow-2xl flex items-center justify-between gap-3 text-slate-100"
       >
         <div className="flex items-center gap-2.5">
