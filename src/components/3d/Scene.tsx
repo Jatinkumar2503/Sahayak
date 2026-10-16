@@ -13,6 +13,7 @@ import { RenderTelemetry } from './RenderTelemetry';
 import { ParallaxAtmosphere } from './ParallaxAtmosphere';
 
 import { BrakeSparks } from './BrakeSparks';
+import { SignalHeads } from './SignalHeads';
 
 function SceneFallback() {
   return (
@@ -56,6 +57,9 @@ export function Scene() {
 
           {/* Low-poly station architectures (Delhi, Panipat, Ambala) */}
           <Stations />
+
+          {/* 3D Track Signal Heads with Slow Pulsing Red/Yellow/Green Lamps */}
+          <SignalHeads position={[2.8, 0, -165]} />
 
           {/* Moving 5-Coach Articulated Train with aerodynamic locomotive and passenger coaches */}
           <Train />

@@ -15,19 +15,19 @@ export const MAIN_CORRIDOR_POINTS: THREE.Vector3[] = [
   new THREE.Vector3(0, 0, -480),      // Beyond Ambala
 ];
 
-// Alternate branch track for rerouting (diverges after Panipat around Z=-250)
+// Alternate branch track for rerouting (diverges after Panipat around Z=-220)
 export const BRANCH_CORRIDOR_POINTS: THREE.Vector3[] = [
   new THREE.Vector3(0, 0, -220),      // Panipat switch point
   new THREE.Vector3(12, 0.5, -260),   // Branch turnout
-  new THREE.Vector3(28, 1.0, -320),   // Kurukshetra bypass loop
-  new THREE.Vector3(20, 0.8, -380),   // Re-aligning towards Ambala Outer
+  new THREE.Vector3(26, 1.0, -320),   // Kurukshetra bypass chord line
+  new THREE.Vector3(16, 0.8, -380),   // Re-aligning towards Ambala Outer
   new THREE.Vector3(0, 0, -430),      // Re-converging at Ambala
 ];
 
 // Main continuous track curve
 export const mainTrackCurve = new THREE.CatmullRomCurve3(
   MAIN_CORRIDOR_POINTS,
-  false, // not closed
+  false,
   'centripetal',
   0.5
 );
@@ -44,7 +44,6 @@ export const branchTrackCurve = new THREE.CatmullRomCurve3(
  * Calculates a point on the left or right rail offset from the center curve
  */
 export function getRailCurves(centerCurve: THREE.CatmullRomCurve3, gaugeWidth = 1.676) {
-  // Broad Gauge (Indian Railways) is 1.676m (scaled down ~ 1.4 in visual units)
   const halfGauge = 0.7;
   const numSamples = 200;
   const leftPoints: THREE.Vector3[] = [];
@@ -64,5 +63,57 @@ export function getRailCurves(centerCurve: THREE.CatmullRomCurve3, gaugeWidth = 
   return {
     leftCurve: new THREE.CatmullRomCurve3(leftPoints),
     rightCurve: new THREE.CatmullRomCurve3(rightPoints),
+  };
+}
+
+/**
+ * Continuous Route Blending Abstraction
+ * Smoothly interpolates from main line to branch line over a fixed arc-length window.
+ * Ensures every individual coach samples identical continuous path coordinates with zero corner cutting.
+ */
+export function getBlendedRoutePoint(progress: number, branch: 'main' | 'branch') {
+  if (branch === 'main' || progress < 0.48 || progress > 0.96) {
+    return {
+      pos: mainTrackCurve.getPointAt(progress),
+      tangent: mainTrackCurve.getTangentAt(progress).normalize(),
+    };
+  }
+
+  // Progress along the branch curve segment (mapped from 0.48 -> 0.95)
+  const branchT = (progress - 0.48) / (0.95 - 0.48);
+  const clampedBranchT = Math.max(0, Math.min(1, branchT));
+
+  // Turnout entry transition zone (between progress 0.48 and 0.53)
+  if (progress < 0.53) {
+    const blendWeight = THREE.MathUtils.smoothstep(progress, 0.48, 0.53);
+    const mainPos = mainTrackCurve.getPointAt(progress);
+    const branchPos = branchTrackCurve.getPointAt(clampedBranchT);
+    const pos = new THREE.Vector3().lerpVectors(mainPos, branchPos, blendWeight);
+
+    const mainTan = mainTrackCurve.getTangentAt(progress).normalize();
+    const branchTan = branchTrackCurve.getTangentAt(clampedBranchT).normalize();
+    const tangent = new THREE.Vector3().lerpVectors(mainTan, branchTan, blendWeight).normalize();
+
+    return { pos, tangent };
+  }
+
+  // Turnout exit transition zone (between progress 0.90 and 0.95)
+  if (progress > 0.90) {
+    const blendWeight = THREE.MathUtils.smoothstep(progress, 0.90, 0.95);
+    const branchPos = branchTrackCurve.getPointAt(clampedBranchT);
+    const mainPos = mainTrackCurve.getPointAt(progress);
+    const pos = new THREE.Vector3().lerpVectors(branchPos, mainPos, blendWeight);
+
+    const branchTan = branchTrackCurve.getTangentAt(clampedBranchT).normalize();
+    const mainTan = mainTrackCurve.getTangentAt(progress).normalize();
+    const tangent = new THREE.Vector3().lerpVectors(branchTan, mainTan, blendWeight).normalize();
+
+    return { pos, tangent };
+  }
+
+  // Fully aligned on bypass branch track
+  return {
+    pos: branchTrackCurve.getPointAt(clampedBranchT),
+    tangent: branchTrackCurve.getTangentAt(clampedBranchT).normalize(),
   };
 }

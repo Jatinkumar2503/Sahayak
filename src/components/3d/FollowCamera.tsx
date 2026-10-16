@@ -6,7 +6,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useJourneyStore } from '@/store/journeyStore';
 import { journeyPhysics } from '@/store/journeyPhysics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { mainTrackCurve, branchTrackCurve } from './trackCurves';
+import { mainTrackCurve, branchTrackCurve, getBlendedRoutePoint } from './trackCurves';
 
 export function FollowCamera() {
   const { camera } = useThree();
@@ -16,15 +16,11 @@ export function FollowCamera() {
 
   const currentLookAt = useRef(new THREE.Vector3(0, 0, 0));
 
-  useFrame((_, delta) => {
-    const isBranching =
-      activeBranch === 'branch' &&
-      journeyPhysics.progress > 0.45 &&
-      journeyPhysics.progress < 0.95;
-    const curve = isBranching ? branchTrackCurve : mainTrackCurve;
-
-    const trainPos = curve.getPointAt(journeyPhysics.progress);
-    const tangent = curve.getTangentAt(journeyPhysics.progress).normalize();
+  useFrame((state, delta) => {
+    const { pos: trainPos, tangent } = getBlendedRoutePoint(
+      journeyPhysics.progress,
+      activeBranch
+    );
     const up = new THREE.Vector3(0, 1, 0);
     const normal = new THREE.Vector3().crossVectors(tangent, up).normalize();
 

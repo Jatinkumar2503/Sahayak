@@ -187,25 +187,37 @@ export function TrackSpline() {
         />
       </instancedMesh>
 
-      {/* Branch Steel Rails with Reroute Highlight glow */}
-      <mesh geometry={branchLeftRailGeo} castShadow receiveShadow>
+      {/* Branch Steel Rails with Animated Reroute Pattern & Luminance Pulse */}
+      <mesh geometry={branchLeftRailGeo} receiveShadow>
         <meshStandardMaterial
           color={isRerouteActive ? '#38BDF8' : '#94A3B8'}
           emissive={isRerouteActive ? '#0284C7' : '#000000'}
-          emissiveIntensity={isRerouteActive ? 0.6 : 0}
+          emissiveIntensity={isRerouteActive ? 0.9 : 0}
           metalness={0.85}
           roughness={0.2}
         />
       </mesh>
-      <mesh geometry={branchRightRailGeo} castShadow receiveShadow>
+      <mesh geometry={branchRightRailGeo} receiveShadow>
         <meshStandardMaterial
           color={isRerouteActive ? '#38BDF8' : '#94A3B8'}
           emissive={isRerouteActive ? '#0284C7' : '#000000'}
-          emissiveIntensity={isRerouteActive ? 0.6 : 0}
+          emissiveIntensity={isRerouteActive ? 0.9 : 0}
           metalness={0.85}
           roughness={0.2}
         />
       </mesh>
+
+      {/* Turnout Direction Indicator Chevrons along Branch Track */}
+      {isRerouteActive && (
+        <group position={[6, 0.25, -240]}>
+          {[0, 15, 30].map((offsetZ, i) => (
+            <mesh key={offsetZ} position={[i * 2.2, 0, -offsetZ]} rotation={[-Math.PI / 2, 0, -0.3]}>
+              <ringGeometry args={[0.4, 0.7, 4]} />
+              <meshBasicMaterial color="#38BDF8" transparent opacity={0.8} />
+            </mesh>
+          ))}
+        </group>
+      )}
     </group>
   );
 }

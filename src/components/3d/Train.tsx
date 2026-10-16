@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useJourneyStore, STATIONS } from '@/store/journeyStore';
 import { journeyPhysics, COACH_COUNT, COACH_OFFSET_STEP } from '@/store/journeyPhysics';
-import { mainTrackCurve, branchTrackCurve } from './trackCurves';
+import { mainTrackCurve, branchTrackCurve, getBlendedRoutePoint } from './trackCurves';
 
 // Station stop threshold distances
 const STATION_SLOW_ZONE = 0.045; // Starts decelerating
@@ -99,8 +99,10 @@ export function Train() {
           }
         }
 
-        // If cruising normally outside station approach
-        if (!approachingStation && journeyPhysics.stationStopTimer <= 0) {
+        // Deceleration easing curve when delayed or stopped at red signal
+        if (disruptionType === 'delay' || disruptionType === 'cancellation') {
+          journeyPhysics.speed = Math.max(0, THREE.MathUtils.lerp(journeyPhysics.speed, 0, delta * 1.6));
+        } else if (!approachingStation && journeyPhysics.stationStopTimer <= 0) {
           journeyPhysics.speed = THREE.MathUtils.lerp(
             journeyPhysics.speed,
             journeyPhysics.targetSpeed,
@@ -117,13 +119,7 @@ export function Train() {
     // 3. Update Wheel Spin Angle
     journeyPhysics.wheelAngle = (journeyPhysics.wheelAngle + journeyPhysics.speed * delta * 28) % (Math.PI * 2);
 
-    // 4. Position and Orient Each Vehicle along the Spline using getPointAt (Arc-Length Parameterization)
-    const isBranching =
-      activeBranch === 'branch' &&
-      journeyPhysics.progress > 0.45 &&
-      journeyPhysics.progress < 0.95;
-    const curve = isBranching ? branchTrackCurve : mainTrackCurve;
-
+    // 4. Position and Orient Each Vehicle using getBlendedRoutePoint (Arc-Length Parameterization)
     const up = new THREE.Vector3(0, 1, 0);
 
     for (let i = 0; i < COACH_COUNT; i++) {
@@ -135,8 +131,8 @@ export function Train() {
         (journeyPhysics.progress - i * COACH_OFFSET_STEP + 1) % 1;
       journeyPhysics.coachProgresses[i] = coachProgress;
 
-      const pt = curve.getPointAt(coachProgress);
-      const tangent = curve.getTangentAt(coachProgress).normalize();
+      // Route abstraction: every coach follows the exact continuous blended curve path
+      const { pos: pt, tangent } = getBlendedRoutePoint(coachProgress, activeBranch);
 
       ref.position.set(pt.x, pt.y + 0.45, pt.z);
 
