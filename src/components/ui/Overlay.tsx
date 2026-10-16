@@ -14,6 +14,8 @@ import {
   Volume2,
   VolumeX,
   Megaphone,
+  Users,
+  Sparkles,
 } from 'lucide-react';
 import { useJourneyStore, STATIONS } from '@/store/journeyStore';
 import { journeyPhysics } from '@/store/journeyPhysics';
@@ -60,6 +62,14 @@ export function Overlay() {
   // Authentic Okabe-Ito status badge config (colorblind-safe icons + patterns + text)
   const getStatusBadge = () => {
     switch (status) {
+      case 'resolved':
+        return {
+          icon: <CheckCircle2 className="w-4 h-4 text-emerald-400" aria-hidden="true" />,
+          labelEn: 'RESOLVED',
+          labelHi: 'समाधान लागू',
+          classes: 'bg-[#004D38]/60 text-[#D1FAE5] border-emerald-400 shadow-emerald-400/20',
+          pattern: 'border-solid border-2',
+        };
       case 'delay':
         return {
           icon: <AlertTriangle className="w-4 h-4 text-[#E69F00]" aria-hidden="true" />,
@@ -96,7 +106,34 @@ export function Overlay() {
     }
   };
 
+  // Signal 104 HTML Aspect (Accessible text/icon alternative to 3D lamp color)
+  const getSignalAspect = () => {
+    if (disruptionType === 'delay' || disruptionType === 'cancellation') {
+      return {
+        icon: '🛑',
+        textEn: 'Signal 104: STOP (Red)',
+        textHi: 'सिग्नल १०४: रोकें (लाल)',
+        colorClass: 'text-rose-400 bg-rose-950/70 border-rose-500/50',
+      };
+    }
+    if (disruptionType === 'missed_connection' || disruptionType === 'platform_change') {
+      return {
+        icon: '⚠️',
+        textEn: 'Signal 104: CAUTION (Yellow)',
+        textHi: 'सिग्नल १०४: सावधानी (पीला)',
+        colorClass: 'text-amber-400 bg-amber-950/70 border-amber-500/50',
+      };
+    }
+    return {
+      icon: '🟢',
+      textEn: 'Signal 104: CLEAR (Green)',
+      textHi: 'सिग्नल १०४: साफ़ (हरा)',
+      colorClass: 'text-emerald-400 bg-emerald-950/70 border-emerald-500/50',
+    };
+  };
+
   const statusBadge = getStatusBadge();
+  const signalAspect = getSignalAspect();
 
   return (
     <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-4 sm:p-6 z-30 select-none">
@@ -139,6 +176,25 @@ export function Overlay() {
           {statusBadge.icon}
           <span>{isHindi ? statusBadge.labelHi : statusBadge.labelEn}</span>
         </div>
+
+        {/* Live Signal 104 Aspect Badge (Text & Icon, never relying on color alone) */}
+        <div
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-md shadow-lg transition-all ${signalAspect.colorClass}`}
+          title="Trackside Signal 104 aspect status (Accessibility Text Alternative)"
+        >
+          <span className="text-sm" aria-hidden="true">{signalAspect.icon}</span>
+          <span>{isHindi ? signalAspect.textHi : signalAspect.textEn}</span>
+        </div>
+
+        {/* Family Live Share Phone Trigger Button */}
+        <button
+          onClick={useJourneyStore.getState().toggleFamilyShare}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600/90 hover:bg-blue-500 text-white font-bold text-xs shadow-lg transition-all focus-visible:ring-2 focus-visible:ring-blue-400"
+          title={isHindi ? 'परिवार लाइव शेयर देखें' : 'View Family Live Share'}
+        >
+          <Users className="w-3.5 h-3.5" />
+          <span>{isHindi ? 'परिवार शेयर' : 'Family Share'}</span>
+        </button>
 
         {/* Accessibility & Environment Controls */}
         <div className="flex items-center gap-2 bg-slate-950/80 backdrop-blur-md border border-slate-700/50 p-1.5 rounded-xl shadow-2xl">
@@ -315,54 +371,23 @@ export function Overlay() {
           </div>
         </div>
 
-        {/* Phase 1 Disruption Quick-Simulator Controls */}
-        <div className="bg-slate-950/85 backdrop-blur-md border border-slate-700/60 p-2.5 rounded-2xl shadow-2xl flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-bold text-slate-400 px-2 uppercase tracking-wider">
-            {isHindi ? 'सिम्युलेटर' : 'Simulate'}:
-          </span>
-
+        {/* Quick Action Controls */}
+        <div className="bg-slate-950/85 backdrop-blur-md border border-slate-700/60 p-2 rounded-2xl shadow-2xl flex items-center gap-2">
           <button
-            onClick={() => setDisruptionType('none')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-              disruptionType === 'none'
-                ? 'bg-[#009E73] text-white shadow-md'
-                : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
-            }`}
+            onClick={useJourneyStore.getState().toggleDisruptionPanel}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-800 transition-colors"
           >
-            {isHindi ? 'सामान्य' : 'Normal'}
-          </button>
-
-          <button
-            onClick={() => setDisruptionType('delay')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-              disruptionType === 'delay'
-                ? 'bg-[#E69F00] text-slate-950 shadow-md'
-                : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
-            }`}
-          >
-            {isHindi ? 'विलंब' : 'Delay (Brake)'}
-          </button>
-
-          <button
-            onClick={() => {
-              setDisruptionType('missed_connection');
-              useJourneyStore.getState().setActiveBranch('branch');
-            }}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-              disruptionType === 'missed_connection'
-                ? 'bg-[#0072B2] text-white shadow-md'
-                : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
-            }`}
-          >
-            {isHindi ? 'शाखा मार्ग' : 'Branch Reroute'}
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{isHindi ? 'सिम्युलेटर पैनल' : 'Simulator'}</span>
           </button>
 
           <button
             onClick={resetJourney}
-            title="Reset Train to Start"
-            className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-[#E69F00] rounded-lg transition-colors ml-1"
+            title={isHindi ? 'यात्रा रीसेट करें' : 'Reset Train to Start'}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 transition-colors"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>{isHindi ? 'रीसेट' : 'Reset'}</span>
           </button>
         </div>
       </footer>
