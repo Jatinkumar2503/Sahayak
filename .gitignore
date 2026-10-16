@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Next.js agents file
+AGENTS.md
+
+# Lighthouse HTML reports
+*.report.html
+
