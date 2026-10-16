@@ -8,6 +8,8 @@ import { JourneyTimelineA11y } from '@/components/ui/JourneyTimelineA11y';
 import { DisruptionPanel } from '@/components/ui/DisruptionPanel';
 import { DecisionCardsOverlay } from '@/components/ui/DecisionCardsOverlay';
 import { FamilyShareModal } from '@/components/ui/FamilyShareModal';
+import { OnboardingModal } from '@/components/ui/OnboardingModal';
+import { VoiceAssistantModal } from '@/components/ui/VoiceAssistantModal';
 import { useJourneyStore } from '@/store/journeyStore';
 
 // Dynamically import Three.js canvas to ensure clean browser-only rendering
@@ -48,6 +50,12 @@ export default function Home() {
         isOpen={isFamilyShareOpen}
         onClose={() => setFamilyShareOpen(false)}
       />
+
+      {/* Phase 4 Accessible Voice Assistant Modal (Web Speech API) */}
+      <VoiceAssistantModal />
+
+      {/* Phase 4 Skippable 3-Step Guided Onboarding Modal */}
+      <OnboardingModal />
 
       {/* Dev Frame Rate, Draw Calls & Performance Telemetry */}
       <StatsOverlay />
