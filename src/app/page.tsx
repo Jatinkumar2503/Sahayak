@@ -3,6 +3,8 @@
 import dynamic from 'next/dynamic';
 import { Overlay } from '@/components/ui/Overlay';
 import { StatsOverlay } from '@/components/ui/StatsOverlay';
+import { ScrollDriver } from '@/components/ui/ScrollDriver';
+import { JourneyTimelineA11y } from '@/components/ui/JourneyTimelineA11y';
 
 // Dynamically import Three.js canvas to ensure clean browser-only rendering
 const Scene = dynamic(() => import('@/components/3d/Scene').then((m) => m.Scene), {
@@ -28,8 +30,14 @@ export default function Home() {
       {/* Accessible HTML Overlay */}
       <Overlay />
 
-      {/* Dev Frame Rate & Performance Telemetry */}
+      {/* Dev Frame Rate, Draw Calls & Performance Telemetry */}
       <StatsOverlay />
+
+      {/* Wheel / Trackpad Scroll-Driven Journey Driver */}
+      <ScrollDriver />
+
+      {/* Screen Reader Semantic HTML Journey Timeline */}
+      <JourneyTimelineA11y />
     </main>
   );
 }
