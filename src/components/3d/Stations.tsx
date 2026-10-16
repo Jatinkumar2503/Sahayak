@@ -34,8 +34,8 @@ function createStationSignboardTexture(nameEn: string, nameHi: string, code: str
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // Hindi Name
-  ctx.font = 'bold 36px "Segoe UI", Arial, sans-serif';
+  // Hindi Name with cross-platform Devanagari font fallbacks
+  ctx.font = 'bold 36px "Mangal", "Nirmala UI", "Noto Sans Devanagari", "Segoe UI", Arial, sans-serif';
   ctx.fillText(nameHi, 256, 45);
 
   // English Name
