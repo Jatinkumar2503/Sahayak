@@ -64,7 +64,7 @@ describe('Decision Engine Unit Tests', () => {
     };
     const options = getDecisionOptions(missedState);
     expect(options).toHaveLength(2);
-    expect(options[0].confidenceScore).toBe(98);
+    expect(options[0].confidenceScore).toBe(84);
     expect(options[0].actionType).toBe('reroute');
   });
 

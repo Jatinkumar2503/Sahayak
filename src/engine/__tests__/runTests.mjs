@@ -24,8 +24,8 @@ console.log('✔ Test 3: Long delay ranks Branch Reroute as #1 saving 22 minutes
 
 // 4. Missed connection
 const missed = getDecisionOptions({ kind: 'MISSED_CONNECTION', delayMinutes: 25, reasonEn: '', reasonHi: '', timestamp: 0 });
-assert.strictEqual(missed[0].confidenceScore, 98, 'Missed connection branch confidence must be 98%');
-console.log('✔ Test 4: Missed connection provides shortcut with 98% confidence passed');
+assert.strictEqual(missed[0].confidenceScore, 84, 'Missed connection branch confidence must be 84%');
+console.log('✔ Test 4: Missed connection provides shortcut with 84% hedged confidence passed');
 
 // 5. Cancellation
 const cancel = getDecisionOptions({ kind: 'CANCELLED', delayMinutes: 999, reasonEn: '', reasonHi: '', timestamp: 0 });
