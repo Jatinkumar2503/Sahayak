@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
 import { getDecisionOptions } from '../decisionEngine';
 import { DisruptionFSMState } from '../disruptionFSM';
 
@@ -11,7 +12,7 @@ describe('Decision Engine Unit Tests', () => {
       reasonHi: 'साफ़',
       timestamp: Date.now(),
     };
-    expect(getDecisionOptions(normalState)).toHaveLength(0);
+    assert.strictEqual(getDecisionOptions(normalState).length, 0);
 
     const resolvedState: DisruptionFSMState = {
       kind: 'RESOLVED',
@@ -20,7 +21,7 @@ describe('Decision Engine Unit Tests', () => {
       reasonHi: 'सुलझा',
       timestamp: Date.now(),
     };
-    expect(getDecisionOptions(resolvedState)).toHaveLength(0);
+    assert.strictEqual(getDecisionOptions(resolvedState).length, 0);
   });
 
   it('2. Short Delay (10 min) ranks Hold & Wait as #1 with ₹0 cost', () => {
