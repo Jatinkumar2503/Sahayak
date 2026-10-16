@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { journeyPhysics, ShadowQualityTier } from './journeyPhysics';
 
-export type JourneyStatus = 'on-time' | 'delay' | 'cancelled' | 'rerouted';
+export type JourneyStatus = 'on-time' | 'delay' | 'cancelled' | 'rerouted' | 'resolved';
 export type DisruptionType = 'none' | 'delay' | 'cancellation' | 'missed_connection' | 'platform_change';
 export type TimeOfDay = 'day' | 'dusk';
 export type CameraMode = 'chase' | 'cinematic' | 'map';
@@ -66,6 +66,10 @@ export interface JourneyState {
   shadowTier: ShadowTier;
   scrollMode: boolean;
 
+  // Modals
+  isFamilyShareOpen: boolean;
+  isDisruptionPanelOpen: boolean;
+
   setProgress: (progress: number) => void;
   setSpeed: (speed: number) => void;
   setTargetSpeed: (targetSpeed: number) => void;
@@ -80,6 +84,10 @@ export interface JourneyState {
   setActiveBranch: (branch: 'main' | 'branch') => void;
   setShadowTier: (tier: ShadowTier) => void;
   toggleScrollMode: () => void;
+  toggleFamilyShare: () => void;
+  setFamilyShareOpen: (open: boolean) => void;
+  toggleDisruptionPanel: () => void;
+  setDisruptionPanelOpen: (open: boolean) => void;
   resetJourney: () => void;
 }
 
@@ -103,6 +111,9 @@ export const useJourneyStore = create<JourneyState>((set) => ({
 
   shadowTier: 'blob', // Default fast contact blob shadows
   scrollMode: false,
+
+  isFamilyShareOpen: false,
+  isDisruptionPanelOpen: true,
 
   setProgress: (progress) => {
     journeyPhysics.progress = progress;
@@ -162,6 +173,12 @@ export const useJourneyStore = create<JourneyState>((set) => ({
       journeyPhysics.scrollDriven = next;
       return { scrollMode: next };
     }),
+  toggleFamilyShare: () =>
+    set((state) => ({ isFamilyShareOpen: !state.isFamilyShareOpen })),
+  setFamilyShareOpen: (open) => set({ isFamilyShareOpen: open }),
+  toggleDisruptionPanel: () =>
+    set((state) => ({ isDisruptionPanelOpen: !state.isDisruptionPanelOpen })),
+  setDisruptionPanelOpen: (open) => set({ isDisruptionPanelOpen: open }),
   resetJourney: () => {
     journeyPhysics.progress = 0.02;
     journeyPhysics.speed = 0.25;

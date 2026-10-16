@@ -35,7 +35,7 @@ export const INITIAL_DISRUPTION_STATE: DisruptionFSMState = {
   delayMinutes: 0,
   reasonEn: 'All signals clear. Journey on schedule.',
   reasonHi: 'सभी सिग्नल साफ़। यात्रा निर्धारित समय पर है।',
-  timestamp: Date.now(),
+  timestamp: 0,
 };
 
 /**
