@@ -12,7 +12,7 @@ import { FollowCamera } from './FollowCamera';
 import { RenderTelemetry } from './RenderTelemetry';
 import { ParallaxAtmosphere } from './ParallaxAtmosphere';
 
-import { SteamParticles } from './SteamParticles';
+import { BrakeSparks } from './BrakeSparks';
 
 function SceneFallback() {
   return (
@@ -60,8 +60,8 @@ export function Scene() {
           {/* Moving 5-Coach Articulated Train with aerodynamic locomotive and passenger coaches */}
           <Train />
 
-          {/* Locomotive Exhaust Steam Particles */}
-          <SteamParticles />
+          {/* Electric Traction Brake Pad Sparks & Friction Dust */}
+          <BrakeSparks />
 
           {/* Drifting Clouds Parallax & Speed-Based Dynamic FOV */}
           <ParallaxAtmosphere />
