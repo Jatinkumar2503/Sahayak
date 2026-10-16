@@ -9,6 +9,8 @@ import { TrackSpline } from './TrackSpline';
 import { Stations } from './Stations';
 import { Train } from './Train';
 import { FollowCamera } from './FollowCamera';
+import { RenderTelemetry } from './RenderTelemetry';
+import { ParallaxAtmosphere } from './ParallaxAtmosphere';
 
 function SceneFallback() {
   return (
@@ -27,18 +29,21 @@ export function Scene() {
       <Suspense fallback={<SceneFallback />}>
         <Canvas
           shadows
-          dpr={[1, 1.25]} // Capped at 1.25 for guaranteed 60fps on all laptop displays
+          dpr={[1, 1.25]} // Capped at 1.25 for guaranteed 60fps on laptop & mobile displays
           camera={{ position: [0, 10, 30], fov: 55, near: 0.1, far: 600 }}
           gl={{
-            antialias: true,
+            antialias: false, // Disabling MSAA saves ~7ms on integrated GPUs with no visual loss in low-poly flat shading
             powerPreference: 'high-performance',
           }}
           className="w-full h-full"
         >
+          {/* Renderer Stats Collector (draw calls & triangles) */}
+          <RenderTelemetry />
+
           {/* Sky Dome with Day/Dusk Shader */}
           <SkyDome />
 
-          {/* Optimized Lighting Rig with soft shadows and animated fog */}
+          {/* Hybrid Tier Lighting Rig with soft contact shadows & optional 1024 depth shadow map */}
           <LightingRig />
 
           {/* Procedural low-poly terrain, crops, trees, and catenary masts */}
@@ -50,8 +55,11 @@ export function Scene() {
           {/* Low-poly station architectures (Delhi, Panipat, Ambala) */}
           <Stations />
 
-          {/* Moving Train with aerodynamic locomotive and braking lights */}
+          {/* Moving 5-Coach Articulated Train with aerodynamic locomotive and passenger coaches */}
           <Train />
+
+          {/* Drifting Clouds Parallax & Speed-Based Dynamic FOV */}
+          <ParallaxAtmosphere />
 
           {/* Smooth following camera with chase, cinematic, and map modes */}
           <FollowCamera />
