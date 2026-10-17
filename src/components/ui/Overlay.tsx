@@ -49,6 +49,7 @@ export function Overlay() {
 
   const journeyStarted = useJourneyStore((s) => s.journeyStarted);
   const isDemoToolsOpen = useJourneyStore((s) => s.isDemoToolsOpen);
+  const isLoopFading = useJourneyStore((s) => s.isLoopFading);
 
   const startJourney = useJourneyStore((s) => s.startJourney);
   const toggleDemoTools = useJourneyStore((s) => s.toggleDemoTools);
@@ -191,6 +192,15 @@ export function Overlay() {
         {t.skipToContent}
       </a>
 
+      {/* 0.6s Loop Fade Overlay (Instant under reduced motion) */}
+      <div
+        id="corridor-loop-fade-overlay"
+        aria-hidden="true"
+        className={`fixed inset-0 z-50 pointer-events-none bg-slate-950 transition-opacity duration-300 ${
+          isLoopFading ? 'opacity-100' : 'opacity-0'
+        } ${reducedMotion ? 'transition-none duration-0' : ''}`}
+      />
+
       {/* Screen Reader Live Region for Status Changes */}
       <div className="sr-only" aria-live="polite" role="status">
         {isHindi
@@ -221,6 +231,7 @@ export function Overlay() {
             </div>
 
             <div
+              id="signal-aspect-badge"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-md shadow-lg transition-all ${signalAspect.colorClass}`}
               title={`Trackside ${activeSignal.nameEn} aspect status`}
             >

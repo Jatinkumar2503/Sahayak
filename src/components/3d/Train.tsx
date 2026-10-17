@@ -122,8 +122,8 @@ export function Train() {
           } else {
             // Smooth, continuous deceleration curve that glides naturally into zero
             // using sin easing combined with linear ratio so derivative approaches 0 smoothly
-            const targetSpeed = maxAllowedSpeed * Math.sin((ratio * Math.PI) / 2) * Math.min(1, ratio * 1.4);
-            journeyPhysics.speed = THREE.MathUtils.lerp(journeyPhysics.speed, targetSpeed, delta * 3.8);
+            const targetSpeed = maxAllowedSpeed * Math.sin((ratio * Math.PI) / 2) * Math.min(1, ratio * 1.3);
+            journeyPhysics.speed = THREE.MathUtils.lerp(journeyPhysics.speed, targetSpeed, delta * 4.4);
 
             // Strict cap: train can NEVER exceed initialBrakeSpeed (never accelerate after disruption)
             if (journeyPhysics.speed > maxAllowedSpeed) {
@@ -131,7 +131,7 @@ export function Train() {
             }
 
             // Continuous cutoff threshold: when speed is negligible near target margin, smoothly reach complete stop
-            if ((distRemaining < 1.2 && journeyPhysics.speed < 0.012) || journeyPhysics.speed < 0.003) {
+            if ((distRemaining < 1.0 && journeyPhysics.speed < 0.010) || journeyPhysics.speed < 0.003) {
               journeyPhysics.speed = 0;
               journeyPhysics.progress = stopProgress;
             }
@@ -146,6 +146,9 @@ export function Train() {
       }
 
       // 2. Advance train master progress along spline (never overshoots stopProgress at red signal)
+      const deltaProgress = Math.max(0, journeyPhysics.speed * 0.045 * delta);
+      let nextProgress = journeyPhysics.progress + deltaProgress;
+
       if (disruptionType === 'delay' || disruptionType === 'cancellation') {
         const CORRIDOR_CURVE_LENGTH = 568.74;
         const SIGNAL_STOP_MARGIN_UNITS = 4.5;
@@ -155,25 +158,38 @@ export function Train() {
           getNextSignalAhead(journeyPhysics.progress);
         const stopProgress = (activeSig.progress - MARGIN_PROGRESS + 1) % 1;
 
-        const deltaProgress = Math.max(0, journeyPhysics.speed * 0.045 * delta);
-        const nextProgress = journeyPhysics.progress + deltaProgress;
         if (nextProgress >= stopProgress && journeyPhysics.progress <= stopProgress) {
-          journeyPhysics.progress = stopProgress;
+          nextProgress = stopProgress;
           journeyPhysics.speed = 0;
-        } else {
-          journeyPhysics.progress = Math.max(journeyPhysics.progress, nextProgress);
+        }
+      }
+
+      // Seamless journey looping: When train completes run past Ambala (progress >= 0.98),
+      // smoothly loop back to Delhi approach with 0.6s fade and clean consistent state.
+      if (nextProgress >= 0.98) {
+        const store = useJourneyStore.getState();
+        const isReduced = store.reducedMotion;
+
+        // Clear any active disruption on loop to guarantee clean consistent state
+        if (store.disruptionType !== 'none' || store.status !== 'on-time') {
+          store.setDisruptionType('none');
+        }
+
+        journeyPhysics.progress = 0.02;
+        journeyPhysics.speed = 0.25;
+        journeyPhysics.targetSpeed = 0.25;
+        journeyPhysics.activeBranch = 'main';
+        store.setActiveBranch('main');
+        store.setActiveSignalId('sig-102');
+
+        if (!isReduced) {
+          store.setIsLoopFading(true);
+          setTimeout(() => {
+            useJourneyStore.getState().setIsLoopFading(false);
+          }, 600);
         }
       } else {
-        const deltaProgress = Math.max(0, journeyPhysics.speed * 0.045 * delta);
-        const nextProgress = journeyPhysics.progress + deltaProgress;
-        // Seamless journey looping: When train completes run past Ambala, loop back to Delhi approach
-        if (nextProgress >= 0.98) {
-          journeyPhysics.progress = 0.02;
-          journeyPhysics.activeBranch = 'main';
-          useJourneyStore.getState().setActiveBranch('main');
-        } else {
-          journeyPhysics.progress = nextProgress;
-        }
+        journeyPhysics.progress = Math.max(journeyPhysics.progress, nextProgress);
       }
     }
 
@@ -188,8 +204,9 @@ export function Train() {
       if (!ref) continue;
 
       // Arc-length parameterization ensures uniform spacing through any curve radius
+      // Lead locomotive (i=0) leads at front; trailing coaches (i>0) follow behind with positive progress >= 0.02
       const coachProgress =
-        (journeyPhysics.progress - i * COACH_OFFSET_STEP + 1) % 1;
+        (journeyPhysics.progress + (COACH_COUNT - 1 - i) * COACH_OFFSET_STEP) % 1;
       journeyPhysics.coachProgresses[i] = coachProgress;
 
       // Route abstraction: every coach follows the exact continuous blended curve path

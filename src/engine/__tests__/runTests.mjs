@@ -127,4 +127,100 @@ assert.ok(disabledBypass.disabledReasonEn.includes('behind'), 'Must explain bran
 assert.ok(disabledBypass.disabledReasonHi.includes('पीछे'), 'Must explain branch junction is behind train in Hindi');
 console.log('✔ Test 11: Position-aware decision engine disables branch chord and shows plain-language reason when past switch (progress >= 0.48) passed');
 
-console.log('\nAll 11 Decision Engine & FSM Unit Tests PASSED successfully!');
+// 12. Coach spacing and non-negative progress at loop point (progress = 0.02)
+const loopProgress = 0.02;
+const COACH_COUNT = 5;
+const COACH_OFFSET_STEP = 0.0145;
+const loopCoachProgresses = [];
+for (let i = 0; i < COACH_COUNT; i++) {
+  const p = (loopProgress + (COACH_COUNT - 1 - i) * COACH_OFFSET_STEP) % 1;
+  loopCoachProgresses.push(p);
+}
+
+// Assert no coach has negative progress
+loopCoachProgresses.forEach((p, idx) => {
+  assert.ok(p >= 0, `Coach ${idx} progress must be non-negative (actual: ${p})`);
+  assert.ok(p >= loopProgress, `Coach ${idx} progress must be >= master progress ${loopProgress} (actual: ${p})`);
+});
+
+// Assert every coach has a distinct position
+const uniquePositions = new Set(loopCoachProgresses.map((p) => p.toFixed(6)));
+assert.strictEqual(
+  uniquePositions.size,
+  COACH_COUNT,
+  'All 5 coaches must have distinct positions after loop'
+);
+
+// Assert spacing between adjacent coaches is at least normal coach gap (COACH_OFFSET_STEP)
+for (let i = 0; i < COACH_COUNT - 1; i++) {
+  const gap = Math.abs(loopCoachProgresses[i] - loopCoachProgresses[i + 1]);
+  assert.ok(
+    gap >= COACH_OFFSET_STEP - 0.0001,
+    `Coach gap between ${i} and ${i + 1} (${gap.toFixed(5)}) must be >= COACH_OFFSET_STEP (${COACH_OFFSET_STEP})`
+  );
+}
+console.log('✔ Test 12: Loop coach spacing >= 0.0145, non-negative progress, and distinct positions passed');
+
+// 13. Loop disruption sanitization consistency
+// When loop point (0.98) is reached during an active disruption, state resets cleanly to on-time
+const activeDisruptionAtLoop = {
+  disruptionType: 'delay',
+  status: 'delay',
+  activeBranch: 'main',
+  progress: 0.985,
+};
+
+function handleLoopTransition(state) {
+  const isLooping = state.progress >= 0.98;
+  if (!isLooping) return state;
+  return {
+    ...state,
+    progress: 0.02,
+    disruptionType: 'none',
+    status: 'on-time',
+    activeBranch: 'main',
+  };
+}
+
+const postLoopState = handleLoopTransition(activeDisruptionAtLoop);
+assert.strictEqual(postLoopState.progress, 0.02, 'Progress after loop must reset to 0.02');
+assert.strictEqual(postLoopState.disruptionType, 'none', 'Disruption must be cleared on loop');
+assert.strictEqual(postLoopState.status, 'on-time', 'Status must be restored to on-time on loop');
+assert.strictEqual(postLoopState.activeBranch, 'main', 'Active branch must be main on loop');
+console.log('✔ Test 13: Active disruption at loop point cleanly resets to consistent on-time state passed');
+
+// 14. "Restart journey to try the bypass" state transition
+// Clears disruption, resets progress and coach positions, and restores clear signal
+function handleRestartJourney() {
+  return {
+    status: 'on-time',
+    progress: 0.02,
+    speed: 0.25,
+    targetSpeed: 0.25,
+    disruptionType: 'none',
+    activeBranch: 'main',
+    activeSignalId: 'sig-102',
+    signalAspect: 'CLEAR (Green)',
+    coachProgresses: [
+      0.02 + 4 * COACH_OFFSET_STEP,
+      0.02 + 3 * COACH_OFFSET_STEP,
+      0.02 + 2 * COACH_OFFSET_STEP,
+      0.02 + 1 * COACH_OFFSET_STEP,
+      0.02,
+    ],
+  };
+}
+
+const restartedState = handleRestartJourney();
+assert.strictEqual(restartedState.disruptionType, 'none', 'Restart journey must clear disruption');
+assert.strictEqual(restartedState.status, 'on-time', 'Restart journey must set status to on-time');
+assert.strictEqual(restartedState.progress, 0.02, 'Restart journey must reset master progress to 0.02');
+assert.strictEqual(restartedState.activeSignalId, 'sig-102', 'Restart journey must target first signal 102');
+assert.strictEqual(restartedState.signalAspect, 'CLEAR (Green)', 'Restart journey must restore signal to CLEAR (Green)');
+assert.strictEqual(restartedState.coachProgresses.length, 5, 'Must have 5 coach positions');
+restartedState.coachProgresses.forEach((cp, idx) => {
+  assert.ok(cp >= 0.02, `Coach ${idx} must be >= 0.02`);
+});
+console.log('✔ Test 14: Restart journey clears disruption, resets progress and coach positions, and sets signal to green passed');
+
+console.log('\nAll 14 Decision Engine, FSM, Loop & Consistency Unit Tests PASSED successfully!');

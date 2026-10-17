@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { journeyPhysics, ShadowQualityTier } from './journeyPhysics';
+import { journeyPhysics, ShadowQualityTier, COACH_OFFSET_STEP } from './journeyPhysics';
 import { broadcastJourneyState, getSyncChannel } from '@/utils/broadcastSync';
 
 export type JourneyStatus = 'on-time' | 'delay' | 'cancelled' | 'rerouted' | 'resolved';
@@ -166,6 +166,9 @@ export interface JourneyState {
   confirmedOption: any | null;
   previousDisruptionState: PreviousDisruptionState | null;
 
+  isLoopFading: boolean;
+  setIsLoopFading: (isLoopFading: boolean) => void;
+
   startJourney: () => void;
   toggleDemoTools: () => void;
   setDemoToolsOpen: (open: boolean) => void;
@@ -240,6 +243,8 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
   previewRouteId: null,
   confirmedOption: null,
   previousDisruptionState: null,
+  isLoopFading: false,
+  setIsLoopFading: (isLoopFading) => set({ isLoopFading }),
 
   startJourney: () => {
     journeyPhysics.targetSpeed = 0.25;
@@ -508,6 +513,13 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
     journeyPhysics.speed = 0.25;
     journeyPhysics.targetSpeed = 0.25;
     journeyPhysics.activeBranch = 'main';
+    journeyPhysics.coachProgresses = [
+      0.02 + 4 * COACH_OFFSET_STEP,
+      0.02 + 3 * COACH_OFFSET_STEP,
+      0.02 + 2 * COACH_OFFSET_STEP,
+      0.02 + 1 * COACH_OFFSET_STEP,
+      0.02,
+    ];
 
     broadcastJourneyState({
       status: 'on-time',
@@ -524,6 +536,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
       targetSpeed: 0.25,
       disruptionType: 'none',
       activeBranch: 'main',
+      activeSignalId: 'sig-102',
       journeyStarted: true,
       isDemoToolsOpen: false,
       previewRouteId: null,

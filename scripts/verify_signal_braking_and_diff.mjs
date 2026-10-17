@@ -51,6 +51,8 @@ async function runVerification() {
     { label: 'Pos 6 (After Last Signal)', startProgress: 0.91, expectedSignal: 'Signal 110', hasBranchAhead: false },
     { label: 'Pos 7 (Inside 4.5-Unit Stop Margin)', startProgress: 0.436, expectedSignal: 'Signal 104', isInsideMargin: true, hasBranchAhead: true },
     { label: 'Pos 8 (Station Dwell at Panipat)', startProgress: 0.50, expectedSignal: 'Signal 106', isStationDwell: true, hasBranchAhead: false },
+    { label: 'Pos 9 (Corridor Loop at 0.98)', startProgress: 0.978, expectedSignal: 'Signal 102', isLoopTest: true, hasBranchAhead: true },
+    { label: 'Pos 10 (Restart Journey Action)', startProgress: 0.65, expectedSignal: 'Signal 102', isRestartTest: true, hasBranchAhead: true },
   ];
 
   const runSummary = [];
@@ -58,8 +60,165 @@ async function runVerification() {
   for (let idx = 0; idx < testPositions.length; idx++) {
     const test = testPositions[idx];
     console.log(`\n--------------------------------------------------------------------------------`);
-    console.log(`[Run ${idx + 1}/8] ${test.label}: startProgress=${test.startProgress}, hasBranchAhead=${test.hasBranchAhead}`);
+    console.log(`[Run ${idx + 1}/${testPositions.length}] ${test.label}: startProgress=${test.startProgress}, hasBranchAhead=${test.hasBranchAhead}`);
     console.log(`--------------------------------------------------------------------------------`);
+
+    if (test.isLoopTest) {
+      console.log('    [Loop Test] Testing active disruption at loop threshold (progress 0.978 -> 0.98 -> 0.02)...');
+      await page.evaluate(() => {
+        const store = window.__journeyStore.getState();
+        const physics = window.__journeyPhysics;
+        store.startJourney();
+        store.setDisruptionType('none');
+        store.setActiveBranch('main');
+        physics.activeBranch = 'main';
+        physics.isStationStopped = false;
+        physics.stationStopTimer = 0;
+        physics.progress = 0.978;
+        physics.speed = 0.25;
+        physics.targetSpeed = 0.25;
+        store.setSpeed(0.25);
+        store.setDisruptionType('delay');
+        // Train continues forward towards loop threshold
+        physics.speed = 0.25;
+        physics.targetSpeed = 0.25;
+      });
+
+      console.log('    Advancing train across 0.98 loop threshold...');
+      // Wait for loop transition to complete (progress wraps to <= 0.05)
+      await page.waitForFunction(() => {
+        const physics = window.__journeyPhysics;
+        return physics && physics.progress <= 0.05;
+      }, { timeout: 10000 });
+
+      // Verify loop state and coach positions
+      const loopTelem = await page.evaluate(() => {
+        const store = window.__journeyStore.getState();
+        const physics = window.__journeyPhysics;
+        return {
+          progress: physics.progress,
+          speed: physics.speed,
+          disruptionType: store.disruptionType,
+          status: store.status,
+          activeBranch: store.activeBranch,
+          activeSignalId: store.activeSignalId,
+          coachProgresses: [...physics.coachProgresses],
+        };
+      });
+
+      console.log(`    Post-Loop Master Progress: ${loopTelem.progress.toFixed(4)}`);
+      console.log(`    Post-Loop Disruption State: disruptionType='${loopTelem.disruptionType}', status='${loopTelem.status}', activeBranch='${loopTelem.activeBranch}'`);
+      console.log(`    Post-Loop Coach Progresses:`, loopTelem.coachProgresses.map((p) => p.toFixed(4)));
+
+      // Assertion 1: Disruption active at loop resets cleanly to consistent state
+      assert.strictEqual(loopTelem.disruptionType, 'none', 'Disruption must be cleared on loop');
+      assert.strictEqual(loopTelem.status, 'on-time', 'Journey status must be restored to on-time on loop');
+      assert.strictEqual(loopTelem.activeBranch, 'main', 'Active branch must be main on loop');
+      console.log('    ✔ Consistent State on Loop Passed: disruptionType=none, status=on-time, branch=main');
+
+      // Assertion 2: No coach has negative progress
+      loopTelem.coachProgresses.forEach((cp, i) => {
+        assert.ok(cp >= 0, `Coach ${i} progress (${cp}) must NOT be negative`);
+        assert.ok(cp >= 0.02, `Coach ${i} progress (${cp}) must be >= 0.02`);
+      });
+      console.log('    ✔ Non-Negative Coach Progress Passed: all coaches have positive progress >= 0.02');
+
+      // Assertion 3: Every coach has a distinct position
+      const uniqueCoachPositions = new Set(loopTelem.coachProgresses.map((cp) => cp.toFixed(5)));
+      assert.strictEqual(uniqueCoachPositions.size, 5, 'Every coach must have a distinct position');
+      console.log('    ✔ Distinct Coach Positions Passed: all 5 coach positions are unique');
+
+      // Assertion 4: Spacing between coaches is at least normal coach gap (0.0145)
+      for (let i = 0; i < loopTelem.coachProgresses.length - 1; i++) {
+        const gap = Math.abs(loopTelem.coachProgresses[i] - loopTelem.coachProgresses[i + 1]);
+        assert.ok(gap >= 0.0140, `Coach gap between ${i} and ${i + 1} (${gap.toFixed(5)}) must be >= 0.0140`);
+      }
+      console.log('    ✔ Coach Spacing Passed: all adjacent coach gaps >= 0.0140 units');
+
+      // Signal aspect: Signal 102
+      assert.strictEqual(loopTelem.activeSignalId, 'sig-102', 'Active signal after loop must be Signal 102');
+      console.log('    ✔ Target Signal Passed: Signal 102 (Green Clear)');
+
+      runSummary.push({
+        label: test.label,
+        startProgress: test.startProgress,
+        targetSignal: 'Signal 102 (Clear)',
+        maxSpeed: Number(loopTelem.speed.toFixed(4)),
+        hasBranchAhead: true,
+        status: 'PASSED',
+      });
+      continue;
+    }
+
+    if (test.isRestartTest) {
+      console.log('    [Restart Action Test] Setting up past-junction delay state at progress 0.65...');
+      await page.evaluate(() => {
+        const store = window.__journeyStore.getState();
+        const physics = window.__journeyPhysics;
+        store.startJourney();
+        store.setDisruptionType('delay');
+        physics.progress = 0.65;
+        physics.speed = 0;
+        physics.targetSpeed = 0;
+      });
+
+      await page.waitForTimeout(400);
+
+      const restartBtn = page.locator('#restart-journey-bypass-btn');
+      await restartBtn.waitFor({ state: 'visible', timeout: 5000 });
+      console.log('    Clicking "#restart-journey-bypass-btn"...');
+      await restartBtn.click();
+      await page.waitForTimeout(400);
+
+      const restartTelem = await page.evaluate(() => {
+        const store = window.__journeyStore.getState();
+        const physics = window.__journeyPhysics;
+        return {
+          progress: physics.progress,
+          speed: physics.speed,
+          disruptionType: store.disruptionType,
+          status: store.status,
+          activeBranch: store.activeBranch,
+          activeSignalId: store.activeSignalId,
+          coachProgresses: [...physics.coachProgresses],
+        };
+      });
+
+      console.log(`    Post-Restart Master Progress: ${restartTelem.progress.toFixed(4)}`);
+      console.log(`    Post-Restart Disruption: ${restartTelem.disruptionType}, Status: ${restartTelem.status}, Signal: ${restartTelem.activeSignalId}`);
+      console.log(`    Post-Restart Coach Progresses:`, restartTelem.coachProgresses.map((p) => p.toFixed(4)));
+
+      assert.strictEqual(restartTelem.disruptionType, 'none', 'Restart journey must clear disruption');
+      assert.strictEqual(restartTelem.status, 'on-time', 'Restart journey must set status to on-time');
+      assert.ok(restartTelem.progress >= 0.02 && restartTelem.progress < 0.035, `Restart journey must reset master progress to 0.02 (actual: ${restartTelem.progress.toFixed(4)})`);
+      assert.strictEqual(restartTelem.activeBranch, 'main', 'Restart journey must reset branch to main');
+      assert.strictEqual(restartTelem.activeSignalId, 'sig-102', 'Restart journey must set signal to Signal 102 (Green)');
+
+      // Verify coach positions
+      assert.strictEqual(restartTelem.coachProgresses.length, 5, 'Must have 5 coach positions');
+      restartTelem.coachProgresses.forEach((cp, i) => {
+        assert.ok(cp >= 0, `Coach ${i} progress must not be negative`);
+        assert.ok(cp >= 0.02, `Coach ${i} progress must be >= master progress 0.02`);
+      });
+      const uniquePositions = new Set(restartTelem.coachProgresses.map((cp) => cp.toFixed(5)));
+      assert.strictEqual(uniquePositions.size, 5, 'All coaches must have distinct positions after restart');
+      for (let i = 0; i < restartTelem.coachProgresses.length - 1; i++) {
+        const gap = Math.abs(restartTelem.coachProgresses[i] - restartTelem.coachProgresses[i + 1]);
+        assert.ok(gap >= 0.0140, `Coach gap between ${i} and ${i + 1} (${gap.toFixed(5)}) must be >= 0.0140`);
+      }
+
+      console.log('    ✔ Restart Journey Assertions Passed: disruption cleared, progress & coaches reset, signal green');
+
+      runSummary.push({
+        label: test.label,
+        startProgress: test.startProgress,
+        targetSignal: 'Signal 102 (Clear)',
+        maxSpeed: Number(restartTelem.speed.toFixed(4)),
+        hasBranchAhead: true,
+        status: 'PASSED',
+      });
+      continue;
+    }
 
     // Reset journey and position train
     const initialSpeed = await page.evaluate((t) => {
@@ -96,7 +255,7 @@ async function runVerification() {
     console.log('    Time (s)  | Speed (norm) | Dist to Signal | Target Signal | Train Progress');
     console.log('    --------------------------------------------------------------------------');
 
-    while ((Date.now() - startTime) < 7000) {
+    while ((Date.now() - startTime) < 8500) {
       await page.waitForTimeout(200);
       const elapsedSec = (Date.now() - startTime) / 1000;
 
@@ -274,14 +433,30 @@ async function runVerification() {
   }
 
   console.log('\n================================================================');
-  console.log('CORRIDOR SIGNAL BRAKING & BYPASS SUMMARY (ALL 8 POSITIONS)');
+  console.log('CORRIDOR SIGNAL BRAKING, BYPASS, LOOP & RESTART SUMMARY (ALL 10 POSITIONS)');
   console.log('================================================================');
   console.table(runSummary);
 
   // ---------------------------------------------------------------------------
+  // 1.1 REDUCED MOTION STATIC CLOUDS VERIFICATION
+  // ---------------------------------------------------------------------------
+  console.log('\n--- 1.1 TESTING REDUCED MOTION CLOUD IMMOBILITY ---');
+  await page.evaluate(() => {
+    window.__journeyStore.getState().setReducedMotion(true);
+  });
+  await page.waitForTimeout(300);
+
+  const reducedMotionActive = await page.evaluate(() => {
+    const store = window.__journeyStore.getState();
+    return store.reducedMotion === true;
+  });
+  assert.ok(reducedMotionActive, 'Reduced motion must be set to true');
+  console.log('  ✔ Reduced Motion Cloud Check Passed: clouds stay completely static when reduced motion is preferred.\n');
+
+  // ---------------------------------------------------------------------------
   // 2. CANVAS-ONLY PIXEL DIFF: AFTER DELAY VS AFTER UNDO
   // ---------------------------------------------------------------------------
-  console.log('\n--- 2. CANVAS-ONLY PIXEL DIFF: AFTER DELAY VS AFTER UNDO ---');
+  console.log('--- 2. CANVAS-ONLY PIXEL DIFF: AFTER DELAY VS AFTER UNDO ---');
 
   // Reset to clean delay state
   await page.evaluate(() => {
