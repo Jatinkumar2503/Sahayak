@@ -19,35 +19,67 @@ import { SignalHeads } from './SignalHeads';
 
 /**
  * Task 1: Low-power detector
- * Samples actual rendered FPS for 3 seconds after scene load.
- * If average FPS < 40, automatically switches to Lite Mode.
+ * Skips the first 2.0 seconds of shader compilation & scene setup,
+ * then samples steady-state FPS for 3.0 seconds.
+ * If average steady FPS < 40, automatically switches to Lite Mode.
+ * Supports URL override: `?quality=full` forces full quality, `?quality=lite` forces Lite Mode.
  */
 function LowPowerDetector() {
   const isLiteMode = useJourneyStore((s) => s.isLiteMode);
   const setLiteMode = useJourneyStore((s) => s.setLiteMode);
   const setLowPowerDetected = useJourneyStore((s) => s.setLowPowerDetected);
 
+  const mountTime = useRef<number | null>(null);
   const sampleStartTime = useRef<number | null>(null);
   const frameCount = useRef(0);
   const evaluated = useRef(false);
 
   useFrame(() => {
     if (evaluated.current || isLiteMode) return;
+
+    // Check URL parameter overrides
+    if (typeof window !== 'undefined') {
+      const q = new URLSearchParams(window.location.search).get('quality');
+      if (q === 'full') {
+        evaluated.current = true;
+        return;
+      }
+      if (q === 'lite') {
+        evaluated.current = true;
+        setLiteMode(true);
+        return;
+      }
+    }
+
+    const now = performance.now();
+    if (mountTime.current === null) {
+      mountTime.current = now;
+      return;
+    }
+
+    const totalElapsedSec = (now - mountTime.current) / 1000;
+
+    // Skip first 2.0s to ignore shader compile and asset preparation
+    if (totalElapsedSec < 2.0) {
+      return;
+    }
+
     if (sampleStartTime.current === null) {
-      sampleStartTime.current = performance.now();
+      sampleStartTime.current = now;
       frameCount.current = 0;
       return;
     }
 
     frameCount.current++;
-    const elapsedSec = (performance.now() - sampleStartTime.current) / 1000;
+    const sampleDurationSec = (now - sampleStartTime.current) / 1000;
 
-    if (elapsedSec >= 3.0) {
+    // Sample steady-state rendering for 3.0 seconds (seconds 2.0 -> 5.0)
+    if (sampleDurationSec >= 3.0) {
       evaluated.current = true;
-      const avgFps = frameCount.current / elapsedSec;
+      const avgFps = frameCount.current / sampleDurationSec;
       if (avgFps < 40) {
         console.warn(
-          `[Sahayak 3D] Low-power rendering detected (${avgFps.toFixed(1)} FPS < 40 FPS). Auto-switched to Lite Mode.`
+          `[Sahayak 3D] Low-power rendering detected after warmup (${avgFps.toFixed(1)} FPS < 40 FPS). Auto-switched to Lite Mode.`
         );
         setLowPowerDetected(true);
         setLiteMode(true);

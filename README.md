@@ -1,7 +1,7 @@
 # Sahayak 3D (सहायक ३डी)
 ### Accessible Moving 3D Rail Journey & Disruption Decision Simulator
 
-[![Accessibility: WCAG 2.1 AA](https://img.shields.io/badge/Accessibility-WCAG%202.1%20AA%20(100%2F100)-009E73?style=for-the-badge)](./a11y-statement.md)
+[![Accessibility: Lighthouse 100 & Axe Passed](https://img.shields.io/badge/Accessibility-Lighthouse%20100%20%7C%20Axe%200%20Violations-009E73?style=for-the-badge)](./a11y-statement.md)
 [![Lighthouse: 100/100/100](https://img.shields.io/badge/Lighthouse-100%20A11y%20%7C%20100%20SEO%20%7C%20100%20Best%20Practices-0072B2?style=for-the-badge)](./a11y-statement.md)
 [![Decision Engine: 6/6 Tests](https://img.shields.io/badge/Decision%20Engine-6%2F6%20Deterministic%20Tests%20Passing-E69F00?style=for-the-badge)](#running-unit-tests)
 
@@ -14,7 +14,7 @@ Every day, millions of passengers navigate the Indian Railways network. When an 
 2. **Advisories are fragmented or missing**, forcing passengers to calculate complex trade-offs (e.g., waiting vs. taking an unreserved bypass chord vs. rebooking).
 3. **Accessibility is severely neglected**, leaving senior citizens, screen-reader users, and non-English speakers stranded without accessible guidance.
 
-**Sahayak 3D** solves this by combining a real-time, low-poly 3D rail corridor simulation with an ethical, deterministic Multi-Criteria Decision Engine and universal WCAG 2.1 AA accessibility (including Elder Mode, Web Speech voice interaction, and Family Live Sharing).
+**Sahayak 3D** solves this by combining a real-time, low-poly 3D rail corridor simulation with an ethical, deterministic rules engine and comprehensive accessibility features (including Elder Mode, Web Speech voice interaction, and Family Live Sharing).
 
 > **Important Simulation Disclaimer:**  
 > All train numbers (e.g. *Express 00001*), station signals, and passenger statuses in this application are **purely simulated** for UX and hackathon research purposes. No official IRCTC or Indian Railways credentials or proprietary databases are used.
@@ -38,7 +38,7 @@ graph TD
     end
     
     subgraph Decision Intelligence
-        F[Disruption FSM] --> G[Multi-Criteria Decision Engine]
+        F[Disruption FSM] --> G[Deterministic Rules Engine]
         G -->|Ranked Weighted Options| D
     end
     
@@ -52,18 +52,20 @@ graph TD
 ### Key Architectural Pillars:
 1. **Zero-Per-Frame Zustand Updates (`journeyPhysics.ts`)**:
    High-frequency locomotive position ($x, y, z$), wheel angles, bogie sway, and spline progress are stored in a mutable physics ref. Three.js `useFrame` directly reads this ref, completely eliminating 60fps React component re-rendering overhead.
-2. **Deterministic Decision Engine (`src/engine/decisionEngine.ts`)**:
-   When a disruption occurs (Signal 104 Red, 25-minute delay, section cancellation), the engine evaluates candidates across Arrival Confidence, Time Savings, Comfort Score, Financial Cost, and Complexity.
+2. **Deterministic Rules Engine (`src/engine/decisionEngine.ts`)**:
+   When a disruption occurs (Signal 104 Red, 25-minute delay, section cancellation), the engine evaluates candidates across Arrival Confidence, Time Savings, Comfort Score, Financial Cost, and Complexity using deterministic weighted scoring.
    - *Authentic Trade-offs*: Short delays (10m) prioritize **Hold & Wait** (₹0, 4/5 comfort, 94% confidence). Severe delays offer a **Chord Bypass Detour** which saves 22 minutes but penalizes comfort (3/5) with unreserved seating.
 3. **2D Accessible Fallback View**:
    If WebGL is disabled or unsupported, Sahayak 3D automatically renders a full HTML timeline and decision panel so the app remains 100% operational without 3D graphics.
 
 ---
 
-## 3. Accessibility & Inclusivity (WCAG 2.1 AA Verified)
+## 3. Accessibility & Inclusivity (Lighthouse & Axe-Core Verified)
 
-Audited with **Google Lighthouse CLI v13.5.0** and the **Axe-Core v4.13** engine:
-- **100 / 100 Accessibility Score** (Desktop and Mobile)
+Audited with **Google Lighthouse CLI v13.5.0**, **Playwright**, and **Axe-Core**:
+- **100 / 100 Accessibility Score** (Google Lighthouse production run).
+- **0 Axe Violations across 8 page states**: Audited on Default English (`/`), Hindi mode (`hi`), Elder mode, all 4 open modals (`OnboardingModal`, `FamilyShareModal`, `VoiceAssistantModal`, `JourneyTimelineA11y`), and `/design-system`.
+- **44×44px Minimum Touch Targets**: Verified with Playwright across 360px (mobile), 768px (tablet), and 1280px (desktop) viewports.
 - **Okabe-Ito Colorblind-Safe Standard**: All statuses pair high-contrast colors (`#009E73`, `#E69F00`, `#D55E00`, `#0072B2`) with geometric SVG glyphs (`CheckCircle2`, `AlertTriangle`, `OctagonAlert`, `GitBranch`) and visible text. Status never relies on color alone.
 - **Elder Mode (वरिष्ठ मोड)**: Enlarges typography up to 24px, sets min 48×48px tap targets with 2px solid amber borders, simplifies the HUD, and slows 3D motion by 36%.
 - **Reduced Motion**: Full support for `prefers-reduced-motion` and manual in-app toggle. Stops camera sway, freezes signal pulsing, and cross-fades transitions.
@@ -108,7 +110,7 @@ npm run start
 ```
 
 ### Running Unit Tests
-Validate the deterministic Multi-Criteria Decision Engine test suite:
+Validate the deterministic rules engine test suite:
 ```bash
 node src/engine/__tests__/runTests.mjs
 ```
@@ -128,20 +130,37 @@ All 6 Decision Engine Unit Tests PASSED successfully!
 
 ## 6. Deployxa Deployment Guide
 
-Sahayak 3D is fully production-ready and optimized for deployment on **Deployxa** or containerized cloud hosts:
+Sahayak 3D is fully self-contained with no external database or server secrets required, making it 100% compatible with **Deployxa's zero-config Next.js framework detection**:
 
-### Step-by-Step Deployxa Instructions:
-1. **Connect Repository**:
-   Point your Deployxa project to `https://github.com/Jatinkumar2503/Sahayak.git` (branch `main`).
-2. **Build Settings**:
-   - **Framework Preset**: Next.js
-   - **Build Command**: `npm run build`
-   - **Start Command**: `npm run start`
-   - **Node Version**: `20.x`
-3. **Environment Variables**:
-   No external API keys are required; all decision rules, audio engines, and WebGL corridors run self-contained in client-side code.
-4. **Deploy**:
-   Trigger deployment. Verify the live URL in an incognito window and on mobile.
+### Method 1: Git-Based Zero-Config Deployment (Recommended)
+1. **Push to Git**: Ensure your latest changes are pushed to `main`:
+   ```bash
+   git push origin main
+   ```
+2. **Connect on Deployxa**:
+   - In your Deployxa dashboard, select **New Project** and connect `https://github.com/Jatinkumar2503/Sahayak.git`.
+   - Select branch `main`.
+3. **Automated Pipeline**:
+   Deployxa automatically runs its 5-stage deployment lifecycle:
+   - `01 Repository connected`
+   - `02 Framework detected (Next.js App Router)`
+   - `03 Production image built (Turbopack optimized)`
+   - `04 Health checks passed`
+   - `05 Global route activated (Live with auto TLS/SSL)`
+
+### Method 2: Deployxa CLI (`@deployxa/cli`)
+If deploying directly from your terminal:
+```bash
+# 1. Install CLI
+npm i -g @deployxa/cli
+
+# 2. Login to Deployxa
+deployxa login
+
+# 3. Detect framework & trigger production deployment
+deployxa detect
+deployxa deploy
+```
 
 ---
 
@@ -168,7 +187,7 @@ sahayak/
 │   │   │   └── FollowCamera.tsx      # Chase, Cinematic Side, and Map camera modes
 │   │   └── ui/                       # Accessible UI Overlay & Decision Cards
 │   │       ├── Overlay.tsx           # HUD, language toggle, elder mode, lite mode
-│   │       ├── DecisionCardsOverlay.tsx # Ranked multi-criteria advisory cards
+│   │       ├── DecisionCardsOverlay.tsx # Ranked disruption advisory cards
 │   │       ├── DisruptionPanel.tsx   # Interactive rail disruption simulation triggers
 │   │       ├── FamilyShareModal.tsx  # Simulated live family tracking phone frame
 │   │       ├── VoiceAssistantModal.tsx # Web Speech API voice assistant
@@ -176,7 +195,7 @@ sahayak/
 │   │       ├── JourneyTimelineA11y.tsx # Full semantic HTML text alternative
 │   │       └── StatsOverlay.tsx      # Real-time frame time, draw calls & triangles
 │   ├── engine/
-│   │   ├── decisionEngine.ts         # Multi-criteria weighted ranking algorithm
+│   │   ├── decisionEngine.ts         # Deterministic weighted rules algorithm
 │   │   └── __tests__/                # Deterministic unit test runner
 │   ├── i18n/
 │   │   └── translations.ts           # Complete English and Hindi localization dictionary

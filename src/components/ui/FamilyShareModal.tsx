@@ -156,7 +156,7 @@ export function FamilyShareModal({ isOpen, onClose }: FamilyShareModalProps) {
             <button
               onClick={onClose}
               autoFocus
-              className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-[#E69F00]"
+              className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-[#E69F00] min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95"
               aria-label={t.closeModal}
               title={t.closeModal}
             >
@@ -240,20 +240,20 @@ export function FamilyShareModal({ isOpen, onClose }: FamilyShareModalProps) {
           )}
 
           {/* Test State Toggles (Offline / Loading simulation) */}
-          <div className="flex items-center justify-center gap-2 pt-2 border-t border-slate-800 text-[10px]">
+          <div className="flex items-center justify-center gap-2 pt-2 border-t border-slate-800 text-xs">
             <button
               onClick={() => setViewState(viewState === 'offline' ? 'ready' : 'offline')}
-              className="text-slate-500 hover:text-slate-300 underline"
+              className="text-slate-300 hover:text-white underline min-h-[44px] px-2 flex items-center justify-center"
             >
               Toggle Offline State
             </button>
-            <span className="text-slate-700">•</span>
+            <span className="text-slate-600" aria-hidden="true">•</span>
             <button
               onClick={() => {
                 setViewState('loading');
                 setTimeout(() => setViewState('ready'), 1000);
               }}
-              className="text-slate-500 hover:text-slate-300 underline"
+              className="text-slate-300 hover:text-white underline min-h-[44px] px-2 flex items-center justify-center"
             >
               Test Sync Loading
             </button>

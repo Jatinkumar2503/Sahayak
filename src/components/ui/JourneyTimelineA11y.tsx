@@ -155,7 +155,7 @@ export function JourneyTimelineA11y() {
               </div>
               <button
                 onClick={() => setTimelineOpen(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400"
+                className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95"
                 aria-label={t.closeModal}
                 title={t.closeModal}
               >

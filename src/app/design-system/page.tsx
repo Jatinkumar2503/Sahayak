@@ -88,16 +88,16 @@ export default function DesignSystemPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-12 max-w-5xl mx-auto space-y-12">
+    <main className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-12 max-w-5xl mx-auto space-y-12">
       {/* Top Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-8 border-b border-slate-800">
         <div className="space-y-1">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors focus-visible:outline-2 focus-visible:outline-amber-400 mb-2"
+            className="inline-flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors focus-visible:outline-2 focus-visible:outline-amber-400 mb-2 px-3 py-2.5 min-h-[44px] rounded-xl bg-slate-900 border border-slate-800 active:scale-95"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to 3D Simulator
+            <span>Back to 3D Simulator</span>
           </Link>
           <h1 className="text-3xl font-black tracking-tight text-white">
             Sahayak 3D Design System
@@ -321,6 +321,6 @@ export default function DesignSystemPage() {
           </div>
         </div>
       </section>
-    </div>
+    </main>
   );
 }

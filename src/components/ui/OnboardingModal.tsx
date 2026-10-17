@@ -112,7 +112,7 @@ export function OnboardingModal() {
           </div>
           <button
             onClick={handleFinish}
-            className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400"
+            className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95"
             aria-label={t.closeModal}
             title={t.closeModal}
           >
@@ -182,7 +182,7 @@ export function OnboardingModal() {
             {step > 1 ? (
               <button
                 onClick={() => setStep((s) => s - 1)}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-amber-400 flex items-center gap-1"
+                className="px-3.5 py-2.5 min-h-[44px] rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-amber-400 flex items-center gap-1 active:scale-95"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>{t.onboardingBack}</span>
@@ -190,7 +190,7 @@ export function OnboardingModal() {
             ) : (
               <button
                 onClick={handleFinish}
-                className="px-3 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 text-xs font-medium transition-colors"
+                className="px-3.5 py-2.5 min-h-[44px] rounded-xl text-slate-400 hover:text-slate-200 text-xs font-medium transition-colors flex items-center justify-center active:scale-95"
               >
                 {t.onboardingSkip}
               </button>
@@ -199,7 +199,7 @@ export function OnboardingModal() {
             {step < 3 ? (
               <button
                 onClick={() => setStep((s) => s + 1)}
-                className="px-4 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black transition-all shadow-md flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-amber-400"
+                className="px-4 py-2.5 min-h-[44px] rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black transition-all shadow-md flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-amber-400 active:scale-95"
               >
                 <span>{t.onboardingNext}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -207,7 +207,7 @@ export function OnboardingModal() {
             ) : (
               <button
                 onClick={handleFinish}
-                className="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black transition-all shadow-md flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-emerald-400"
+                className="px-4 py-2.5 min-h-[44px] rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black transition-all shadow-md flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-emerald-400 active:scale-95"
               >
                 <CheckCircle className="w-3.5 h-3.5" />
                 <span>{t.onboardingFinish}</span>

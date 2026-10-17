@@ -1,9 +1,10 @@
 # Accessibility & Inclusivity Statement — Sahayak 3D
 
-> **Standard Target:** Web Content Accessibility Guidelines (WCAG) 2.1 Level AA  
-> **Audit Status:** Verified with Google Lighthouse CLI v13.5.0 & Axe-Core Engine  
-> **Audit Date:** October 16, 2026 (Production Build `next build && next start`)  
-> **Target URL:** `http://localhost:3000/`
+> **Verified Status:** Lighthouse (100 Accessibility) and Axe-Core automated checks pass on 8 tested states: Default English (`/`), Hindi localization mode (`hi`), Elder accessibility mode, Onboarding modal, Family Share modal, Voice Assistant modal, Journey Timeline modal, and `/design-system`.
+> **Manual Verification:** Keyboard navigation traversal (Tab/Shift+Tab focus trapping, Escape dismissal, and focus restoration to trigger elements).
+> **Screen Reader Notice:** Automated accessibility tools evaluate machine-detectable rules (~30–40% of real-world barriers). A manual pass with screen readers (e.g. NVDA on Windows or TalkBack on Android) provides the true screen-reader experience.
+> **Audit Date:** October 16–17, 2026 (Production Build `next build && next start`)  
+> **Target URLs:** `http://localhost:3000/` and `http://localhost:3000/design-system`
 
 ---
 

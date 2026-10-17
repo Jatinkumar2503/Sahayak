@@ -159,7 +159,7 @@ export function Overlay() {
       {/* Skip to Content for Screen Readers & Keyboard Nav */}
       <a
         href="#main-controls"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-[#E69F00] text-slate-950 font-bold px-4 py-2 rounded-xl shadow-2xl focus:outline-none focus:ring-4 focus:ring-white"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-[#E69F00] text-slate-950 font-bold px-4 py-2.5 focus:min-h-[44px] focus:inline-flex focus:items-center rounded-xl shadow-2xl focus:outline-none focus:ring-4 focus:ring-white"
       >
         {t.skipToContent}
       </a>
@@ -206,81 +206,81 @@ export function Overlay() {
         </div>
 
         {/* Primary Interactive Modules: Family Share, Voice Assistant, Timeline */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           {/* Family Live Share Phone Trigger Button */}
           <button
             onClick={useJourneyStore.getState().toggleFamilyShare}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600/90 hover:bg-blue-500 text-white font-bold text-xs shadow-lg transition-all focus-visible:ring-2 focus-visible:ring-[#E69F00]"
+            className="flex items-center gap-2 px-3.5 py-2.5 min-h-[44px] rounded-xl bg-blue-600/90 hover:bg-blue-500 text-white font-bold text-xs shadow-lg transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E69F00]"
             title={isHindi ? 'परिवार लाइव शेयर देखें' : 'View Family Live Share'}
           >
-            <Users className="w-3.5 h-3.5" />
+            <Users className="w-4 h-4" />
             <span>{isHindi ? 'परिवार शेयर' : 'Family Share'}</span>
           </button>
 
           {/* Voice Assistant Button */}
           <button
             onClick={useJourneyStore.getState().toggleVoiceAssistant}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/90 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg transition-all focus-visible:ring-2 focus-visible:ring-white"
+            className="flex items-center gap-2 px-3.5 py-2.5 min-h-[44px] rounded-xl bg-amber-500/90 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-white"
             title={t.voiceTitle}
           >
-            <Mic className="w-3.5 h-3.5" />
+            <Mic className="w-4 h-4" />
             <span>{isHindi ? 'वॉयस' : 'Voice'}</span>
           </button>
 
           {/* Accessible HTML Timeline Panel Toggle */}
           <button
             onClick={useJourneyStore.getState().toggleTimeline}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-emerald-400 font-bold text-xs border border-slate-700 transition-all focus-visible:ring-2 focus-visible:ring-emerald-400"
+            className="flex items-center gap-2 px-3.5 py-2.5 min-h-[44px] rounded-xl bg-slate-900 hover:bg-slate-800 text-emerald-400 font-bold text-xs border border-slate-700 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-emerald-400"
             title={t.timelineTitle}
           >
-            <Compass className="w-3.5 h-3.5" />
+            <Compass className="w-4 h-4" />
             <span className="hidden sm:inline">{isHindi ? 'समयरेखा' : 'Timeline'}</span>
           </button>
 
           {/* Onboarding Help Guide Button */}
           <button
             onClick={() => useJourneyStore.getState().setIsOnboardingOpen(true)}
-            className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 flex items-center justify-center min-h-[36px] min-w-[36px]"
+            className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 flex items-center justify-center min-h-[44px] min-w-[44px] active:scale-95"
             title={t.onboardingTitle}
           >
-            <HelpCircle className="w-4 h-4" />
+            <HelpCircle className="w-5 h-5" />
           </button>
 
           {/* Design System Link */}
           <Link
             href="/design-system"
-            className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 flex items-center justify-center min-h-[36px] min-w-[36px]"
+            className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 flex items-center justify-center min-h-[44px] min-w-[44px] active:scale-95"
             title="Design System & Tokens"
           >
-            <Palette className="w-4 h-4" />
+            <Palette className="w-5 h-5" />
           </Link>
         </div>
 
         {/* Accessibility & Environment Controls */}
-        <div className="flex items-center gap-2 bg-slate-950/85 backdrop-blur-md border border-slate-700/60 p-1.5 rounded-2xl shadow-2xl">
+        <div className="flex items-center gap-1.5 bg-slate-950/85 backdrop-blur-md border border-slate-700/60 p-1.5 rounded-2xl shadow-2xl">
           {/* Day / Dusk Toggle */}
           <button
             onClick={toggleTimeOfDay}
             title={timeOfDay === 'day' ? 'Switch to Dusk Mode' : 'Switch to Day Mode'}
             aria-label={`Current lighting is ${timeOfDay}. Click to toggle.`}
-            className="p-2 rounded-xl text-slate-300 hover:text-[#E69F00] hover:bg-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-[#E69F00]"
+            className="p-2.5 rounded-xl text-slate-300 hover:text-[#E69F00] hover:bg-slate-800 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E69F00]"
           >
             {timeOfDay === 'day' ? (
-              <Sun className="w-4 h-4 text-[#E69F00]" />
+              <Sun className="w-5 h-5 text-[#E69F00]" />
             ) : (
-              <Moon className="w-4 h-4 text-[#56B4E9]" />
+              <Moon className="w-5 h-5 text-[#56B4E9]" />
             )}
           </button>
 
           {/* Camera View Switcher */}
-          <div className="flex bg-slate-900 rounded-xl p-0.5 border border-slate-800">
+          <div className="flex bg-slate-900 rounded-xl p-1 border border-slate-800">
             {(['chase', 'cinematic', 'map'] as const).map((mode) => (
               <button
                 key={mode}
                 onClick={() => setCameraMode(mode)}
-                className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-[#E69F00] ${
+                className={`px-3 py-2 text-xs font-semibold rounded-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-[#E69F00] ${
                   cameraMode === mode
-                    ? 'bg-[#0072B2] text-white shadow-sm'
+                    ? 'bg-[#0072B2] text-white shadow-sm font-bold'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
                 title={`Switch to ${mode} camera view`}
@@ -294,9 +294,9 @@ export function Overlay() {
           <button
             onClick={toggleLanguage}
             title="Toggle Hindi/English Language"
-            className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-xl text-slate-300 hover:text-[#E69F00] hover:bg-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-[#E69F00]"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] text-xs font-bold rounded-xl text-slate-300 hover:text-[#E69F00] hover:bg-slate-800 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E69F00]"
           >
-            <Languages className="w-3.5 h-3.5" />
+            <Languages className="w-4 h-4" />
             <span>{isHindi ? 'EN' : 'हिन्दी'}</span>
           </button>
 
@@ -304,13 +304,13 @@ export function Overlay() {
           <button
             onClick={() => setReducedMotion(!reducedMotion)}
             title={reducedMotion ? t.reducedMotionOn : t.reducedMotionOff}
-            className={`p-2 rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-[#E69F00] ${
+            className={`p-2.5 rounded-xl transition-all min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E69F00] ${
               reducedMotion
                 ? 'bg-amber-400 text-slate-950 font-bold'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
             }`}
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="w-5 h-5" />
           </button>
 
           {/* Elder Mode Toggle */}
@@ -347,7 +347,8 @@ export function Overlay() {
               setIsMuted(railwayAudio.toggleMute());
             }}
             title={isMuted ? t.audioMuted : t.audioUnmuted}
-            className="p-2 rounded-xl text-slate-300 hover:text-[#E69F00] hover:bg-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-[#E69F00]"
+            aria-label={isMuted ? t.audioMuted : t.audioUnmuted}
+            className="p-2.5 rounded-xl text-slate-300 hover:text-[#E69F00] hover:bg-slate-800 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E69F00]"
           >
             {isMuted ? <VolumeX className="w-4 h-4 text-slate-400" /> : <Volume2 className="w-4 h-4 text-[#009E73]" />}
           </button>
@@ -356,7 +357,8 @@ export function Overlay() {
           <button
             onClick={() => railwayAudio.playHorn()}
             title={t.hornTitle}
-            className="p-2 rounded-xl text-amber-400 hover:text-amber-300 hover:bg-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-[#E69F00]"
+            aria-label={t.hornTitle}
+            className="p-2.5 rounded-xl text-amber-400 hover:text-amber-300 hover:bg-slate-800 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E69F00]"
           >
             <Megaphone className="w-4 h-4" />
           </button>
@@ -450,7 +452,7 @@ export function Overlay() {
         <div className="bg-slate-950/85 backdrop-blur-md border border-slate-700/60 p-2 rounded-2xl shadow-2xl flex items-center gap-2">
           <button
             onClick={useJourneyStore.getState().toggleDisruptionPanel}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-800 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-800 transition-all active:scale-95"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>{isHindi ? 'सिम्युलेटर पैनल' : 'Simulator'}</span>
@@ -459,7 +461,7 @@ export function Overlay() {
           <button
             onClick={resetJourney}
             title={isHindi ? 'यात्रा रीसेट करें' : 'Reset Train to Start'}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 transition-all active:scale-95"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>{isHindi ? 'रीसेट' : 'Reset'}</span>

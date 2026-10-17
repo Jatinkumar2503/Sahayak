@@ -99,7 +99,7 @@ export function StatsOverlay() {
         <button
           onClick={toggleShadow}
           title="Click to toggle between Blob (Fast) and Dynamic (1024) shadows"
-          className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase transition-all ${
+          className={`px-3 py-2 min-h-[44px] min-w-[90px] flex items-center justify-center rounded-lg text-xs font-bold uppercase transition-all active:scale-95 ${
             shadowTier === 'dynamic'
               ? 'bg-blue-950 text-sky-200 border border-sky-500/60'
               : 'bg-emerald-950 text-emerald-200 border border-emerald-500/60'

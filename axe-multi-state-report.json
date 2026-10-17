@@ -1,0 +1,58 @@
+[
+  {
+    "state": "Default English (/)",
+    "passed": 33,
+    "incomplete": 1,
+    "violationsCount": 0,
+    "violations": []
+  },
+  {
+    "state": "Hindi Localization Mode (hi)",
+    "passed": 34,
+    "incomplete": 1,
+    "violationsCount": 0,
+    "violations": []
+  },
+  {
+    "state": "Elder Accessibility Mode",
+    "passed": 33,
+    "incomplete": 1,
+    "violationsCount": 0,
+    "violations": []
+  },
+  {
+    "state": "Onboarding Modal Open",
+    "passed": 34,
+    "incomplete": 1,
+    "violationsCount": 0,
+    "violations": []
+  },
+  {
+    "state": "Family Share Modal Open",
+    "passed": 34,
+    "incomplete": 1,
+    "violationsCount": 0,
+    "violations": []
+  },
+  {
+    "state": "Voice Assistant Modal Open",
+    "passed": 34,
+    "incomplete": 1,
+    "violationsCount": 0,
+    "violations": []
+  },
+  {
+    "state": "Journey Timeline Modal Open",
+    "passed": 34,
+    "incomplete": 1,
+    "violationsCount": 0,
+    "violations": []
+  },
+  {
+    "state": "Design System Page (/design-system)",
+    "passed": 30,
+    "incomplete": 0,
+    "violationsCount": 0,
+    "violations": []
+  }
+]

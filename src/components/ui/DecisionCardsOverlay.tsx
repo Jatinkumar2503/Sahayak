@@ -190,7 +190,7 @@ export function DecisionCardsOverlay() {
                 {/* Apply Button */}
                 <button
                   onClick={() => handleApplyOption(option)}
-                  className={`mt-3 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all focus-visible:ring-2 focus-visible:ring-amber-400 ${
+                  className={`mt-3 py-2.5 px-3 min-h-[44px] rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all focus-visible:ring-2 focus-visible:ring-amber-400 active:scale-95 ${
                     isTop
                       ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 font-black shadow-md hover:scale-[1.02]'
                       : 'bg-slate-800 hover:bg-slate-700 text-slate-200'

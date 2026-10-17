@@ -23,7 +23,7 @@ Most railway tools present static timetables or uninformative "Late by 45 mins" 
    - *Section Blockage / Cancellation*
    - *Tight Junction Missed Connection*
    - *Platform Reassignment with Footbridge Transfer*
-3. **Multi-Criteria Decision Engine**: Rather than recommending trivial choices, the engine evaluates real trade-offs across 5 weighted factors:
+3. **Deterministic Rules Engine**: Rather than recommending trivial choices, our deterministic rules engine evaluates real trade-offs across 5 weighted factors:
    - **Arrival Confidence (%)**
    - **Time Saved (Minutes)**
    - **Comfort Score (1–5 Stars)**
@@ -31,7 +31,7 @@ Most railway tools present static timetables or uninformative "Late by 45 mins" 
    - **Transfer Complexity**
    - *Example Trade-off*: Short delays (10m) rightfully favor holding on track (₹0, 4/5 comfort, 94% confidence). A long delay recommends a **Bypass Chord Detour** that saves 22 minutes but penalizes comfort (3/5) due to unreserved seating.
 4. **Interactive Branch Track Rerouting**: When a reroute is approved, the track switch lights up, Signal 104 flips, and the train seamlessly blends from the main corridor onto the branch line without stopping.
-5. **Universal Accessibility (WCAG 2.1 AA)**:
+5. **Universal Accessibility & Multi-State Audits**:
    - **Okabe-Ito Colorblind-Safe Palette**: No status ever relies on color alone; every badge pairs high-contrast hues with geometric SVG glyphs (`CheckCircle2`, `AlertTriangle`, `OctagonAlert`, `GitBranch`) and dual-language text.
    - **Elder Mode (वरिष्ठ मोड)**: Tailored for senior citizens with 18px–24px text, 48px+ touch targets, 2px amber borders, a simplified single-action HUD, and 36% slower 3D motion.
    - **Complete Reduced Motion**: Disables camera bobbing, freezes signal pulsing, and switches 3D reroutes to gentle cross-fades.
@@ -48,7 +48,7 @@ Most railway tools present static timetables or uninformative "Late by 45 mins" 
   - *Mutable Physics Engine*: High-frequency train coordinates and bogie sway are managed in a decoupled mutable physics reference (`journeyPhysics.ts`), completely bypassing React/Zustand render trees to maintain 60 FPS without component thrashing.
 - **State Management & Persistence**: Zustand with `localStorage` persistence for language preference (`en`/`hi`), Elder Mode, and Reduced Motion.
 - **Audio Synthesis**: Web Audio API oscillator synthesizing realistic electric locomotive dual-tone horns and rail track rumble without external audio assets.
-- **Auditing & Testing**: Google Lighthouse CLI v13.5.0, Axe-Core engine, and a deterministic 6-test suite.
+- **Auditing & Testing**: Google Lighthouse CLI v13.5.0, Playwright, Axe-Core engine, and a deterministic 6-test suite.
 
 ---
 
@@ -59,20 +59,31 @@ Most railway tools present static timetables or uninformative "Late by 45 mins" 
   - **Best Practices: 100 / 100**
   - **SEO: 100 / 100**
   - **Desktop Performance: 87 / 100**
+- **Automated Axe-Core Multi-State Audit (0 Violations Across All 8 States)**:
+  - Default English (`/`): 0 violations (33 passed rules)
+  - Hindi Mode (`hi`): 0 violations (34 passed rules)
+  - Elder Accessibility Mode: 0 violations (33 passed rules)
+  - Onboarding Modal Open: 0 violations (34 passed rules)
+  - Family Share Modal Open: 0 violations (34 passed rules)
+  - Voice Assistant Modal Open: 0 violations (34 passed rules)
+  - Journey Timeline Modal Open: 0 violations (34 passed rules)
+  - Design System (`/design-system`): 0 violations (30 passed rules)
+- **Responsive Target Sizes (Playwright Verified)**:
+  - 360px Mobile, 768px Tablet, 1280px Desktop: 0 interactive elements under 44×44px.
 - **Headless Container Telemetry (Software SwiftShader)**:
   - Cruise: 36–42 FPS (85 draw calls, 24k triangles)
   - Active Chord Reroute: 32–38 FPS (no draw call spikes)
 - **Laptop Hardware GPU Telemetry (User Verified)**:
   - `[USER: add real FPS from your Chrome, e.g., 60 FPS at 16.6 ms]`
 - **Low-Power Fallback (Lite Mode)**:
-  - If a device averages <40 FPS over the first 3 seconds, Sahayak 3D automatically reduces instanced trees, disables sparks, uses blob shadows, and caps pixel ratio to 1.0.
+  - Skips the initial 2.0s shader compilation warmup, then evaluates steady-state FPS between seconds 2.0 and 5.0. If steady FPS < 40, Sahayak 3D auto-activates Lite Mode. Supports URL override (`?quality=full` or `?quality=lite`) and manual toggle.
 
 ---
 
 ## User Testing & Observation
 
 > **60-Second Friend Observation**:  
-> `[USER: add real friend feedback — e.g. "When handed the phone without explanation, my friend immediately understood the train was moving, but upon seeing the red signal they tapped the bypass card asking if it would cost extra fare. This prompted us to highlight the ₹0 unreserved note directly on the card header."]`
+> `[USER: add real feedback from your 60-second test with a friend on Oct 18, including one thing observed and one change made because of it]`
 
 ---
 

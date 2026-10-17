@@ -51,7 +51,7 @@ export function DisruptionPanel() {
       <button
         onClick={toggleDisruptionPanel}
         aria-label="Open Disruption Simulator Panel"
-        className="fixed top-20 right-4 sm:right-6 z-40 bg-slate-950/90 backdrop-blur-xl border border-amber-400/60 hover:border-amber-400 p-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300 transition-all focus-visible:ring-2 focus-visible:ring-amber-400"
+        className="fixed top-20 right-4 sm:right-6 z-40 bg-slate-950/90 backdrop-blur-xl border border-amber-400/60 hover:border-amber-400 p-2.5 min-h-[44px] rounded-xl shadow-2xl flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300 transition-all focus-visible:ring-2 focus-visible:ring-amber-400 active:scale-95"
       >
         <Sparkles className="w-4 h-4" />
         <span>{t.simulatorTitle}</span>
@@ -81,9 +81,9 @@ export function DisruptionPanel() {
           <button
             onClick={toggleDisruptionPanel}
             aria-label="Collapse Disruption Simulator Panel"
-            className="p-1 text-slate-400 hover:text-slate-200 rounded hover:bg-slate-800 transition-colors"
+            className="p-1 text-slate-400 hover:text-slate-200 rounded-xl hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95"
           >
-            <ChevronUp className="w-3.5 h-3.5" />
+            <ChevronUp className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -106,7 +106,7 @@ export function DisruptionPanel() {
                 <button
                   key={mins}
                   onClick={() => handleTriggerDelay(mins as 10 | 25 | 60)}
-                  className={`py-1.5 px-2 rounded-lg font-bold text-[11px] transition-all focus-visible:ring-2 focus-visible:ring-[#E69F00] ${
+                  className={`py-2 px-2 rounded-lg font-bold text-xs transition-all min-h-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-[#E69F00] active:scale-95 ${
                     isSelected
                       ? 'bg-[#E69F00] text-slate-950 shadow-md scale-[1.02]'
                       : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
@@ -122,7 +122,7 @@ export function DisruptionPanel() {
         {/* 2. Cancellation / Section Halt Button */}
         <button
           onClick={handleTriggerCancellation}
-          className={`flex items-center justify-between p-2.5 rounded-xl font-bold transition-all border focus-visible:ring-2 focus-visible:ring-[#D55E00] ${
+          className={`flex items-center justify-between p-3 min-h-[44px] rounded-xl font-bold transition-all border active:scale-95 focus-visible:ring-2 focus-visible:ring-[#D55E00] ${
             disruptionType === 'cancellation'
               ? 'bg-[#D55E00] text-white border-[#D55E00] shadow-lg'
               : 'bg-slate-900/80 text-slate-200 border-slate-800 hover:bg-slate-800'
@@ -138,7 +138,7 @@ export function DisruptionPanel() {
         {/* 3. Missed Connection Button */}
         <button
           onClick={handleTriggerMissedConnection}
-          className={`flex items-center justify-between p-2.5 rounded-xl font-bold transition-all border focus-visible:ring-2 focus-visible:ring-[#0072B2] ${
+          className={`flex items-center justify-between p-3 min-h-[44px] rounded-xl font-bold transition-all border active:scale-95 focus-visible:ring-2 focus-visible:ring-[#0072B2] ${
             disruptionType === 'missed_connection'
               ? 'bg-[#0072B2] text-white border-[#0072B2] shadow-lg'
               : 'bg-slate-900/80 text-slate-200 border-slate-800 hover:bg-slate-800'
@@ -154,7 +154,7 @@ export function DisruptionPanel() {
         {/* 4. Platform Reallocation Button */}
         <button
           onClick={handleTriggerPlatformChange}
-          className={`flex items-center justify-between p-2.5 rounded-xl font-bold transition-all border focus-visible:ring-2 focus-visible:ring-[#E69F00] ${
+          className={`flex items-center justify-between p-3 min-h-[44px] rounded-xl font-bold transition-all border active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E69F00] ${
             disruptionType === 'platform_change'
               ? 'bg-amber-600 text-white border-amber-500 shadow-lg'
               : 'bg-slate-900/80 text-slate-200 border-slate-800 hover:bg-slate-800'
@@ -170,7 +170,7 @@ export function DisruptionPanel() {
         {/* 5. Reset Simulator Button */}
         <button
           onClick={resetJourney}
-          className="flex items-center justify-center gap-2 py-2 px-3 mt-1 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-400 font-bold transition-colors border border-slate-800 focus-visible:ring-2 focus-visible:ring-amber-400"
+          className="flex items-center justify-center gap-2 py-2.5 px-3 mt-1 min-h-[44px] rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-400 font-bold transition-all active:scale-95 border border-slate-800 focus-visible:ring-2 focus-visible:ring-amber-400"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           <span>{t.resetJourney}</span>

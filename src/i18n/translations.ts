@@ -135,7 +135,7 @@ export const translations = {
     onboardingStep1Title: '1. Continuous 3D Rail Corridor',
     onboardingStep1Desc: 'Observe a 5-coach Indian train moving along a Northern corridor track with following camera perspectives (Chase, Side, Map).',
     onboardingStep2Title: '2. Deterministic Disruption Simulation',
-    onboardingStep2Desc: 'Trigger real-world rail delays, halts, or platform diversions to test how our multi-criteria decision engine evaluates realistic trade-offs.',
+    onboardingStep2Desc: 'Trigger real-world rail delays, halts, or platform diversions to test how our deterministic rules engine evaluates realistic trade-offs.',
     onboardingStep3Title: '3. Accessibility & Family Sharing',
     onboardingStep3Desc: 'Includes high-contrast Elder Mode, reduced motion support, screen reader live regions, Voice input, and a phone-frame Family Share preview.',
     onboardingNext: 'Next Step',
