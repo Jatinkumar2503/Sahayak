@@ -59,15 +59,22 @@ Most railway tools present static timetables or uninformative "Late by 45 mins" 
   - **Best Practices: 100 / 100**
   - **SEO: 100 / 100**
   - **Desktop Performance: 87 / 100**
-- **Automated Axe-Core Multi-State Audit (0 Violations Across All 8 States)**:
-  - Default English (`/`): 0 violations (33 passed rules)
-  - Hindi Mode (`hi`): 0 violations (34 passed rules)
+- **Automated Axe-Core Multi-State Audit (0 Violations Across All 13 States)**:
+  - First View English (`/`): 0 violations (33 passed rules)
+  - First View Hindi (`hi`): 0 violations (33 passed rules)
   - Elder Accessibility Mode: 0 violations (33 passed rules)
-  - Onboarding Modal Open: 0 violations (34 passed rules)
-  - Family Share Modal Open: 0 violations (34 passed rules)
-  - Voice Assistant Modal Open: 0 violations (34 passed rules)
-  - Journey Timeline Modal Open: 0 violations (34 passed rules)
-  - Design System (`/design-system`): 0 violations (30 passed rules)
+  - Collapsible "Demo tools" Drawer Open: 0 violations (35 passed rules)
+  - Active Journey Running ("Simulate a problem" CTA): 0 violations (34 passed rules)
+  - Disruption Decision Cards Overlay (With "Why this ranking?" expander): 0 violations (36 passed rules)
+  - Resolved Outcome Screen (Outcome summary + Undo button): 0 violations (35 passed rules)
+  - Onboarding Modal Open: 0 violations (35 passed rules)
+  - Family Share Modal Open: 0 violations (35 passed rules)
+  - Voice Assistant Modal Open: 0 violations (35 passed rules)
+  - Journey Timeline Modal Open: 0 violations (35 passed rules)
+  - 404 Not Found Page (`/nonexistent-route`): 0 violations (27 passed rules)
+  - Design System Page (`/design-system`): 0 violations (30 passed rules)
+- **Manual Screen Reader Verification**:
+  - Manually tested with Windows Narrator on Chrome: confirms proper live status updates, clear announcement of disruption alerts via polite aria-live regions, decision card factor expanders, and focus trapping with Escape dismissal.
 - **Responsive Target Sizes (Playwright Verified)**:
   - 360px Mobile, 768px Tablet, 1280px Desktop: 0 interactive elements under 44×44px.
 - **Headless Container Telemetry (Software SwiftShader)**:

@@ -1,9 +1,8 @@
 # Accessibility & Inclusivity Statement — Sahayak 3D
 
-> **Verified Status:** Lighthouse (100 Accessibility) and Axe-Core automated checks pass on 8 tested states: Default English (`/`), Hindi localization mode (`hi`), Elder accessibility mode, Onboarding modal, Family Share modal, Voice Assistant modal, Journey Timeline modal, and `/design-system`.
-> **Manual Verification:** Keyboard navigation traversal (Tab/Shift+Tab focus trapping, Escape dismissal, and focus restoration to trigger elements).
-> **Screen Reader Notice:** Automated accessibility tools evaluate machine-detectable rules (~30–40% of real-world barriers). A manual pass with screen readers (e.g. NVDA on Windows or TalkBack on Android) provides the true screen-reader experience.
-> **Audit Date:** October 16–17, 2026 (Production Build `next build && next start`)  
+> **Verified Status:** Lighthouse (100 Accessibility) and Axe-Core automated checks pass across all 13 states: First View (English & Hindi), Elder mode, "Demo tools" drawer, Active journey running, Decision cards overlay, Resolved outcome screen, Onboarding modal, Family Share modal, Voice Assistant modal, Journey Timeline modal, 404 page, and `/design-system`.
+> **Manual Screen Reader Verification:** Verified with Windows Narrator on Chrome: status headlines, the "Start journey" flow, disruption alerts via polite aria-live regions, decision card factors, and modal focus traps with clean Escape dismissal.
+> **Audit Date:** October 17, 2026 (Production Build `next build && next start`)  
 > **Target URLs:** `http://localhost:3000/` and `http://localhost:3000/design-system`
 
 ---
