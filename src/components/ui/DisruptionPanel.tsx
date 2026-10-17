@@ -47,17 +47,7 @@ export function DisruptionPanel() {
   };
 
   if (!isDisruptionPanelOpen) {
-    return (
-      <button
-        onClick={toggleDisruptionPanel}
-        aria-label="Open Disruption Simulator Panel"
-        className="fixed top-20 right-4 sm:right-6 z-40 bg-slate-950/90 backdrop-blur-xl border border-amber-400/60 hover:border-amber-400 p-2.5 min-h-[44px] rounded-xl shadow-2xl flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300 transition-all focus-visible:ring-2 focus-visible:ring-amber-400 active:scale-95"
-      >
-        <Sparkles className="w-4 h-4" />
-        <span>{t.simulatorTitle}</span>
-        <ChevronDown className="w-4 h-4" />
-      </button>
-    );
+    return null;
   }
 
   return (

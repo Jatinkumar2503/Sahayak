@@ -344,3 +344,7 @@ export const useJourneyStore = create<JourneyState>((set) => ({
     });
   },
 }));
+
+if (typeof window !== 'undefined') {
+  (window as any).__journeyStore = useJourneyStore;
+}

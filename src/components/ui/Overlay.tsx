@@ -233,7 +233,7 @@ export function Overlay() {
           <button
             onClick={toggleLanguage}
             title={t.languageToggle}
-            aria-label={t.languageToggle}
+            aria-label={isHindi ? 'EN - Switch to English' : 'हिन्दी - हिन्दी में बदलें'}
             className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] text-xs font-bold rounded-xl bg-slate-950/85 hover:bg-slate-900 text-slate-200 border border-slate-700/60 shadow-lg transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E69F00]"
           >
             <Languages className="w-4 h-4 text-[#E69F00]" aria-hidden="true" />
@@ -258,7 +258,7 @@ export function Overlay() {
       {/* Guided Flow: Initial First View vs Active Journey */}
       {!journeyStarted ? (
         /* FIRST VIEW: Train Scene, Plain-Language Status Headline, One Primary Action */
-        <main className="my-auto flex flex-col items-center justify-center text-center px-4 pointer-events-auto">
+        <div role="region" aria-label={t.journeyBoardingStatus} className="my-auto flex flex-col items-center justify-center text-center px-4 pointer-events-auto">
           <div className="max-w-md w-full bg-slate-950/90 backdrop-blur-xl border border-slate-700/80 p-6 sm:p-8 rounded-3xl shadow-2xl flex flex-col items-center">
             {/* Plain-Language Status Headline */}
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-bold mb-3">
@@ -285,12 +285,12 @@ export function Overlay() {
               <ArrowRight className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
-        </main>
+        </div>
       ) : (
         /* GUIDED FLOW STEP 2: Running Journey with "Simulate a problem" Action */
         disruptionType === 'none' &&
         status !== 'resolved' && (
-          <main className="my-auto flex flex-col items-center text-center px-4 pointer-events-auto">
+          <div role="region" aria-label={t.journeyRunningStatus} className="my-auto flex flex-col items-center text-center px-4 pointer-events-auto">
             <div className="max-w-md w-full bg-slate-950/90 backdrop-blur-xl border border-slate-700/80 p-5 sm:p-6 rounded-3xl shadow-2xl flex flex-col items-center">
               {/* Plain-Language Status Headline */}
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#004D38]/60 border border-[#009E73]/50 text-emerald-300 text-xs font-bold mb-2">
@@ -312,7 +312,7 @@ export function Overlay() {
                 <span>{t.simulateProblemBtn}</span>
               </button>
             </div>
-          </main>
+          </div>
         )
       )}
 
