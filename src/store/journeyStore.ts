@@ -297,7 +297,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
     // Short dramatic slow-motion beat when disruption triggers (unless reduced motion is active)
     const currentStore = get();
     if (disruptionType !== 'none' && !currentStore.reducedMotion) {
-      journeyPhysics.speed = Math.max(0.015, journeyPhysics.speed * 0.35);
+      journeyPhysics.speed = Math.max(0.015, journeyPhysics.speed * 0.70);
     }
     journeyPhysics.targetSpeed = targetSpeed;
 

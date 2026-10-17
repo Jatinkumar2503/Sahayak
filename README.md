@@ -3,7 +3,7 @@
 
 [![Accessibility: Lighthouse 100 & Axe Passed](https://img.shields.io/badge/Accessibility-Lighthouse%20100%20%7C%20Axe%200%20Violations-009E73?style=for-the-badge)](./a11y-statement.md)
 [![Lighthouse: 100/100/100](https://img.shields.io/badge/Lighthouse-100%20A11y%20%7C%20100%20SEO%20%7C%20100%20Best%20Practices-0072B2?style=for-the-badge)](./a11y-statement.md)
-[![Decision Engine: 6/6 Tests](https://img.shields.io/badge/Decision%20Engine-6%2F6%20Deterministic%20Tests%20Passing-E69F00?style=for-the-badge)](#running-unit-tests)
+[![Decision Engine: 9/9 Tests](https://img.shields.io/badge/Decision%20Engine-9%2F9%20Deterministic%20Tests%20Passing-E69F00?style=for-the-badge)](#running-unit-tests)
 
 ---
 
@@ -123,7 +123,11 @@ Running Decision Engine deterministic tests...
 ✔ Test 4: Missed connection provides shortcut with 84% hedged confidence passed
 ✔ Test 5: Cancellation provides guaranteed seat transfer with fee protection passed
 ✔ Test 6: Platform change provides crossover and battery cart accessibility passed
-All 6 Decision Engine Unit Tests PASSED successfully!
+✔ Test 7: Disruption resolution successfully links dynamic option attributes passed
+✔ Test 8: Disruption undo successfully restores pre-disruption state passed
+✔ Test 9: All 11 generated options across disruptions contain complete dynamic fields passed
+
+All 9 Decision Engine & FSM Unit Tests PASSED successfully!
 ```
 
 ---

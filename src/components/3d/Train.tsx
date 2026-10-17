@@ -99,9 +99,9 @@ export function Train() {
           }
         }
 
-        // Deceleration easing curve when delayed or stopped at red signal
+        // Deceleration easing curve when delayed or stopped at red signal (tuned for smooth ~4s stop)
         if (disruptionType === 'delay' || disruptionType === 'cancellation') {
-          journeyPhysics.speed = Math.max(0, THREE.MathUtils.lerp(journeyPhysics.speed, 0, delta * 1.6));
+          journeyPhysics.speed = Math.max(0, THREE.MathUtils.lerp(journeyPhysics.speed, 0, delta * 0.95));
         } else if (!approachingStation && journeyPhysics.stationStopTimer <= 0) {
           journeyPhysics.speed = THREE.MathUtils.lerp(
             journeyPhysics.speed,
