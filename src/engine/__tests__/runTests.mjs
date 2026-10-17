@@ -104,4 +104,27 @@ for (const disruption of testDisruptions) {
 }
 console.log(`✔ Test 9: All ${totalOptionsChecked} generated options across disruptions contain complete dynamic fields passed`);
 
-console.log('\nAll 9 Decision Engine & FSM Unit Tests PASSED successfully!');
+// 10. Position-aware gating: before branch junction (progress < 0.48)
+const beforeSwitch = getDecisionOptions(
+  { kind: 'DELAYED', delayMinutes: 25, reasonEn: '', reasonHi: '', timestamp: 0 },
+  { progress: 0.35 }
+);
+assert.strictEqual(beforeSwitch[0].id, 'opt-branch-bypass', 'Before switch, bypass must be #1');
+assert.strictEqual(beforeSwitch[0].disabled, false, 'Before switch, bypass must be enabled');
+console.log('✔ Test 10: Position-aware decision engine enables branch chord when before switch (progress < 0.48) passed');
+
+// 11. Position-aware gating: after branch junction (progress >= 0.48)
+const afterSwitch = getDecisionOptions(
+  { kind: 'DELAYED', delayMinutes: 25, reasonEn: '', reasonHi: '', timestamp: 0 },
+  { progress: 0.65 }
+);
+assert.strictEqual(afterSwitch[0].id, 'opt-rebook-express', 'After switch, Express Special transfer must become #1');
+assert.strictEqual(afterSwitch[0].isTopRanked, true, 'Express transfer must be top ranked');
+const disabledBypass = afterSwitch.find(o => o.id === 'opt-branch-bypass');
+assert.ok(disabledBypass, 'Bypass option must still be present');
+assert.strictEqual(disabledBypass.disabled, true, 'Bypass must be marked disabled');
+assert.ok(disabledBypass.disabledReasonEn.includes('behind'), 'Must explain branch junction is behind train in English');
+assert.ok(disabledBypass.disabledReasonHi.includes('पीछे'), 'Must explain branch junction is behind train in Hindi');
+console.log('✔ Test 11: Position-aware decision engine disables branch chord and shows plain-language reason when past switch (progress >= 0.48) passed');
+
+console.log('\nAll 11 Decision Engine & FSM Unit Tests PASSED successfully!');

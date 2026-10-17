@@ -6,6 +6,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { journeyPhysics } from '@/store/journeyPhysics';
 
 import { useJourneyStore } from '@/store/journeyStore';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 const CLOUD_COUNT = 18;
 const PARTICLE_COUNT = 45;
@@ -13,6 +14,7 @@ const PARTICLE_COUNT = 45;
 export function ParallaxAtmosphere() {
   const { camera } = useThree();
   const isLiteMode = useJourneyStore((s) => s.isLiteMode);
+  const isReducedMotion = useReducedMotion();
   const activeCloudCount = isLiteMode ? 6 : CLOUD_COUNT;
   const cloudsRef = useRef<THREE.InstancedMesh>(null);
   const particlesRef = useRef<THREE.Points>(null);
@@ -71,8 +73,8 @@ export function ParallaxAtmosphere() {
   }, [cloudData, activeCloudCount]);
 
   useFrame((_, delta) => {
-    // 1. Drifting Clouds Parallax
-    if (cloudsRef.current) {
+    // 1. Drifting Clouds Parallax (paused when reduced motion is preferred)
+    if (cloudsRef.current && !isReducedMotion) {
       const dummy = new THREE.Object3D();
       cloudData.slice(0, activeCloudCount).forEach((c, i) => {
         // Drift along X and slowly along Z
@@ -87,11 +89,14 @@ export function ParallaxAtmosphere() {
       cloudsRef.current.instanceMatrix.needsUpdate = true;
     }
 
-    // 2. Dynamic Speed-Based Camera FOV
+    // 2. Dynamic Speed-Based Camera FOV (stabilized when reduced motion is preferred)
     if (camera instanceof THREE.PerspectiveCamera) {
-      // Accelerating widens FOV for high-speed sensation (52 to 58)
-      const targetFov = 53 + (journeyPhysics.speed / 0.25) * 4.5;
-      camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, delta * 2);
+      if (isReducedMotion) {
+        camera.fov = 55;
+      } else {
+        const targetFov = 53 + (journeyPhysics.speed / 0.25) * 4.5;
+        camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, delta * 2);
+      }
       camera.updateProjectionMatrix();
     }
   });

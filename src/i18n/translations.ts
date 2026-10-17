@@ -36,9 +36,9 @@ export const translations = {
     resetJourney: 'Reset Journey',
 
     // Signal Heads & Text/Icon Fallbacks
-    signalClear: 'Signal 104: CLEAR (Green)',
-    signalCaution: 'Signal 104: CAUTION (Yellow)',
-    signalDanger: 'Signal 104: STOP (Red)',
+    signalClear: 'Trackside Signal: CLEAR (Green)',
+    signalCaution: 'Trackside Signal: CAUTION (Yellow)',
+    signalDanger: 'Trackside Signal: STOP (Red)',
 
     // Plain Language Banners (aria-live)
     bannerNormal: 'Express 00001 is on schedule. Next scheduled stop is Panipat Junction.',
@@ -62,7 +62,7 @@ export const translations = {
 
     // Decision Engine Options (Balanced Trade-offs & Hedged Copy)
     optionWaitShortTitle: 'Hold & Wait on Track',
-    optionWaitShortDesc: 'Train waits before signal 104 until the track section clears. No train transfer required.',
+    optionWaitShortDesc: 'Train waits before red signal until track section clears. No train transfer required.',
     optionWaitShortReason: 'Best choice for short delays: Zero extra cost, full seat retention, and highest chance of schedule recovery.',
 
     optionBranchShortTitle: 'Divert via Siding Loop Line',
@@ -240,9 +240,9 @@ export const translations = {
     resetJourney: 'यात्रा रीसेट करें',
 
     // Signal Heads & Text/Icon Fallbacks
-    signalClear: 'सिग्नल १०४: साफ़ (हरा)',
-    signalCaution: 'सिग्नल १०४: सावधानी (पीला)',
-    signalDanger: 'सिग्नल १०४: ख़तरा / रोकें (लाल)',
+    signalClear: 'ट्रैकसाइड सिग्नल: साफ़ (हरा)',
+    signalCaution: 'ट्रैकसाइड सिग्नल: सावधानी (पीला)',
+    signalDanger: 'ट्रैकसाइड सिग्नल: ख़तरा / रोकें (लाल)',
 
     // Plain Language Banners (aria-live)
     bannerNormal: 'एक्सप्रेस ००००१ निर्धारित समय पर है। अगला स्टेशन पानीपत जंक्शन है।',

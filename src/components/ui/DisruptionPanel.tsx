@@ -12,18 +12,22 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { useJourneyStore } from '@/store/journeyStore';
+import { useJourneyStore, SIGNALS, getNextSignalAhead } from '@/store/journeyStore';
+import { journeyPhysics } from '@/store/journeyPhysics';
 import { disruptionReducer } from '@/engine/disruptionFSM';
 import { translations } from '@/i18n/translations';
 
 export function DisruptionPanel() {
   const disruptionType = useJourneyStore((s) => s.disruptionType);
+  const activeSignalId = useJourneyStore((s) => s.activeSignalId);
   const setDisruptionType = useJourneyStore((s) => s.setDisruptionType);
   const resetJourney = useJourneyStore((s) => s.resetJourney);
   const language = useJourneyStore((s) => s.language);
   const elderMode = useJourneyStore((s) => s.elderMode);
   const isDisruptionPanelOpen = useJourneyStore((s) => s.isDisruptionPanelOpen);
   const toggleDisruptionPanel = useJourneyStore((s) => s.toggleDisruptionPanel);
+
+  const activeSignal = SIGNALS.find((s) => s.id === activeSignalId) || getNextSignalAhead(journeyPhysics.progress);
 
   const [selectedDelayMinutes, setSelectedDelayMinutes] = useState<10 | 25 | 60>(25);
 
@@ -86,7 +90,7 @@ export function DisruptionPanel() {
               <Clock className="w-3.5 h-3.5 text-[#E69F00]" />
               {t.simulateDelay}
             </span>
-            <span className="text-[10px] text-slate-400 font-mono">Signal 104</span>
+            <span className="text-[10px] text-slate-400 font-mono">{activeSignal.nameEn}</span>
           </div>
 
           <div className="grid grid-cols-3 gap-1.5" role="group" aria-label="Delay duration options">

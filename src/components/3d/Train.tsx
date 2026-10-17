@@ -112,17 +112,26 @@ export function Train() {
           const stopProgress = (activeSig.progress - MARGIN_PROGRESS + 1) % 1;
           const distRemaining = (stopProgress - journeyPhysics.progress) * CORRIDOR_CURVE_LENGTH;
 
-          if (distRemaining <= 0.04) {
+          const initialDist = journeyPhysics.initialBrakeDist || Math.max(5.0, distRemaining);
+          const ratio = Math.max(0, Math.min(1, distRemaining / initialDist));
+          const maxAllowedSpeed = Math.min(journeyPhysics.initialBrakeSpeed || 0.25, 0.25);
+
+          if (distRemaining <= 0.01 || ratio <= 0.001) {
             journeyPhysics.speed = 0;
             journeyPhysics.progress = stopProgress;
           } else {
-            const initialDist = journeyPhysics.initialBrakeDist || Math.max(5.0, distRemaining);
-            const ratio = Math.max(0, Math.min(1, distRemaining / initialDist));
-            const baseV = journeyPhysics.initialBrakeSpeed || journeyPhysics.targetSpeed;
-            const targetSpeed = baseV * Math.sqrt(ratio);
-            journeyPhysics.speed = THREE.MathUtils.lerp(journeyPhysics.speed, targetSpeed, delta * 5.0);
+            // Smooth, continuous deceleration curve that glides naturally into zero
+            // using sin easing combined with linear ratio so derivative approaches 0 smoothly
+            const targetSpeed = maxAllowedSpeed * Math.sin((ratio * Math.PI) / 2) * Math.min(1, ratio * 1.4);
+            journeyPhysics.speed = THREE.MathUtils.lerp(journeyPhysics.speed, targetSpeed, delta * 3.8);
 
-            if (distRemaining < 0.20 && journeyPhysics.speed < 0.02) {
+            // Strict cap: train can NEVER exceed initialBrakeSpeed (never accelerate after disruption)
+            if (journeyPhysics.speed > maxAllowedSpeed) {
+              journeyPhysics.speed = maxAllowedSpeed;
+            }
+
+            // Continuous cutoff threshold: when speed is already negligible (< 0.008), smoothly reach complete stop
+            if (distRemaining < 0.25 && journeyPhysics.speed < 0.008) {
               journeyPhysics.speed = 0;
               journeyPhysics.progress = stopProgress;
             }
@@ -146,16 +155,18 @@ export function Train() {
           getNextSignalAhead(journeyPhysics.progress);
         const stopProgress = (activeSig.progress - MARGIN_PROGRESS + 1) % 1;
 
-        const nextProgress = journeyPhysics.progress + journeyPhysics.speed * 0.045 * delta;
+        const deltaProgress = Math.max(0, journeyPhysics.speed * 0.045 * delta);
+        const nextProgress = journeyPhysics.progress + deltaProgress;
         if (nextProgress >= stopProgress && journeyPhysics.progress <= stopProgress) {
           journeyPhysics.progress = stopProgress;
           journeyPhysics.speed = 0;
         } else {
-          journeyPhysics.progress = nextProgress;
+          journeyPhysics.progress = Math.max(journeyPhysics.progress, nextProgress);
         }
       } else {
+        const deltaProgress = Math.max(0, journeyPhysics.speed * 0.045 * delta);
         journeyPhysics.progress =
-          (journeyPhysics.progress + journeyPhysics.speed * 0.045 * delta) % 1;
+          (journeyPhysics.progress + deltaProgress) % 1;
       }
     }
 

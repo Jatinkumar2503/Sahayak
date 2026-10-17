@@ -62,7 +62,7 @@ export function DecisionCardsOverlay() {
     timestamp: 0,
   };
 
-  const options = getDecisionOptions(fsmState);
+  const options = getDecisionOptions(fsmState, { progress: journeyPhysics.progress });
 
   // Plain-Language Status Announcement for aria-live region
   const getBannerAnnouncement = () => {
@@ -196,24 +196,26 @@ export function DecisionCardsOverlay() {
                     </div>
                   </div>
 
-                  {/* Tap-to-Preview Route Toggle Button for Touch / Mobile Users */}
-                  <button
-                    type="button"
-                    id={`preview-route-btn-${option.id}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPreviewRouteId(isPreviewActive ? null : option.id);
-                    }}
-                    aria-pressed={isPreviewActive}
-                    className={`mt-2 py-2 px-2.5 min-h-[44px] w-full rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all border ${
-                      isPreviewActive
-                        ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-md font-extrabold'
-                        : 'bg-slate-900/90 text-slate-300 border-slate-800 hover:border-slate-700'
-                    }`}
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>{isPreviewActive ? t.hidePreviewBtn : t.previewRouteBtn}</span>
-                  </button>
+                  {/* Tap-to-Preview Route Toggle Button for Touch / Mobile Users (hidden if option is disabled) */}
+                  {!option.disabled && (
+                    <button
+                      type="button"
+                      id={`preview-route-btn-${option.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPreviewRouteId(isPreviewActive ? null : option.id);
+                      }}
+                      aria-pressed={isPreviewActive}
+                      className={`mt-2 py-2 px-2.5 min-h-[44px] w-full rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all border ${
+                        isPreviewActive
+                          ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-md font-extrabold'
+                          : 'bg-slate-900/90 text-slate-300 border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>{isPreviewActive ? t.hidePreviewBtn : t.previewRouteBtn}</span>
+                    </button>
+                  )}
 
                   {/* Accessible "Why this ranking?" expander button */}
                   <button
@@ -271,21 +273,36 @@ export function DecisionCardsOverlay() {
                       </p>
                     </div>
                   )}
+
+                  {/* Plain-Language Reason Alert if Option is Disabled */}
+                  {option.disabled && (
+                    <div
+                      className="mt-2.5 p-2 rounded-xl bg-red-950/40 border border-red-500/40 text-red-200 text-[10px] sm:text-[11px] flex items-start gap-1.5 leading-snug"
+                      role="alert"
+                    >
+                      <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+                      <span>{isHindi ? option.disabledReasonHi : option.disabledReasonEn}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Apply Button */}
                 <button
                   type="button"
                   id={`apply-option-btn-${option.id}`}
-                  onClick={() => handleApplyOption(option)}
+                  disabled={option.disabled}
+                  aria-disabled={option.disabled ? 'true' : undefined}
+                  onClick={() => !option.disabled && handleApplyOption(option)}
                   className={`mt-3 py-2.5 px-3 min-h-[44px] rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all focus-visible:ring-2 focus-visible:ring-amber-400 active:scale-95 ${
-                    isTop
+                    option.disabled
+                      ? 'bg-slate-800/40 text-slate-500 border border-slate-800/80 cursor-not-allowed opacity-60'
+                      : isTop
                       ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 font-black shadow-md hover:scale-[1.02]'
                       : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
                   }`}
                 >
-                  <span>{t.selectOptionBtn}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <span>{option.disabled ? (isHindi ? 'बाईपास अनुपलब्ध' : 'Bypass Unavailable') : t.selectOptionBtn}</span>
+                  {!option.disabled && <ArrowRight className="w-3.5 h-3.5" />}
                 </button>
               </div>
             );

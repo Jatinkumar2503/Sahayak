@@ -87,13 +87,29 @@ export const SIGNALS: SignalInfo[] = [
     progress: 0.88,
     position: [-1.0, 0.2, -411.5],
   },
+  {
+    id: 'sig-110',
+    nameEn: 'Signal 110',
+    nameHi: 'सिग्नल ११०',
+    code: 'SIG-110',
+    progress: 0.95,
+    position: [0.0, 0.2, -430.0],
+  },
 ];
 
 export function getNextSignalAhead(progress: number): SignalInfo {
   for (const sig of SIGNALS) {
-    if (sig.progress > progress + 0.005) return sig;
+    if (sig.progress > progress + 0.001) return sig;
   }
-  return SIGNALS[0];
+  // Terminal approach buffer signal at corridor terminus (never wraps backwards)
+  return {
+    id: 'sig-terminal',
+    nameEn: 'Terminal Signal 112',
+    nameHi: 'टर्मिनल सिग्नल ११२',
+    code: 'SIG-112',
+    progress: 0.99,
+    position: [0, 0.2, -475],
+  };
 }
 
 export interface PreviousDisruptionState {
@@ -102,6 +118,7 @@ export interface PreviousDisruptionState {
   activeBranch: 'main' | 'branch';
   targetSpeed: number;
   speed: number;
+  progress: number;
   cameraMode: CameraMode;
 }
 
@@ -246,6 +263,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
       activeBranch: state.activeBranch,
       targetSpeed: journeyPhysics.targetSpeed,
       speed: journeyPhysics.speed,
+      progress: journeyPhysics.progress,
       cameraMode: state.cameraMode,
     };
 
@@ -275,6 +293,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
       journeyPhysics.activeBranch = prev.activeBranch;
       journeyPhysics.targetSpeed = prev.targetSpeed;
       journeyPhysics.speed = prev.speed;
+      journeyPhysics.progress = prev.progress;
 
       broadcastJourneyState({
         status: prev.status,
@@ -291,6 +310,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
         activeBranch: prev.activeBranch,
         targetSpeed: prev.targetSpeed,
         speed: prev.speed,
+        progress: prev.progress,
         cameraMode: prev.cameraMode,
         previewRouteId: null,
         previousDisruptionState: null,
@@ -352,14 +372,27 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
 
       const CORRIDOR_CURVE_LENGTH = 568.74;
       const SIGNAL_STOP_MARGIN_UNITS = 4.5;
-      const stopProgress = (nextSig.progress - (SIGNAL_STOP_MARGIN_UNITS / CORRIDOR_CURVE_LENGTH) + 1) % 1;
-      const initialDist = Math.max(0.1, (stopProgress - journeyPhysics.progress) * CORRIDOR_CURVE_LENGTH);
-      const idealVmax = (initialDist / (0.045 * CORRIDOR_CURVE_LENGTH * 3.8)) * 1.5;
+      let stopProgress = (nextSig.progress - (SIGNAL_STOP_MARGIN_UNITS / CORRIDOR_CURVE_LENGTH) + 1) % 1;
+      let initialDist = (stopProgress - journeyPhysics.progress) * CORRIDOR_CURVE_LENGTH;
 
+      // Handle edge case: train is already inside the 4.5-unit stop margin before the signal
+      if (initialDist <= 0) {
+        stopProgress = Math.min(nextSig.progress - (0.5 / CORRIDOR_CURVE_LENGTH), journeyPhysics.progress + (0.001 / CORRIDOR_CURVE_LENGTH));
+        initialDist = Math.max(0.001, (stopProgress - journeyPhysics.progress) * CORRIDOR_CURVE_LENGTH);
+      }
+
+      // Handle edge case: train is already stopped at station dwell
+      if (journeyPhysics.isStationStopped) {
+        journeyPhysics.speed = 0;
+        initialDist = 0;
+      }
+
+      // Cap braking speed strictly at current cruise speed (never accelerate after disruption!)
+      const currentCruiseSpeed = journeyPhysics.speed > 0.005 ? journeyPhysics.speed : 0.25;
+      journeyPhysics.initialBrakeSpeed = Math.min(currentCruiseSpeed, 0.25);
+      journeyPhysics.initialBrakeDist = initialDist;
       journeyPhysics.targetSignalProgress = nextSig.progress;
       journeyPhysics.stopProgress = stopProgress;
-      journeyPhysics.initialBrakeDist = initialDist;
-      journeyPhysics.initialBrakeSpeed = Math.max(0.12, Math.min(0.42, idealVmax));
     } else if (disruptionType === 'missed_connection' || disruptionType === 'platform_change') {
       nextStatus = 'rerouted';
       targetSpeed = 0.15;

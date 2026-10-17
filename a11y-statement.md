@@ -47,7 +47,7 @@ Lighthouse audits were executed in CLI mode against the Next.js production build
 - Complete respect for system-level `prefers-reduced-motion` media queries plus a manual in-app toggle:
   - Disables dynamic camera bobbing, orbit sway, and tracking oscillations.
   - Replaces rapid track switching with a gentle cross-fade transition.
-  - Disables pulsing glow shaders on track signals (Signal 104).
+  - Disables pulsing glow shaders on trackside signals.
 - **WCAG Criteria:** 2.3.3 (Animation from Interactions).
 
 ### D. Screen Reader Compatibility & Polite Live Announcements
@@ -59,7 +59,7 @@ Lighthouse audits were executed in CLI mode against the Next.js production build
 - For users unable to view WebGL canvas graphics, Sahayak 3D includes a 100% equivalent semantic HTML timeline:
   - Lists all upcoming stations (New Delhi, Panipat, Ambala).
   - Live arrival ETAs and progress percentages.
-  - Current signal aspect status (Signal 104 - Danger/Caution/Clear).
+  - Current signal aspect status (Corridor Signals - Danger/Caution/Clear).
   - Active track alignment (Main Line vs. Chord Line Detour).
   - Detailed rationale and trade-offs of the chosen passenger resolution.
   - Available both as a permanently accessible `sr-only` landmark and an on-demand modal.

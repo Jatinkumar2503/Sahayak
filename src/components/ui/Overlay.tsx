@@ -30,7 +30,7 @@ import {
   MousePointerClick,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useJourneyStore, STATIONS, SIGNALS } from '@/store/journeyStore';
+import { useJourneyStore, STATIONS, SIGNALS, getNextSignalAhead } from '@/store/journeyStore';
 import { journeyPhysics } from '@/store/journeyPhysics';
 import { railwayAudio } from '@/utils/audioEngine';
 import { translations } from '@/i18n/translations';
@@ -147,7 +147,7 @@ export function Overlay() {
   };
 
   // Trackside Signal Aspect
-  const activeSignal = SIGNALS.find((s) => s.id === activeSignalId) || SIGNALS[1]; // default Signal 104
+  const activeSignal = SIGNALS.find((s) => s.id === activeSignalId) || getNextSignalAhead(hudState.progress);
 
   const getSignalAspect = () => {
     if (disruptionType === 'delay' || disruptionType === 'cancellation') {
@@ -222,7 +222,7 @@ export function Overlay() {
 
             <div
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-md shadow-lg transition-all ${signalAspect.colorClass}`}
-              title="Trackside Signal 104 aspect status"
+              title={`Trackside ${activeSignal.nameEn} aspect status`}
             >
               {signalAspect.icon}
               <span>{isHindi ? signalAspect.textHi : signalAspect.textEn}</span>

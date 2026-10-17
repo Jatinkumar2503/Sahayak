@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { journeyPhysics } from '@/store/journeyPhysics';
 import { useJourneyStore } from '@/store/journeyStore';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { mainTrackCurve, branchTrackCurve } from './trackCurves';
 
 const SPARK_COUNT = 24;
@@ -18,13 +19,16 @@ export function BrakeSparks() {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const disruptionType = useJourneyStore((s) => s.disruptionType);
   const isLiteMode = useJourneyStore((s) => s.isLiteMode);
+  const isReducedMotion = useReducedMotion();
 
-  // Sparks only active when braking or decelerating into station and not in Lite Mode
+  // Sparks only active when moving and actively braking, disabled in Lite Mode & Reduced Motion
   const isBraking =
     !isLiteMode &&
+    !isReducedMotion &&
+    journeyPhysics.speed > 0.01 &&
     (disruptionType === 'delay' ||
       disruptionType === 'cancellation' ||
-      (journeyPhysics.speed < journeyPhysics.targetSpeed && journeyPhysics.speed > 0.01));
+      journeyPhysics.speed < journeyPhysics.targetSpeed);
 
   const particles = useMemo(() => {
     return Array.from({ length: SPARK_COUNT }, (_, i) => ({

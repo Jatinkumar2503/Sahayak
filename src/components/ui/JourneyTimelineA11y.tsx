@@ -11,7 +11,7 @@ import {
   X,
   Compass,
 } from 'lucide-react';
-import { useJourneyStore, STATIONS } from '@/store/journeyStore';
+import { useJourneyStore, STATIONS, SIGNALS, getNextSignalAhead } from '@/store/journeyStore';
 import { journeyPhysics } from '@/store/journeyPhysics';
 import { translations } from '@/i18n/translations';
 
@@ -19,9 +19,12 @@ export function JourneyTimelineA11y() {
   const status = useJourneyStore((s) => s.status);
   const disruptionType = useJourneyStore((s) => s.disruptionType);
   const activeBranch = useJourneyStore((s) => s.activeBranch);
+  const activeSignalId = useJourneyStore((s) => s.activeSignalId);
   const language = useJourneyStore((s) => s.language);
   const isTimelineOpen = useJourneyStore((s) => s.isTimelineOpen);
   const setTimelineOpen = useJourneyStore((s) => s.setTimelineOpen);
+
+  const activeSignal = SIGNALS.find((s) => s.id === activeSignalId) || getNextSignalAhead(journeyPhysics.progress);
 
   const t = translations[language];
   const isHindi = language === 'hi';
@@ -94,12 +97,12 @@ export function JourneyTimelineA11y() {
 
   const getSignalAspectText = () => {
     if (disruptionType === 'delay' || disruptionType === 'cancellation') {
-      return t.signalDanger;
+      return isHindi ? `${activeSignal.nameHi}: रुकें (लाल)` : `${activeSignal.nameEn}: STOP (Red)`;
     }
     if (disruptionType === 'missed_connection' || disruptionType === 'platform_change') {
-      return t.signalCaution;
+      return isHindi ? `${activeSignal.nameHi}: सावधानी (पीला)` : `${activeSignal.nameEn}: CAUTION (Yellow)`;
     }
-    return t.signalClear;
+    return isHindi ? `${activeSignal.nameHi}: साफ़ (हरा)` : `${activeSignal.nameEn}: CLEAR (Green)`;
   };
 
   // Station ETAs (Simulated)

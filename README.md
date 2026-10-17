@@ -53,7 +53,7 @@ graph TD
 1. **Zero-Per-Frame Zustand Updates (`journeyPhysics.ts`)**:
    High-frequency locomotive position ($x, y, z$), wheel angles, bogie sway, and spline progress are stored in a mutable physics ref. Three.js `useFrame` directly reads this ref, completely eliminating 60fps React component re-rendering overhead.
 2. **Deterministic Rules Engine (`src/engine/decisionEngine.ts`)**:
-   When a disruption occurs (Signal 104 Red, 25-minute delay, section cancellation), the engine evaluates candidates across Arrival Confidence, Time Savings, Comfort Score, Financial Cost, and Complexity using deterministic weighted scoring.
+   When a disruption occurs (corridor red signal, 25-minute delay, section cancellation), the engine evaluates candidates across Arrival Confidence, Time Savings, Comfort Score, Financial Cost, and Complexity using deterministic weighted scoring.
    - *Authentic Trade-offs*: Short delays (10m) prioritize **Hold & Wait** (₹0, 4/5 comfort, 94% confidence). Severe delays offer a **Chord Bypass Detour** which saves 22 minutes but penalizes comfort (3/5) with unreserved seating.
 3. **2D Accessible Fallback View**:
    If WebGL is disabled or unsupported, Sahayak 3D automatically renders a full HTML timeline and decision panel so the app remains 100% operational without 3D graphics.
@@ -186,7 +186,7 @@ sahayak/
 │   │   │   ├── TrackSpline.tsx       # Main line and glowing chord detour splines
 │   │   │   ├── LowPolyTerrain.tsx    # Procedural terrain, instanced trees & OHE masts
 │   │   │   ├── Stations.tsx          # Devanagari & English railway station signboards
-│   │   │   ├── SignalHeads.tsx       # Signal 104 with danger/caution/clear aspects
+│   │   │   ├── SignalHeads.tsx       # Trackside signals with danger/caution/clear aspects
 │   │   │   ├── BrakeSparks.tsx       # Electric locomotive friction sparks
 │   │   │   └── FollowCamera.tsx      # Chase, Cinematic Side, and Map camera modes
 │   │   └── ui/                       # Accessible UI Overlay & Decision Cards

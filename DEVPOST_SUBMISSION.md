@@ -19,7 +19,7 @@ Most railway tools present static timetables or uninformative "Late by 45 mins" 
 
 1. **Continuous Moving 3D Corridor**: A real-time, low-poly 3D rail corridor along the Northern Railway line (New Delhi ➔ Panipat ➔ Ambala). The 5-coach train travels continuously with following camera perspectives (Chase, Side, Map) and day/dusk lighting transitions.
 2. **Deterministic Disruption Simulator**: Allows passengers or station managers to simulate common rail incidents:
-   - *Signal 104 Trackside Failure (25-minute delay)*
+   - *Trackside Signal Failure (25-minute delay)*
    - *Section Blockage / Cancellation*
    - *Tight Junction Missed Connection*
    - *Platform Reassignment with Footbridge Transfer*
@@ -30,7 +30,7 @@ Most railway tools present static timetables or uninformative "Late by 45 mins" 
    - **Financial Cost (₹)**
    - **Transfer Complexity**
    - *Example Trade-off*: Short delays (10m) rightfully favor holding on track (₹0, 4/5 comfort, 94% confidence). A long delay recommends a **Bypass Chord Detour** that saves 22 minutes but penalizes comfort (3/5) due to unreserved seating.
-4. **Interactive Branch Track Rerouting**: When a reroute is approved, the track switch lights up, Signal 104 flips, and the train seamlessly blends from the main corridor onto the branch line without stopping.
+4. **Interactive Branch Track Rerouting**: When a reroute is approved, the track switch lights up, the signal clears, and the train seamlessly blends from the main corridor onto the branch line without stopping.
 5. **Universal Accessibility & Multi-State Audits**:
    - **Okabe-Ito Colorblind-Safe Palette**: No status ever relies on color alone; every badge pairs high-contrast hues with geometric SVG glyphs (`CheckCircle2`, `AlertTriangle`, `OctagonAlert`, `GitBranch`) and dual-language text.
    - **Elder Mode (वरिष्ठ मोड)**: Tailored for senior citizens with 18px–24px text, 48px+ touch targets, 2px amber borders, a simplified single-action HUD, and 36% slower 3D motion.
@@ -120,9 +120,9 @@ Most railway tools present static timetables or uninformative "Late by 45 mins" 
 | Time | Visual Scene | Audio / Voiceover Narrative | On-Screen Action |
 | :---: | :--- | :--- | :--- |
 | **0:00 – 0:20** | **The Moving Corridor**<br>Chase camera following 5-coach train at sunset. | *"Every day, millions ride Indian Railways. But when unexpected delays hit, passengers are left in the dark. Welcome to Sahayak 3D — a moving rail corridor and disruption decision companion."* | Camera switches to Cinematic Side view; sound loco horn. |
-| **0:20 – 0:45** | **The Disruption & Signal 104**<br>Signal 104 turns red; train decelerates with brake sparks. | *"Disruption simulated: Signal 104 ahead turns red. Our train decelerates to a stop. Immediately, the Decision Engine analyzes viable choices with genuine trade-offs."* | Click "Trigger Delay (Signal 104)"; show polite live banner. |
+| **0:20 – 0:45** | **The Disruption & Signal Halt**<br>Upcoming signal turns red; train decelerates with brake sparks. | *"Disruption simulated: Trackside signal ahead turns red. Our train decelerates smoothly to a stop. Immediately, the Decision Engine analyzes viable choices with genuine trade-offs."* | Click "Trigger Delay"; show polite live banner. |
 | **0:45 – 1:10** | **The Ethical Decision Cards**<br>Ranked cards appear showing real trade-offs. | *"Notice the options: Holding on track is free with 4/5 comfort, but a chord bypass detour saves 22 minutes with an honest trade-off — 3/5 comfort and unreserved seating."* | Click "Preview Route" on Chord Detour card; point out confidence (82%) and time saved. |
 | **1:10 – 1:30** | **The Reroute Execution**<br>Train smoothly switches onto the glowing chord branch. | *"We approve the bypass reroute. The switch lights up, and the train smoothly blends onto the chord track at 60 frames per second without stutter."* | Click "Approve Bypass Reroute"; camera follows train through switch frog. |
 | **1:30 – 1:40** | **Family Live Share Payoff**<br>Smartphone frame opens. | *"Passengers don't travel in a vacuum. With Family Share, simulated live status, coach number, and safety verification are instantly visible to loved ones at home."* | Open Family Share modal; show battery status and "Simulated Passenger Status". |
-| **1:40 – 1:50** | **Hindi Localization (10s)**<br>Toggle to Hindi (हिन्दी). | *"Language inclusivity: With one click, the entire UI, 3D station signboards, and decision intelligence translate into Devanagari Hindi."* | Click "हिन्दी"; show "समय पर", "सिग्नल १०४", and Hindi station board. |
+| **1:40 – 1:50** | **Hindi Localization (10s)**<br>Toggle to Hindi (हिन्दी). | *"Language inclusivity: With one click, the entire UI, 3D station signboards, and decision intelligence translate into Devanagari Hindi."* | Click "हिन्दी"; show "समय पर", dual-language signals, and Hindi station board. |
 | **1:50 – 2:00** | **Elder Mode & Web Speech Voice (10s)**<br>Activate Elder mode and speak voice command. | *"Elder Mode enhances contrast with 48px targets and calmer motion, while the Web Speech assistant lets anyone speak their situation hands-free. Sahayak 3D: accessible, transparent rail transit for all."* | Toggle Elder mode; show high contrast; tap mic button to show voice modal. |
