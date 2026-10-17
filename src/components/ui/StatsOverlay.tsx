@@ -50,7 +50,16 @@ export function StatsOverlay() {
     return () => cancelAnimationFrame(animId);
   }, []);
 
-  if (!showFps) return null;
+  const [isDebug, setIsDebug] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const param = new URLSearchParams(window.location.search).get('debug');
+      setIsDebug(param === '1');
+    }
+  }, []);
+
+  if (!isDebug || !showFps) return null;
 
   const toggleShadow = () => {
     const nextTier = shadowTier === 'blob' ? 'dynamic' : 'blob';

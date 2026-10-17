@@ -13,19 +13,44 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sahayak 3D | Moving 3D Rail Journey & Disruption Simulator",
+  metadataBase: new URL("https://sahayak-3d.vercel.app"),
+  title: {
+    default: "Sahayak 3D | Real-Time 3D Rail Journey & Disruption Simulator",
+    template: "%s | Sahayak 3D",
+  },
   description:
     "An accessible, real-time 3D low-poly Indian rail corridor companion for passenger journeys and instant disruption decision making.",
   keywords: [
     "Sahayak",
     "Indian Railways",
     "React Three Fiber",
-    "3D Journey",
+    "3D Rail Journey",
     "Railway Disruption Simulator",
     "Accessibility",
     "Next.js",
+    "Okabe-Ito Colorblind Safe",
   ],
   authors: [{ name: "Sahayak Creative Team" }],
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
+  openGraph: {
+    title: "Sahayak 3D | Real-Time 3D Rail Journey & Disruption Simulator",
+    description:
+      "An accessible, real-time 3D low-poly Indian rail corridor companion for passenger journeys and instant disruption decision making.",
+    url: "https://sahayak-3d.vercel.app",
+    siteName: "Sahayak 3D",
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sahayak 3D | Real-Time 3D Rail Journey & Disruption Simulator",
+    description:
+      "An accessible, real-time 3D low-poly Indian rail corridor companion for passenger journeys and instant disruption decision making.",
+  },
 };
 
 export const viewport: Viewport = {

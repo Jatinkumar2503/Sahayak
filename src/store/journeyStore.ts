@@ -70,12 +70,30 @@ export interface JourneyState {
   isLiteMode: boolean;
   isLowPowerDetected: boolean;
 
-  // Modals
+  // Modals & Panels
   isFamilyShareOpen: boolean;
   isDisruptionPanelOpen: boolean;
   isTimelineOpen: boolean;
   isOnboardingOpen: boolean;
   isVoiceAssistantOpen: boolean;
+
+  // Guided Flow & UX Polish
+  journeyStarted: boolean;
+  isDemoToolsOpen: boolean;
+  previewRouteId: string | null;
+  confirmedOption: any | null;
+  previousDisruptionState: {
+    disruptionType: DisruptionType;
+    status: JourneyStatus;
+    activeBranch: 'main' | 'branch';
+  } | null;
+
+  startJourney: () => void;
+  toggleDemoTools: () => void;
+  setDemoToolsOpen: (open: boolean) => void;
+  setPreviewRouteId: (id: string | null) => void;
+  confirmOption: (option: any) => void;
+  undoConfirmedOption: () => void;
 
   setProgress: (progress: number) => void;
   setSpeed: (speed: number) => void;
@@ -133,10 +151,57 @@ export const useJourneyStore = create<JourneyState>((set) => ({
   isLowPowerDetected: false,
 
   isFamilyShareOpen: false,
-  isDisruptionPanelOpen: true,
+  isDisruptionPanelOpen: false, // Default closed into Demo Tools
   isTimelineOpen: false,
   isOnboardingOpen: false,
   isVoiceAssistantOpen: false,
+
+  journeyStarted: false,
+  isDemoToolsOpen: false,
+  previewRouteId: null,
+  confirmedOption: null,
+  previousDisruptionState: null,
+
+  startJourney: () => {
+    journeyPhysics.targetSpeed = 0.25;
+    journeyPhysics.speed = 0.05;
+    set({
+      journeyStarted: true,
+      status: 'on-time',
+      speed: 0.05,
+      targetSpeed: 0.25,
+    });
+  },
+  toggleDemoTools: () => set((state) => ({ isDemoToolsOpen: !state.isDemoToolsOpen })),
+  setDemoToolsOpen: (open) => set({ isDemoToolsOpen: open }),
+  setPreviewRouteId: (previewRouteId) => set({ previewRouteId }),
+  confirmOption: (option) => {
+    set((state) => ({
+      confirmedOption: option,
+      previousDisruptionState: {
+        disruptionType: state.disruptionType,
+        status: state.status,
+        activeBranch: state.activeBranch,
+      },
+      status: 'resolved',
+    }));
+  },
+  undoConfirmedOption: () => {
+    set((state) => {
+      const prev = state.previousDisruptionState;
+      if (prev) {
+        journeyPhysics.activeBranch = prev.activeBranch;
+        return {
+          confirmedOption: null,
+          status: prev.status,
+          disruptionType: prev.disruptionType,
+          activeBranch: prev.activeBranch,
+          previousDisruptionState: null,
+        };
+      }
+      return { confirmedOption: null, status: 'delay' };
+    });
+  },
 
   setProgress: (progress) => {
     journeyPhysics.progress = progress;
@@ -271,6 +336,11 @@ export const useJourneyStore = create<JourneyState>((set) => ({
       targetSpeed: 0.25,
       disruptionType: 'none',
       activeBranch: 'main',
+      journeyStarted: true,
+      isDemoToolsOpen: false,
+      previewRouteId: null,
+      confirmedOption: null,
+      previousDisruptionState: null,
     });
   },
 }));

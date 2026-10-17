@@ -168,6 +168,41 @@ export const translations = {
     webglFallbackTitle: '2D Accessible Corridor Mode',
     webglFallbackDesc: '3D WebGL acceleration is unavailable or disabled. All decision intelligence, live status, and family sharing remain 100% accessible.',
     loadingProgress: 'Initializing Sahayak 3D Corridor...',
+
+    // Guided Flow & Collapsible Demo Tools Drawer
+    demoToolsTitle: 'Demo Tools',
+    demoToolsDesc: 'Simulation triggers, accessibility modes, audio, and camera controls',
+    openDemoTools: 'Demo Tools',
+    closeDemoTools: 'Close Tools Drawer',
+    startJourneyBtn: 'Start Journey',
+    simulateProblemBtn: 'Simulate a Disruption',
+    journeyBoardingStatus: 'Express 00001 • Ready for Departure (New Delhi)',
+    journeyRunningStatus: 'Express 00001 • Cruising Smoothly (110 km/h)',
+
+    // "Why this ranking?" expander
+    whyRankingBtn: 'Why this ranking?',
+    hideRankingBtn: 'Hide ranking factors',
+    rankingFactorsTitle: 'Deterministic Decision Weighting',
+    factorConfidence: 'Arrival Confidence',
+    factorTimeSaved: 'Time Saved',
+    factorComfort: 'Ride Comfort',
+    factorCost: 'Additional Cost',
+    factorTransfer: 'Transfer Complexity',
+
+    // Resolved Outcome Card & Undo
+    resolvedTitle: 'Disruption Resolved',
+    resolvedSubtitle: 'Your choice is active in the 3D corridor and synchronized with Family Live Share.',
+    newArrival: 'New Estimated Arrival',
+    additionalCost: 'Additional Cost',
+    comfortScore: 'Ride Comfort',
+    seatNote: 'Seat & Coach Note',
+    undoBtn: 'Undo Decision',
+    undoDesc: 'Cancel confirmed solution and return to disruption decision choices',
+
+    // 404 Not Found Page
+    notFoundTitle: '404 • Track Not Found',
+    notFoundDesc: 'The railway line or page you are looking for does not exist on this corridor.',
+    backToHome: 'Return to Rail Simulator',
   },
 
   hi: {
@@ -334,6 +369,41 @@ export const translations = {
     webglFallbackTitle: '२डी सुलभ कॉरिडोर मोड',
     webglFallbackDesc: '३डी WebGL त्वरण अनुपलब्ध या बंद है। सभी निर्णय, लाइव स्थिति और परिवार शेयर १००% सुलभ हैं।',
     loadingProgress: 'सहायक ३डी कॉरिडोर लोड हो रहा है...',
+
+    // Guided Flow & Collapsible Demo Tools Drawer
+    demoToolsTitle: 'डेमो उपकरण',
+    demoToolsDesc: 'सिमुलेशन ट्रिगर्स, सुगमता मोड, ऑडियो और कैमरा नियंत्रण',
+    openDemoTools: 'डेमो उपकरण',
+    closeDemoTools: 'उपकरण ड्रॉअर बंद करें',
+    startJourneyBtn: 'यात्रा शुरू करें',
+    simulateProblemBtn: 'समस्या का अनुकरण करें',
+    journeyBoardingStatus: 'एक्सप्रेस ००००१ • प्रस्थान के लिए तैयार (नई दिल्ली)',
+    journeyRunningStatus: 'एक्सप्रेस ००००१ • सामान्य गति पर अग्रसर (११० किमी/घंटा)',
+
+    // "Why this ranking?" expander
+    whyRankingBtn: 'यह रैंकिंग क्यों?',
+    hideRankingBtn: 'रैंकिंग कारक छिपाएं',
+    rankingFactorsTitle: 'दृढ़ निर्णय भार निर्धारण',
+    factorConfidence: 'आगमन विश्वास',
+    factorTimeSaved: 'बचाया गया समय',
+    factorComfort: 'सवारी सुविधा',
+    factorCost: 'अतिरिक्त लागत',
+    factorTransfer: 'स्थानांतरण जटिलता',
+
+    // Resolved Outcome Card & Undo
+    resolvedTitle: 'समस्या का समाधान हुआ',
+    resolvedSubtitle: 'आपकी पसंद ३डी कॉरिडोर पर सक्रिय है और फैमिली शेयर के साथ सिंक है।',
+    newArrival: 'नया अनुमानित आगमन',
+    additionalCost: 'अतिरिक्त लागत',
+    comfortScore: 'सवारी सुविधा',
+    seatNote: 'सीट व कोच टिप्पणी',
+    undoBtn: 'निर्णय पूर्ववत करें',
+    undoDesc: 'पुष्ट समाधान रद्द करें और समस्या विकल्पों पर वापस लौटें',
+
+    // 404 Not Found Page
+    notFoundTitle: '४०४ • ट्रैक नहीं मिला',
+    notFoundDesc: 'आप जिस रेलवे लाइन या पृष्ठ की खोज कर रहे हैं वह इस कॉरिडोर पर मौजूद नहीं है।',
+    backToHome: 'रेल सिम्युलेटर पर लौटें',
   },
 } as const;
 

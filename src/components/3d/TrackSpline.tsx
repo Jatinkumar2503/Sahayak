@@ -139,7 +139,23 @@ export function TrackSpline() {
     branchSleepersRef.current.instanceMatrix.needsUpdate = true;
   }, [branchSleeperCount]);
 
-  const isRerouteActive = activeBranch === 'branch' || disruptionType === 'missed_connection' || disruptionType === 'platform_change';
+  const previewRouteId = useJourneyStore((s) => s.previewRouteId);
+  const reducedMotion = useJourneyStore((s) => s.reducedMotion);
+
+  const isPreviewingBranch =
+    previewRouteId === 'opt-branch' ||
+    previewRouteId === 'opt-branch-short' ||
+    previewRouteId === 'opt-missed-reroute' ||
+    previewRouteId === 'opt-platform-crossover';
+
+  const isRerouteActive =
+    activeBranch === 'branch' ||
+    disruptionType === 'missed_connection' ||
+    disruptionType === 'platform_change' ||
+    isPreviewingBranch;
+
+  const branchGlowColor = isPreviewingBranch ? '#F59E0B' : '#0284C7';
+  const branchEmissiveIntensity = isPreviewingBranch ? (reducedMotion ? 1.0 : 1.5) : (isRerouteActive ? 0.9 : 0);
 
   return (
     <group name="track-system">
@@ -190,18 +206,18 @@ export function TrackSpline() {
       {/* Branch Steel Rails with Animated Reroute Pattern & Luminance Pulse */}
       <mesh geometry={branchLeftRailGeo} receiveShadow>
         <meshStandardMaterial
-          color={isRerouteActive ? '#38BDF8' : '#94A3B8'}
-          emissive={isRerouteActive ? '#0284C7' : '#000000'}
-          emissiveIntensity={isRerouteActive ? 0.9 : 0}
+          color={isRerouteActive ? (isPreviewingBranch ? '#FBBF24' : '#38BDF8') : '#94A3B8'}
+          emissive={isRerouteActive ? branchGlowColor : '#000000'}
+          emissiveIntensity={branchEmissiveIntensity}
           metalness={0.85}
           roughness={0.2}
         />
       </mesh>
       <mesh geometry={branchRightRailGeo} receiveShadow>
         <meshStandardMaterial
-          color={isRerouteActive ? '#38BDF8' : '#94A3B8'}
-          emissive={isRerouteActive ? '#0284C7' : '#000000'}
-          emissiveIntensity={isRerouteActive ? 0.9 : 0}
+          color={isRerouteActive ? (isPreviewingBranch ? '#FBBF24' : '#38BDF8') : '#94A3B8'}
+          emissive={isRerouteActive ? branchGlowColor : '#000000'}
+          emissiveIntensity={branchEmissiveIntensity}
           metalness={0.85}
           roughness={0.2}
         />

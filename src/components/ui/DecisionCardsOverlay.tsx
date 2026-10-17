@@ -11,6 +11,10 @@ import {
   Check,
   AlertCircle,
   HelpCircle,
+  ChevronDown,
+  RotateCcw,
+  CheckCircle2,
+  Armchair,
 } from 'lucide-react';
 import { useJourneyStore } from '@/store/journeyStore';
 import { journeyPhysics } from '@/store/journeyPhysics';
@@ -22,11 +26,14 @@ export function DecisionCardsOverlay() {
   const status = useJourneyStore((s) => s.status);
   const language = useJourneyStore((s) => s.language);
   const elderMode = useJourneyStore((s) => s.elderMode);
-  const setStatus = useJourneyStore((s) => s.setStatus);
   const setActiveBranch = useJourneyStore((s) => s.setActiveBranch);
   const setCameraMode = useJourneyStore((s) => s.setCameraMode);
+  const setPreviewRouteId = useJourneyStore((s) => s.setPreviewRouteId);
+  const confirmOption = useJourneyStore((s) => s.confirmOption);
+  const confirmedOption = useJourneyStore((s) => s.confirmedOption as DecisionOption | null);
+  const undoConfirmedOption = useJourneyStore((s) => s.undoConfirmedOption);
 
-  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  const [expandedWhyId, setExpandedWhyId] = useState<string | null>(null);
 
   const t = translations[language];
   const isHindi = language === 'hi';
@@ -69,21 +76,18 @@ export function DecisionCardsOverlay() {
   };
 
   const handleApplyOption = (option: DecisionOption) => {
-    setSelectedOptionId(option.id);
-    setStatus('resolved');
+    confirmOption(option);
+    setPreviewRouteId(null);
 
     // 3D Outcomes triggered deterministically:
     if (option.actionType === 'reroute') {
-      // 1. Reroute plays: train switches onto glowing bypass branch track
       setActiveBranch('branch');
       journeyPhysics.activeBranch = 'branch';
       journeyPhysics.targetSpeed = 0.24;
     } else if (option.actionType === 'rebook') {
-      // 2. Rebook: camera swoops to side view showcasing parallel track priority connection
       setCameraMode('cinematic');
       journeyPhysics.targetSpeed = 0.22;
     } else if (option.actionType === 'resume') {
-      // 3. Wait & hold: train holds then smoothly resumes forward
       setTimeout(() => {
         journeyPhysics.targetSpeed = 0.25;
       }, 1200);
@@ -109,36 +113,43 @@ export function DecisionCardsOverlay() {
       }`}
     >
       {/* 1. Plain-Language Status Banner with Live Region */}
-      <div
-        role="alert"
-        aria-live={disruptionType === 'cancellation' ? 'assertive' : 'polite'}
-        className="mb-3 p-3 rounded-2xl bg-slate-950/95 backdrop-blur-xl border border-amber-400/50 shadow-2xl flex items-center justify-between gap-3 text-slate-100"
-      >
-        <div className="flex items-center gap-2.5">
-          <AlertCircle className="w-5 h-5 text-[#E69F00] shrink-0" aria-hidden="true" />
-          <p className="text-xs sm:text-sm font-bold tracking-wide">
-            {getBannerAnnouncement()}
-          </p>
+      {status !== 'resolved' && (
+        <div
+          role="alert"
+          aria-live={disruptionType === 'cancellation' ? 'assertive' : 'polite'}
+          className="mb-3 p-3.5 rounded-2xl bg-slate-950/95 backdrop-blur-xl border border-amber-400/50 shadow-2xl flex items-center justify-between gap-3 text-slate-100"
+        >
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="w-5 h-5 text-[#E69F00] shrink-0" aria-hidden="true" />
+            <p className="text-xs sm:text-sm font-bold tracking-wide">
+              {getBannerAnnouncement()}
+            </p>
+          </div>
+          <span className="text-[10px] font-mono text-[#E69F00] border border-[#E69F00]/30 px-2 py-0.5 rounded-full shrink-0 font-bold">
+            {t.simulatedDataBadge}
+          </span>
         </div>
-        <span className="text-[10px] font-mono text-[#E69F00] border border-[#E69F00]/30 px-2 py-0.5 rounded-full shrink-0 font-bold">
-          {t.simulatedDataBadge}
-        </span>
-      </div>
+      )}
 
       {/* 2. Ranked Decision Cards Grid */}
       {options.length > 0 && status !== 'resolved' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {options.map((option) => {
             const isTop = option.isTopRanked;
-            const isSelected = selectedOptionId === option.id;
+            const isWhyExpanded = expandedWhyId === option.id;
 
             return (
               <div
                 key={option.id}
-                className={`relative flex flex-col justify-between p-3.5 rounded-2xl backdrop-blur-xl transition-all duration-300 border shadow-2xl ${
+                tabIndex={0}
+                onMouseEnter={() => setPreviewRouteId(option.id)}
+                onMouseLeave={() => setPreviewRouteId(null)}
+                onFocus={() => setPreviewRouteId(option.id)}
+                onBlur={() => setPreviewRouteId(null)}
+                className={`relative flex flex-col justify-between p-3.5 rounded-2xl backdrop-blur-xl transition-all duration-300 border shadow-2xl focus:outline-none focus:ring-2 focus:ring-amber-400 ${
                   isTop
                     ? 'bg-slate-900/95 border-amber-400/80 ring-2 ring-amber-400/20'
-                    : 'bg-slate-950/90 border-slate-700/60 hover:border-slate-500'
+                    : 'bg-slate-950/90 border-slate-700/60 hover:border-slate-400'
                 }`}
               >
                 {/* Top-Ranked Crown Badge */}
@@ -157,13 +168,7 @@ export function DecisionCardsOverlay() {
                     {isHindi ? option.descHi : option.descEn}
                   </p>
 
-                  {/* One-line Reason for Ranking */}
-                  <div className="mt-2 text-[10px] text-amber-300/90 bg-amber-400/10 p-1.5 rounded-lg border border-amber-400/20">
-                    <span className="font-bold">Why: </span>
-                    {isHindi ? option.rankingReasonHi : option.rankingReasonEn}
-                  </div>
-
-                  {/* Multi-Criteria Metrics Bar */}
+                  {/* Multi-Criteria Metrics Summary */}
                   <div className="grid grid-cols-2 gap-1.5 mt-3 pt-2 border-t border-slate-800 text-[10px]">
                     <div className="flex items-center gap-1 text-slate-300">
                       <Clock className="w-3 h-3 text-[#56B4E9]" />
@@ -185,10 +190,60 @@ export function DecisionCardsOverlay() {
                       <span>{option.confidenceScore}% Confidence</span>
                     </div>
                   </div>
+
+                  {/* Accessible "Why this ranking?" expander button */}
+                  <button
+                    type="button"
+                    aria-expanded={isWhyExpanded}
+                    onClick={() => setExpandedWhyId(isWhyExpanded ? null : option.id)}
+                    className="mt-2.5 text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center justify-between w-full py-2 px-2.5 min-h-[44px] rounded-xl bg-slate-900/90 border border-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 active:scale-95"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+                      <span>{isWhyExpanded ? t.hideRankingBtn : t.whyRankingBtn}</span>
+                    </span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 transition-transform ${isWhyExpanded ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+
+                  {/* Collapsible Factor Breakdown */}
+                  {isWhyExpanded && (
+                    <div className="mt-2 p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-[10px] space-y-1.5 animate-fadeIn">
+                      <div className="font-bold text-slate-200 border-b border-slate-800 pb-1 flex justify-between">
+                        <span>{t.rankingFactorsTitle}</span>
+                        <span className="text-[#009E73]">Rank #{option.rank}</span>
+                      </div>
+                      <div className="space-y-1 text-slate-300">
+                        <div className="flex justify-between">
+                          <span>{t.factorConfidence}:</span>
+                          <span className="font-semibold text-emerald-400">{option.confidenceScore}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{t.factorTimeSaved}:</span>
+                          <span className="font-semibold text-sky-400">
+                            {option.timeDeltaMinutes < 0 ? `${Math.abs(option.timeDeltaMinutes)}m saved` : `+${option.timeDeltaMinutes}m delay`}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{t.factorComfort}:</span>
+                          <span className="font-semibold text-amber-300">{option.comfortRating}/5</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{t.factorCost}:</span>
+                          <span className="font-semibold text-emerald-300">₹{option.costInr}</span>
+                        </div>
+                      </div>
+                      <p className="pt-1 border-t border-slate-800 text-[9px] text-slate-400 italic">
+                        {isHindi ? option.rankingReasonHi : option.rankingReasonEn}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Apply Button */}
                 <button
+                  type="button"
                   onClick={() => handleApplyOption(option)}
                   className={`mt-3 py-2.5 px-3 min-h-[44px] rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all focus-visible:ring-2 focus-visible:ring-amber-400 active:scale-95 ${
                     isTop
@@ -205,16 +260,86 @@ export function DecisionCardsOverlay() {
         </div>
       )}
 
-      {/* Resolved Confirmation Toast */}
+      {/* 3. Resolved Screen Summarizing Outcome with Undo Button */}
       {status === 'resolved' && (
-        <div className="bg-emerald-950/90 backdrop-blur-xl border border-emerald-500/80 p-3.5 rounded-2xl shadow-2xl flex items-center justify-between text-emerald-200 text-xs sm:text-sm font-bold">
-          <div className="flex items-center gap-2">
-            <Check className="w-5 h-5 text-emerald-400" />
-            <span>{t.bannerResolved}</span>
+        <div className="p-5 rounded-3xl bg-slate-950/95 backdrop-blur-2xl border-2 border-emerald-500/80 shadow-2xl text-slate-100 flex flex-col gap-4 animate-fadeIn">
+          {/* Header */}
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-6 h-6 text-[#009E73]" />
+              <div>
+                <h3 className="text-sm sm:text-base font-extrabold text-white">
+                  {t.resolvedTitle}
+                </h3>
+                <p className="text-xs text-slate-300">
+                  {t.resolvedSubtitle}
+                </p>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+              3D Outcome Active
+            </span>
           </div>
-          <span className="text-[11px] bg-emerald-900/80 text-emerald-300 px-2 py-0.5 rounded font-mono">
-            3D Outcome Active
-          </span>
+
+          {/* Outcome Summary Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5 text-sky-400" />
+                {t.newArrival}
+              </span>
+              <span className="font-extrabold text-white text-sm">
+                {confirmedOption ? (confirmedOption.timeDeltaMinutes < 0 ? '18:33 (Saved 22m)' : '18:55 (+25m)') : '18:35'}
+              </span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <IndianRupee className="w-3.5 h-3.5 text-emerald-400" />
+                {t.additionalCost}
+              </span>
+              <span className="font-extrabold text-emerald-300 text-sm">
+                {confirmedOption ? `₹${confirmedOption.costInr}` : '₹0'}
+              </span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                {t.comfortScore}
+              </span>
+              <span className="font-extrabold text-amber-300 text-sm">
+                {confirmedOption ? `${confirmedOption.comfortRating}/5 Stars` : '4/5'}
+              </span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <Armchair className="w-3.5 h-3.5 text-purple-400" />
+                {t.seatNote}
+              </span>
+              <span className="font-bold text-slate-200 text-xs truncate">
+                {confirmedOption?.actionType === 'reroute'
+                  ? 'Unreserved Chord Line'
+                  : 'Coach C-4, Seat 24'}
+              </span>
+            </div>
+          </div>
+
+          {/* Action Row: Undo Decision Button */}
+          <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+            <span className="text-[11px] text-slate-400">
+              {t.undoDesc}
+            </span>
+            <button
+              type="button"
+              onClick={undoConfirmedOption}
+              className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 hover:border-amber-400/60 font-bold text-xs transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-amber-400"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>{t.undoBtn}</span>
+            </button>
+          </div>
         </div>
       )}
     </aside>
