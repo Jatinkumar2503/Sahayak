@@ -174,6 +174,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
     set({
       journeyStarted: true,
       status: 'on-time',
+      disruptionType: 'none',
       speed: 0.05,
       targetSpeed: 0.25,
     });
@@ -312,6 +313,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
       disruptionType,
       status: nextStatus,
       targetSpeed,
+      speed: journeyPhysics.speed,
       previewRouteId: null,
     });
   },

@@ -113,7 +113,7 @@ export function DecisionCardsOverlay() {
   return (
     <aside
       aria-label={t.decisionCardsHeader}
-      className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-40 w-full max-w-3xl px-4 pointer-events-auto transition-all ${
+      className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-40 w-full max-w-3xl px-4 pointer-events-auto transition-all max-h-[calc(100vh-7rem)] overflow-y-auto overflow-x-hidden ${
         elderMode ? 'scale-105' : ''
       }`}
     >
@@ -204,6 +204,7 @@ export function DecisionCardsOverlay() {
                   {/* Tap-to-Preview Route Toggle Button for Touch / Mobile Users */}
                   <button
                     type="button"
+                    id={`preview-route-btn-${option.id}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setPreviewRouteId(isPreviewActive ? null : option.id);
@@ -280,6 +281,7 @@ export function DecisionCardsOverlay() {
                 {/* Apply Button */}
                 <button
                   type="button"
+                  id={`apply-option-btn-${option.id}`}
                   onClick={() => handleApplyOption(option)}
                   className={`mt-3 py-2.5 px-3 min-h-[44px] rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all focus-visible:ring-2 focus-visible:ring-amber-400 active:scale-95 ${
                     isTop
@@ -383,6 +385,7 @@ export function DecisionCardsOverlay() {
               {/* Undo button */}
               <button
                 type="button"
+                id="undo-decision-btn"
                 onClick={undoConfirmedOption}
                 className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 hover:border-amber-400/60 font-bold text-xs transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-amber-400"
               >
