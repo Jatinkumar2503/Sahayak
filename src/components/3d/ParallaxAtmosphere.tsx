@@ -73,12 +73,13 @@ export function ParallaxAtmosphere() {
   }, [cloudData, activeCloudCount]);
 
   useFrame((_, delta) => {
-    // 1. Drifting Clouds Parallax (paused when reduced motion is preferred)
-    if (cloudsRef.current && !isReducedMotion) {
+    // 1. Drifting Clouds Parallax: clouds always drift smoothly in the atmosphere
+    if (cloudsRef.current) {
       const dummy = new THREE.Object3D();
+      const speedMultiplier = isReducedMotion ? 0.5 : 1.0;
       cloudData.slice(0, activeCloudCount).forEach((c, i) => {
         // Drift along X and slowly along Z
-        c.pos.x += delta * c.speed;
+        c.pos.x += delta * c.speed * speedMultiplier;
         if (c.pos.x > 80) c.pos.x = -80;
 
         dummy.position.copy(c.pos);

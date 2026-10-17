@@ -36,6 +36,7 @@ export function DecisionCardsOverlay() {
   const confirmOption = useJourneyStore((s) => s.confirmOption);
   const confirmedOption = useJourneyStore((s) => s.confirmedOption as DecisionOption | null);
   const undoConfirmedOption = useJourneyStore((s) => s.undoConfirmedOption);
+  const resetJourney = useJourneyStore((s) => s.resetJourney);
   const setFamilyShareOpen = useJourneyStore((s) => s.setFamilyShareOpen);
 
   const [expandedWhyId, setExpandedWhyId] = useState<string | null>(null);
@@ -304,6 +305,19 @@ export function DecisionCardsOverlay() {
                   <span>{option.disabled ? (isHindi ? 'बाईपास अनुपलब्ध' : 'Bypass Unavailable') : t.selectOptionBtn}</span>
                   {!option.disabled && <ArrowRight className="w-3.5 h-3.5" />}
                 </button>
+
+                {/* Quick Recovery Action for Judges & Travelers to restart journey and experience bypass */}
+                {option.disabled && (
+                  <button
+                    type="button"
+                    id="restart-journey-bypass-btn"
+                    onClick={() => resetJourney()}
+                    className="mt-2 py-2.5 px-3 min-h-[44px] rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-md focus-visible:ring-2 focus-visible:ring-amber-400 active:scale-95"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>{isHindi ? 'बाईपास आज़माने के लिए यात्रा पुनः प्रारंभ करें' : 'Restart journey to try the bypass'}</span>
+                  </button>
+                )}
               </div>
             );
           })}

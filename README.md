@@ -64,7 +64,7 @@ graph TD
 
 Audited with **Google Lighthouse CLI v13.5.0**, **Playwright**, and **Axe-Core**:
 - **100 / 100 Accessibility Score** (Google Lighthouse production run).
-- **0 Axe Violations across 8 page states**: Audited on Default English (`/`), Hindi mode (`hi`), Elder mode, all 4 open modals (`OnboardingModal`, `FamilyShareModal`, `VoiceAssistantModal`, `JourneyTimelineA11y`), and `/design-system`.
+- **0 Axe Violations across 17 page states**: Audited on Default English (`/`), Hindi mode (`hi`), Elder mode, all 4 open modals (`OnboardingModal`, `FamilyShareModal`, `VoiceAssistantModal`, `JourneyTimelineA11y`), mobile drawer open at 360px, multi-tab BroadcastChannel sync, and both English & Hindi Bypass Unavailable decision states.
 - **44×44px Minimum Touch Targets**: Verified with Playwright across 360px (mobile), 768px (tablet), and 1280px (desktop) viewports.
 - **Okabe-Ito Colorblind-Safe Standard**: All statuses pair high-contrast colors (`#009E73`, `#E69F00`, `#D55E00`, `#0072B2`) with geometric SVG glyphs (`CheckCircle2`, `AlertTriangle`, `OctagonAlert`, `GitBranch`) and visible text. Status never relies on color alone.
 - **Elder Mode (वरिष्ठ मोड)**: Enlarges typography up to 24px, sets min 48×48px tap targets with 2px solid amber borders, simplifies the HUD, and slows 3D motion by 36%.
@@ -186,7 +186,7 @@ sahayak/
 │   │   │   ├── TrackSpline.tsx       # Main line and glowing chord detour splines
 │   │   │   ├── LowPolyTerrain.tsx    # Procedural terrain, instanced trees & OHE masts
 │   │   │   ├── Stations.tsx          # Devanagari & English railway station signboards
-│   │   │   ├── SignalHeads.tsx       # Trackside signals with danger/caution/clear aspects
+│   │   │   ├── SignalHeads.tsx       # Trackside signals (Signals 102–110) with danger/caution/clear aspects
 │   │   │   ├── BrakeSparks.tsx       # Electric locomotive friction sparks
 │   │   │   └── FollowCamera.tsx      # Chase, Cinematic Side, and Map camera modes
 │   │   └── ui/                       # Accessible UI Overlay & Decision Cards

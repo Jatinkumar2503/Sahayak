@@ -103,5 +103,19 @@
     "incomplete": 2,
     "violationsCount": 0,
     "violations": []
+  },
+  {
+    "state": "Disruption Decision Cards - Bypass Unavailable (English State 16)",
+    "passed": 35,
+    "incomplete": 2,
+    "violationsCount": 0,
+    "violations": []
+  },
+  {
+    "state": "Disruption Decision Cards - Bypass Unavailable (Hindi State 17)",
+    "passed": 35,
+    "incomplete": 2,
+    "violationsCount": 0,
+    "violations": []
   }
 ]

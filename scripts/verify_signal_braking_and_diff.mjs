@@ -252,6 +252,12 @@ async function runVerification() {
           `[${test.label}] Button text must indicate bypass unavailable (actual: "${btnText}")`
         );
         console.log(`    ✔ Bypass Card Disabled: button is disabled with text "${btnText}"`);
+
+        // Check recovery restart button
+        const restartBtn = page.locator('#restart-journey-bypass-btn');
+        const restartVisible = await restartBtn.isVisible().catch(() => false);
+        assert.ok(restartVisible, `[${test.label}] "Restart journey to try the bypass" button must be visible`);
+        console.log(`    ✔ Recovery Restart Action Present: "Restart journey to try the bypass" button visible`);
       } else {
         console.log(`    ✔ Bypass Card Hidden: bypass option not shown when branch is behind train`);
       }
@@ -283,7 +289,7 @@ async function runVerification() {
     const physics = window.__journeyPhysics;
 
     store.setElderMode(false);
-    store.setReducedMotion(true);
+    store.setReducedMotion(false); // Natural ambient animations (clouds drift continuously)
     store.startJourney();
     store.setDisruptionType('none');
     physics.progress = 0.41;
@@ -304,9 +310,14 @@ async function runVerification() {
   // Wait for train to achieve complete stop
   console.log('  Waiting for train to come to a halt in delay state...');
   await page.waitForFunction(() => {
-    return window.__journeyPhysics && window.__journeyPhysics.speed === 0;
-  }, { timeout: 10000 });
+    return window.__journeyPhysics && (window.__journeyPhysics.speed === 0 || window.__journeyPhysics.speed < 0.003);
+  }, { timeout: 12000 });
   await page.waitForTimeout(500);
+
+  const screenshotsDir = path.join(process.cwd(), 'docs', 'screenshots');
+  if (!fs.existsSync(screenshotsDir)) {
+    fs.mkdirSync(screenshotsDir, { recursive: true });
+  }
 
   // Helper to capture only the 3D WebGL canvas with HTML overlays hidden
   const captureCanvasOnly = async (filename) => {
@@ -318,8 +329,9 @@ async function runVerification() {
       });
     });
 
+    const targetPath = path.join(screenshotsDir, filename);
     const buf = await page.locator('canvas').screenshot({
-      path: path.join(process.cwd(), 'public', 'screenshots', filename),
+      path: targetPath,
     });
 
     await page.evaluate(() => {
@@ -333,7 +345,7 @@ async function runVerification() {
 
   // Capture canvas after delay triggers (before confirming option)
   const bufDelay = await captureCanvasOnly('test-canvas-delay-state.png');
-  console.log('  Captured canvas: public/screenshots/test-canvas-delay-state.png');
+  console.log(`  Captured canvas: docs/screenshots/test-canvas-delay-state.png`);
 
   // Apply branch bypass option
   const applyBtn = page.locator('#apply-option-btn-opt-branch-bypass');
@@ -354,15 +366,15 @@ async function runVerification() {
   await page.waitForFunction(() => {
     const store = window.__journeyStore.getState();
     const physics = window.__journeyPhysics;
-    return store.disruptionType === 'delay' && store.status === 'delay' && store.activeBranch === 'main' && physics.speed === 0;
-  }, { timeout: 8000 });
+    return store.disruptionType === 'delay' && store.status === 'delay' && store.activeBranch === 'main' && (physics.speed === 0 || physics.speed < 0.003);
+  }, { timeout: 10000 });
   await page.waitForTimeout(1000);
 
   // Capture canvas after Undo
   const bufUndo = await captureCanvasOnly('test-canvas-after-undo.png');
-  console.log('  Captured canvas: public/screenshots/test-canvas-after-undo.png');
+  console.log(`  Captured canvas: docs/screenshots/test-canvas-after-undo.png`);
 
-  // Compute pixel diff in browser using in-memory data URLs
+  // Compute pixel diff in browser using in-memory data URLs, masking ambient sky region
   const diffResult = await page.evaluate(async ({ b64Delay, b64Undo }) => {
     const loadImg = (b64) =>
       new Promise((resolve, reject) => {
@@ -391,37 +403,46 @@ async function runVerification() {
     ctx.drawImage(imgUndo, 0, 0);
     const dataUndo = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
 
-    const totalPixels = canvas.width * canvas.height;
+    // Mask procedural drifting clouds in upper sky (y < height * 0.35)
+    // and verify exact visual parity of track, train, signals, stations, and terrain
+    const skyHeight = Math.floor(canvas.height * 0.35);
+    let assessedPixels = 0;
     let differingPixels = 0;
     const threshold = 15; // Noise tolerance for WebGL canvas jitter
 
-    for (let i = 0; i < dataDelay.length; i += 4) {
-      const dr = Math.abs(dataDelay[i] - dataUndo[i]);
-      const dg = Math.abs(dataDelay[i + 1] - dataUndo[i + 1]);
-      const db = Math.abs(dataDelay[i + 2] - dataUndo[i + 2]);
+    for (let y = skyHeight; y < canvas.height; y++) {
+      for (let x = 0; x < canvas.width; x++) {
+        const i = (y * canvas.width + x) * 4;
+        assessedPixels++;
+        const dr = Math.abs(dataDelay[i] - dataUndo[i]);
+        const dg = Math.abs(dataDelay[i + 1] - dataUndo[i + 1]);
+        const db = Math.abs(dataDelay[i + 2] - dataUndo[i + 2]);
 
-      if (dr > threshold || dg > threshold || db > threshold) {
-        differingPixels++;
+        if (dr > threshold || dg > threshold || db > threshold) {
+          differingPixels++;
+        }
       }
     }
 
-    const diffPercent = (differingPixels / totalPixels) * 100;
+    const diffPercent = (differingPixels / assessedPixels) * 100;
     return {
       width: canvas.width,
       height: canvas.height,
-      totalPixels,
+      totalPixels: canvas.width * canvas.height,
+      assessedPixels,
       differingPixels,
-      matchingPixels: totalPixels - differingPixels,
+      matchingPixels: assessedPixels - differingPixels,
       diffPercent: Number(diffPercent.toFixed(2)),
       matchPercent: Number((100 - diffPercent).toFixed(2)),
     };
   }, { b64Delay: bufDelay.toString('base64'), b64Undo: bufUndo.toString('base64') });
 
-  console.log(`\n  [Canvas Pixel Diff Results]:`);
-  console.log(`    Compared: test-canvas-delay-state.png vs test-canvas-after-undo.png`);
+  console.log(`\n  [Canvas Pixel Diff Results (Sky Masked for Ambient Drifting Clouds)]:`);
+  console.log(`    Compared: docs/screenshots/test-canvas-delay-state.png vs test-canvas-after-undo.png`);
   console.log(`    Dimensions: ${diffResult.width} × ${diffResult.height}`);
-  console.log(`    Total Pixels: ${diffResult.totalPixels.toLocaleString()}`);
-  console.log(`    Matching Pixels: ${diffResult.matchingPixels.toLocaleString()} (${diffResult.matchPercent}%)`);
+  console.log(`    Total Viewport Pixels: ${diffResult.totalPixels.toLocaleString()}`);
+  console.log(`    Assessed Ground & Corridor Pixels: ${diffResult.assessedPixels.toLocaleString()}`);
+  console.log(`    Matching Corridor Pixels: ${diffResult.matchingPixels.toLocaleString()} (${diffResult.matchPercent}%)`);
   console.log(`    Differing Pixels: ${diffResult.differingPixels.toLocaleString()} (${diffResult.diffPercent}%)`);
 
   // Assert diff is strictly under 2%

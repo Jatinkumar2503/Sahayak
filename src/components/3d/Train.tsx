@@ -130,8 +130,8 @@ export function Train() {
               journeyPhysics.speed = maxAllowedSpeed;
             }
 
-            // Continuous cutoff threshold: when speed is already negligible (< 0.008), smoothly reach complete stop
-            if (distRemaining < 0.25 && journeyPhysics.speed < 0.008) {
+            // Continuous cutoff threshold: when speed is negligible near target margin, smoothly reach complete stop
+            if ((distRemaining < 1.2 && journeyPhysics.speed < 0.012) || journeyPhysics.speed < 0.003) {
               journeyPhysics.speed = 0;
               journeyPhysics.progress = stopProgress;
             }
@@ -165,8 +165,15 @@ export function Train() {
         }
       } else {
         const deltaProgress = Math.max(0, journeyPhysics.speed * 0.045 * delta);
-        journeyPhysics.progress =
-          (journeyPhysics.progress + deltaProgress) % 1;
+        const nextProgress = journeyPhysics.progress + deltaProgress;
+        // Seamless journey looping: When train completes run past Ambala, loop back to Delhi approach
+        if (nextProgress >= 0.98) {
+          journeyPhysics.progress = 0.02;
+          journeyPhysics.activeBranch = 'main';
+          useJourneyStore.getState().setActiveBranch('main');
+        } else {
+          journeyPhysics.progress = nextProgress;
+        }
       }
     }
 

@@ -46,3 +46,6 @@ AGENTS.md
 # Lighthouse HTML reports
 *.report.html
 
+# Test generated screenshots
+**/test-*.png
+

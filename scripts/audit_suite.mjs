@@ -467,6 +467,48 @@ async function run() {
         return tab2;
       },
     },
+    {
+      name: 'Disruption Decision Cards - Bypass Unavailable (English State 16)',
+      setup: async (page) => {
+        await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
+        await page.evaluate(() => {
+          localStorage.setItem('sahayak_language', 'en');
+          localStorage.setItem('sahayak_onboarding_seen', 'true');
+        });
+        await page.reload({ waitUntil: 'networkidle' });
+        await page.evaluate(() => {
+          const store = window.__journeyStore?.getState();
+          const physics = window.__journeyPhysics;
+          if (physics) physics.progress = 0.64; // Train past Panipat switch (progress >= 0.48)
+          store?.startJourney?.();
+          store?.setDisruptionType?.('delay');
+        });
+        await page.waitForSelector('#apply-option-btn-opt-branch-bypass[disabled]', { timeout: 4000 });
+        await page.waitForSelector('#restart-journey-bypass-btn', { timeout: 4000 });
+        await page.waitForTimeout(600);
+      },
+    },
+    {
+      name: 'Disruption Decision Cards - Bypass Unavailable (Hindi State 17)',
+      setup: async (page) => {
+        await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
+        await page.evaluate(() => {
+          localStorage.setItem('sahayak_language', 'hi');
+          localStorage.setItem('sahayak_onboarding_seen', 'true');
+        });
+        await page.reload({ waitUntil: 'networkidle' });
+        await page.evaluate(() => {
+          const store = window.__journeyStore?.getState();
+          const physics = window.__journeyPhysics;
+          if (physics) physics.progress = 0.64; // Train past Panipat switch (progress >= 0.48)
+          store?.startJourney?.();
+          store?.setDisruptionType?.('delay');
+        });
+        await page.waitForSelector('#apply-option-btn-opt-branch-bypass[disabled]', { timeout: 4000 });
+        await page.waitForSelector('#restart-journey-bypass-btn', { timeout: 4000 });
+        await page.waitForTimeout(600);
+      },
+    },
   ];
 
   const auditSummary = [];

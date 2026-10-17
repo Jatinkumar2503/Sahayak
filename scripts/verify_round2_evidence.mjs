@@ -12,21 +12,21 @@ async function verifyAll() {
   console.log('SAHAYAK 3D — ROUND 2 STRICT RIGOROUS TELEMETRY & PROOF AUDIT');
   console.log('===============================================================\n');
 
-  const screenshotsDir = path.resolve('public', 'screenshots');
+  const screenshotsDir = path.resolve('docs', 'screenshots');
   if (!fs.existsSync(screenshotsDir)) {
     fs.mkdirSync(screenshotsDir, { recursive: true });
   }
 
   // -------------------------------------------------------------------------
-  // 5. ENGINE UNIT TESTS CHECK (Must be 9 tests, not 6)
+  // 5. ENGINE UNIT TESTS CHECK (Must be 11 tests)
   // -------------------------------------------------------------------------
   console.log('--- 5. VERIFY ENGINE UNIT TESTS COUNT & PASS STATUS ---');
   const testOutput = execSync('node src/engine/__tests__/runTests.mjs', { encoding: 'utf-8' });
   const testMatches = testOutput.match(/✔ Test \d+:/g) || [];
   console.log(`  Found ${testMatches.length} passing tests in runTests.mjs.`);
-  assert.strictEqual(testMatches.length, 9, `Expected exactly 9 unit tests, but found ${testMatches.length}`);
-  assert.ok(testOutput.includes('All 9 Decision Engine & FSM Unit Tests PASSED'), 'Must contain 9 tests pass confirmation');
-  console.log('  ✔ Check 5 Passed: All 9 unit tests executed and passed cleanly.\n');
+  assert.strictEqual(testMatches.length, 11, `Expected exactly 11 unit tests, but found ${testMatches.length}`);
+  assert.ok(testOutput.includes('All 11 Decision Engine & FSM Unit Tests PASSED'), 'Must contain 11 tests pass confirmation');
+  console.log('  ✔ Check 5 Passed: All 11 unit tests executed and passed cleanly.\n');
 
   const browser = await chromium.launch({
     executablePath: fs.existsSync(CHROME_PATH) ? CHROME_PATH : undefined,
