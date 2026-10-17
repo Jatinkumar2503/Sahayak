@@ -59,7 +59,7 @@ Most railway tools present static timetables or uninformative "Late by 45 mins" 
   - **Best Practices: 100 / 100**
   - **SEO: 100 / 100**
   - **Desktop Performance: 87 / 100**
-- **Automated Axe-Core Multi-State Audit (0 Violations Across All 13 States)**:
+- **Automated Axe-Core Multi-State Audit (0 Violations Across All 15 States)**:
   - First View English (`/`): 0 violations (33 passed rules)
   - First View Hindi (`hi`): 0 violations (33 passed rules)
   - Elder Accessibility Mode: 0 violations (33 passed rules)
@@ -73,15 +73,19 @@ Most railway tools present static timetables or uninformative "Late by 45 mins" 
   - Journey Timeline Modal Open: 0 violations (35 passed rules)
   - 404 Not Found Page (`/nonexistent-route`): 0 violations (27 passed rules)
   - Design System Page (`/design-system`): 0 violations (30 passed rules)
-- **Manual Screen Reader Verification**:
-  - Manually tested with Windows Narrator on Chrome: confirms proper live status updates, clear announcement of disruption alerts via polite aria-live regions, decision card factor expanders, and focus trapping with Escape dismissal.
+  - Collapsible Drawer Open at 360px Viewport (Mobile A11y & Contrast): 0 violations (35 passed rules)
+  - Second Tab (BroadcastChannel Family Share Sync + Live Audit): 0 violations (35 passed rules)
+- **Screen Reader Verification Status**:
+  - Automated semantic structure, landmark navigation, and accessible names validated via Axe-Core (0 violations). Dedicated end-to-end screen reader testing with NVDA / Windows Narrator is scheduled for manual user pass; semantic markup, polite `aria-live` regions, and modal focus traps are fully implemented.
+- **Family Live Share Sync Note**:
+  - Employs zero-dependency browser `BroadcastChannel` for instant live synchronization across browser tabs on the same device, simulating a family member's view; production deployment would integrate a server-pushed WebSocket/SSE service.
 - **Responsive Target Sizes (Playwright Verified)**:
   - 360px Mobile, 768px Tablet, 1280px Desktop: 0 interactive elements under 44×44px.
 - **Headless Container Telemetry (Software SwiftShader)**:
   - Cruise: 36–42 FPS (85 draw calls, 24k triangles)
   - Active Chord Reroute: 32–38 FPS (no draw call spikes)
 - **Laptop Hardware GPU Telemetry (User Verified)**:
-  - Real hardware Chrome on Windows: **142 FPS at 7.0 ms frame time** (85 draw calls, 24k triangles, Blob fast shadow tier) with rock-solid responsiveness.
+  - Real hardware Chrome on Windows: **142 FPS at 7.0 ms frame time** (85 draw calls, 24k triangles, Blob fast shadow tier, Full Quality during cruise and reroute) reflecting monitor refresh rate.
 - **Low-Power Fallback (Lite Mode)**:
   - Skips the initial 2.0s shader compilation warmup, then evaluates steady-state FPS between seconds 2.0 and 5.0. If steady FPS < 40, Sahayak 3D auto-activates Lite Mode. Supports URL override (`?quality=full` or `?quality=lite`) and manual toggle.
 

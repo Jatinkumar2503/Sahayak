@@ -149,12 +149,7 @@ export function DecisionCardsOverlay() {
             return (
               <div
                 key={option.id}
-                tabIndex={0}
-                onMouseEnter={() => setPreviewRouteId(option.id)}
-                onMouseLeave={() => setPreviewRouteId(null)}
-                onFocus={() => setPreviewRouteId(option.id)}
-                onBlur={() => setPreviewRouteId(null)}
-                className={`relative flex flex-col justify-between p-3.5 rounded-2xl backdrop-blur-xl transition-all duration-300 border shadow-2xl focus:outline-none focus:ring-2 focus:ring-amber-400 ${
+                className={`relative flex flex-col justify-between p-3.5 rounded-2xl backdrop-blur-xl transition-all duration-300 border shadow-2xl ${
                   isTop
                     ? 'bg-slate-900/95 border-amber-400/80 ring-2 ring-amber-400/20'
                     : isPreviewActive

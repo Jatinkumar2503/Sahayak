@@ -431,6 +431,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
 // Cross-tab synchronization listener & test automation hook
 if (typeof window !== 'undefined') {
   (window as any).__journeyStore = useJourneyStore;
+  (window as any).__journeyPhysics = journeyPhysics;
   const channel = getSyncChannel();
   if (channel) {
     channel.onmessage = (event) => {
