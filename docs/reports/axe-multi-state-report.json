@@ -59,18 +59,8 @@
     "state": "Family Share Modal Open",
     "passed": 35,
     "incomplete": 2,
-    "violationsCount": 1,
-    "violations": [
-      {
-        "id": "heading-order",
-        "impact": "moderate",
-        "description": "Ensure the order of headings is semantically correct",
-        "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright",
-        "nodes": [
-          "<h4 class=\"text-sm font-extrabold text-white leading-tight\">Passenger is safe on board</h4>"
-        ]
-      }
-    ]
+    "violationsCount": 0,
+    "violations": []
   },
   {
     "state": "Voice Assistant Modal Open",
