@@ -198,6 +198,9 @@ export const translations = {
     seatNote: 'Seat & Coach Note',
     undoBtn: 'Undo Decision',
     undoDesc: 'Cancel confirmed solution and return to disruption decision choices',
+    shareWithFamilyBtn: 'Share with Family',
+    previewRouteBtn: 'Preview Route',
+    hidePreviewBtn: 'Hide Preview',
 
     // 404 Not Found Page
     notFoundTitle: '404 • Track Not Found',
@@ -399,6 +402,9 @@ export const translations = {
     seatNote: 'सीट व कोच टिप्पणी',
     undoBtn: 'निर्णय पूर्ववत करें',
     undoDesc: 'पुष्ट समाधान रद्द करें और समस्या विकल्पों पर वापस लौटें',
+    shareWithFamilyBtn: 'परिवार के साथ शेयर करें',
+    previewRouteBtn: 'मार्ग पूर्वावलोकन',
+    hidePreviewBtn: 'पूर्वावलोकन हटाएं',
 
     // 404 Not Found Page
     notFoundTitle: '४०४ • ट्रैक नहीं मिला',

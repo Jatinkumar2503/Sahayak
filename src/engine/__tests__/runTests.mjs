@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { getDecisionOptions } from '../decisionEngine.ts';
+import { disruptionReducer, INITIAL_DISRUPTION_STATE } from '../disruptionFSM.ts';
 
 console.log('Running Decision Engine deterministic tests...');
 
@@ -38,4 +39,69 @@ const platform = getDecisionOptions({ kind: 'PLATFORM_CHANGE', delayMinutes: 12,
 assert.strictEqual(platform[0].actionType, 'reroute', 'Platform change #1 must be track crossover');
 console.log('✔ Test 6: Platform change provides crossover and battery cart accessibility passed');
 
-console.log('\nAll 6 Decision Engine Unit Tests PASSED successfully!');
+// 7. Resolved state transition with dynamic option attributes
+const delayState = disruptionReducer(INITIAL_DISRUPTION_STATE, { type: 'TRIGGER_DELAY', minutes: 25 });
+assert.strictEqual(delayState.kind, 'DELAYED');
+const optionsForDelay = getDecisionOptions(delayState);
+const chosenOption = optionsForDelay[0]; // Branch Reroute
+
+const resolvedState = disruptionReducer(delayState, {
+  type: 'RESOLVE_DISRUPTION',
+  optionId: chosenOption.id,
+  outcomeAction: chosenOption.actionType,
+});
+
+assert.strictEqual(resolvedState.kind, 'RESOLVED', 'Resolved state kind must be RESOLVED');
+assert.strictEqual(resolvedState.selectedOptionId, chosenOption.id, 'Resolved state must retain chosen option ID');
+assert.strictEqual(resolvedState.outcomeAction, 'reroute', 'Resolved state action must match option actionType');
+assert.ok(chosenOption.newEtaEn.length > 0, 'Resolved option must have dynamic ETA (EN)');
+assert.ok(chosenOption.newEtaHi.length > 0, 'Resolved option must have dynamic ETA (HI)');
+assert.ok(chosenOption.costDisplayEn.length > 0, 'Resolved option must have dynamic Cost (EN)');
+assert.ok(chosenOption.transfersDisplayEn.length > 0, 'Resolved option must have dynamic Transfers (EN)');
+assert.ok(chosenOption.seatNoteEn.length > 0, 'Resolved option must have dynamic Seat Note (EN)');
+assert.ok(chosenOption.rankingReasonEn.length > 0, 'Resolved option must have dynamic Ranking Reason (EN)');
+console.log('✔ Test 7: Disruption resolution successfully links dynamic option attributes passed');
+
+// 8. Undo state transition restores prior state
+const undoneState = disruptionReducer(resolvedState, {
+  type: 'UNDO_RESOLUTION',
+  previousState: delayState,
+});
+
+assert.strictEqual(undoneState.kind, 'DELAYED', 'Undone state must restore DELAYED kind');
+assert.strictEqual(undoneState.delayMinutes, 25, 'Undone state must restore 25 min delay');
+assert.strictEqual(undoneState.selectedOptionId, undefined, 'Undone state must clear selected option ID');
+console.log('✔ Test 8: Disruption undo successfully restores pre-disruption state passed');
+
+// 9. Dynamic data validation across all disruption scenarios
+const testDisruptions = [
+  { kind: 'DELAYED', delayMinutes: 10, reasonEn: '', reasonHi: '', timestamp: 0 },
+  { kind: 'DELAYED', delayMinutes: 25, reasonEn: '', reasonHi: '', timestamp: 0 },
+  { kind: 'CANCELLED', delayMinutes: 999, reasonEn: '', reasonHi: '', timestamp: 0 },
+  { kind: 'MISSED_CONNECTION', delayMinutes: 25, reasonEn: '', reasonHi: '', timestamp: 0 },
+  { kind: 'PLATFORM_CHANGE', delayMinutes: 12, reasonEn: '', reasonHi: '', timestamp: 0 },
+];
+
+let totalOptionsChecked = 0;
+for (const disruption of testDisruptions) {
+  const opts = getDecisionOptions(disruption);
+  for (const opt of opts) {
+    totalOptionsChecked++;
+    assert.ok(opt.id, 'Option id must be defined');
+    assert.ok(opt.newEtaEn, `Option ${opt.id} must have newEtaEn`);
+    assert.ok(opt.newEtaHi, `Option ${opt.id} must have newEtaHi`);
+    assert.ok(opt.costDisplayEn, `Option ${opt.id} must have costDisplayEn`);
+    assert.ok(opt.costDisplayHi, `Option ${opt.id} must have costDisplayHi`);
+    assert.ok(opt.transfersDisplayEn, `Option ${opt.id} must have transfersDisplayEn`);
+    assert.ok(opt.transfersDisplayHi, `Option ${opt.id} must have transfersDisplayHi`);
+    assert.ok(opt.seatNoteEn, `Option ${opt.id} must have seatNoteEn`);
+    assert.ok(opt.seatNoteHi, `Option ${opt.id} must have seatNoteHi`);
+    assert.ok(opt.rankingReasonEn, `Option ${opt.id} must have rankingReasonEn`);
+    assert.ok(opt.rankingReasonHi, `Option ${opt.id} must have rankingReasonHi`);
+    assert.ok(typeof opt.comfortRating === 'number' && opt.comfortRating >= 1 && opt.comfortRating <= 5, 'Comfort rating 1-5');
+    assert.ok(typeof opt.confidenceScore === 'number' && opt.confidenceScore >= 0 && opt.confidenceScore <= 100, 'Confidence score 0-100');
+  }
+}
+console.log(`✔ Test 9: All ${totalOptionsChecked} generated options across disruptions contain complete dynamic fields passed`);
+
+console.log('\nAll 9 Decision Engine & FSM Unit Tests PASSED successfully!');

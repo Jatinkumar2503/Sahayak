@@ -89,5 +89,19 @@
     "incomplete": 0,
     "violationsCount": 0,
     "violations": []
+  },
+  {
+    "state": "Collapsible Drawer Open at 360px Viewport (Mobile A11y & Contrast)",
+    "passed": 35,
+    "incomplete": 1,
+    "violationsCount": 0,
+    "violations": []
+  },
+  {
+    "state": "Second Tab (BroadcastChannel Family Share Sync + Live Audit)",
+    "passed": 35,
+    "incomplete": 2,
+    "violationsCount": 0,
+    "violations": []
   }
 ]

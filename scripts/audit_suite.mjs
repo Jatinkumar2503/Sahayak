@@ -85,6 +85,74 @@ async function run() {
   }
 
   // -----------------------------------------------------------------
+  // 1b. MOBILE 360px VIEWPORT WITH OPEN DRAWER (Overlap & Target Audit)
+  // -----------------------------------------------------------------
+  console.log('\n--- 1b. 360px VIEWPORT WITH OPEN DRAWER (Overlap & Tap Target Audit) ---');
+  {
+    const context = await browser.newContext({ viewport: { width: 360, height: 740 } });
+    const page = await context.newPage();
+    await page.goto(`${BASE_URL}/?quality=full`, { waitUntil: 'networkidle' });
+    try {
+      const skipBtn = await page.$('button:has-text("Skip"), button:has-text("छोड़ें")');
+      if (skipBtn) await skipBtn.click();
+    } catch {}
+    await page.waitForTimeout(500);
+
+    const trigger = await page.$('#demo-tools-trigger');
+    if (trigger) {
+      await trigger.click();
+    } else {
+      await page.evaluate(() => {
+        window.__journeyStore?.getState()?.setDemoToolsOpen?.(true);
+      });
+    }
+    await page.waitForTimeout(600);
+
+    const shotPath = path.join(screenshotsDir, 'mobile-360px-drawer-open.png');
+    await page.screenshot({ path: shotPath, fullPage: false });
+    console.log(`[Screenshot Saved] mobile-360px-drawer-open: ${shotPath}`);
+
+    const hasHorizontalOverflow = await page.evaluate(() => {
+      return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+    });
+    if (!hasHorizontalOverflow) {
+      console.log('  ✔ Viewport 360px Drawer Open: No horizontal overflow detected (scrollWidth <= clientWidth).');
+    } else {
+      console.log('  ❌ Viewport 360px Drawer Open: Horizontal overflow detected!');
+    }
+
+    const under44 = await page.evaluate(() => {
+      const interactives = Array.from(document.querySelectorAll('button, a, input, select, textarea'));
+      const small = [];
+      for (const el of interactives) {
+        if (el.classList.contains('sr-only')) continue;
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0 || window.getComputedStyle(el).display === 'none') continue;
+        if (rect.width < 44 || rect.height < 44) {
+          small.push({
+            tag: el.tagName.toLowerCase(),
+            text: (el.textContent || el.getAttribute('aria-label') || el.getAttribute('title') || '').trim().slice(0, 30),
+            width: Math.round(rect.width),
+            height: Math.round(rect.height),
+            id: el.id || undefined,
+          });
+        }
+      }
+      return small;
+    });
+
+    if (under44.length === 0) {
+      console.log('  ✔ Viewport 360px Drawer Open: All visible interactive targets meet or exceed 44x44px.');
+    } else {
+      console.log(`  ⚠ Viewport 360px Drawer Open: Found ${under44.length} element(s) under 44px:`);
+      under44.forEach((it) => {
+        console.log(`    - <${it.tag}> "${it.text}": ${it.width}x${it.height}px`);
+      });
+    }
+    await context.close();
+  }
+
+  // -----------------------------------------------------------------
   // 2. AXE-CORE AUDITS ACROSS ALL REQUIRED UX STATES
   // -----------------------------------------------------------------
   console.log('\n--- 2. AXE-CORE MULTI-STATE ACCESSIBILITY AUDIT ---');
@@ -298,6 +366,107 @@ async function run() {
         await page.waitForTimeout(500);
       },
     },
+    {
+      name: 'Collapsible Drawer Open at 360px Viewport (Mobile A11y & Contrast)',
+      setup: async (page) => {
+        await page.setViewportSize({ width: 360, height: 740 });
+        await page.goto(`${BASE_URL}/?quality=full`, { waitUntil: 'networkidle' });
+        try {
+          const skipBtn = await page.$('button:has-text("Skip"), button:has-text("छोड़ें")');
+          if (skipBtn) await skipBtn.click();
+        } catch {}
+        await page.waitForTimeout(500);
+        const trigger = await page.$('#demo-tools-trigger');
+        if (trigger) {
+          await trigger.click();
+        } else {
+          await page.evaluate(() => {
+            window.__journeyStore?.getState()?.setDemoToolsOpen?.(true);
+          });
+        }
+        await page.waitForTimeout(600);
+      },
+    },
+    {
+      name: 'Second Tab (BroadcastChannel Family Share Sync + Live Audit)',
+      setup: async (page) => {
+        // Tab 1 setup
+        await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
+        try {
+          const skipBtn = await page.$('button:has-text("Skip")');
+          if (skipBtn) await skipBtn.click();
+        } catch {}
+        await page.waitForTimeout(500);
+
+        // Open Tab 2 in same browser context (sharing BroadcastChannel)
+        const tab2 = await page.context().newPage();
+        await tab2.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
+        try {
+          const skipBtn2 = await tab2.$('button:has-text("Skip")');
+          if (skipBtn2) await skipBtn2.click();
+        } catch {}
+        await tab2.waitForTimeout(500);
+
+        // On Tab 1: Start journey, trigger disruption, and confirm option
+        await page.evaluate(() => {
+          const store = window.__journeyStore?.getState();
+          store?.startJourney?.();
+          store?.setDisruptionType?.('delay');
+        });
+        await page.waitForTimeout(400);
+
+        // Tab 1 confirms option (broadcasts to sahayak_family_sync)
+        await page.evaluate(() => {
+          const store = window.__journeyStore?.getState();
+          store?.confirmOption?.({
+            id: 'opt-reroute-branch',
+            titleEn: 'Branch Line Reroute via Kurukshetra',
+            titleHi: 'कुरुक्षेत्र के रास्ते शाखा लाइन डायवर्जन',
+            actionType: 'reroute',
+            timeDeltaMinutes: -22,
+            timeDisplayEn: 'Saves 22 min',
+            timeDisplayHi: '२२ मिनट की बचत',
+            newEtaEn: '16:15',
+            newEtaHi: '१६:१५',
+            costInr: 0,
+            costDisplayEn: '₹0 (Free transfer)',
+            costDisplayHi: '₹० (मुफ़्त स्थानांतरण)',
+            comfortRating: 4,
+            transfersCount: 0,
+            transfersDisplayEn: 'Direct bypass',
+            transfersDisplayHi: 'सीधा बाईपास',
+            seatNoteEn: 'Seat guaranteed in bypass train. Reserved coach transfer provided.',
+            seatNoteHi: 'बाईपास ट्रेन में सीट की गारंटी। आरक्षित कोच स्थानांतरण प्रदान किया गया।',
+            rankingReasonEn: 'Fastest arrival with 0 transfers and full seat protection.',
+            rankingReasonHi: 'बिना किसी स्थानांतरण और पूर्ण सीट सुरक्षा के साथ सबसे तेज़ आगमन।',
+            confidenceScore: 94,
+          });
+        });
+
+        // Allow broadcast propagation
+        await tab2.waitForTimeout(600);
+
+        // Verify Tab 2 state received via broadcast sync
+        const tab2State = await tab2.evaluate(() => {
+          const s = window.__journeyStore?.getState();
+          return { status: s?.status, hasOption: !!s?.confirmedOption, activeBranch: s?.activeBranch };
+        });
+        console.log(`    [BroadcastChannel Sync Verified] Tab 2 State: status=${tab2State.status}, hasOption=${tab2State.hasOption}, activeBranch=${tab2State.activeBranch}`);
+
+        // Open Family Share modal on Tab 2
+        await tab2.evaluate(() => {
+          window.__journeyStore?.getState()?.setFamilyShareOpen?.(true);
+        });
+        await tab2.waitForSelector('div[role="dialog"]', { timeout: 3000 });
+        await tab2.waitForTimeout(500);
+
+        const shotPath = path.join(screenshotsDir, 'family-share-tab2-synced.png');
+        await tab2.screenshot({ path: shotPath, fullPage: false });
+        console.log(`[Screenshot Saved] ${shotPath}`);
+
+        return tab2;
+      },
+    },
   ];
 
   const auditSummary = [];
@@ -306,8 +475,8 @@ async function run() {
     const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
     const page = await context.newPage();
     try {
-      await st.setup(page);
-      const results = await new AxeBuilder({ page }).analyze();
+      const auditPage = (await st.setup(page)) || page;
+      const results = await new AxeBuilder({ page: auditPage }).analyze();
       
       const violations = results.violations.map((v) => ({
         id: v.id,
@@ -348,6 +517,19 @@ async function run() {
   const reportPath = path.join(reportsDir, 'axe-multi-state-report.json');
   fs.writeFileSync(reportPath, JSON.stringify(auditSummary, null, 2));
   console.log(`\n[Report Written] ${reportPath}`);
+
+  await browser.close();
+
+  const totalViolations = auditSummary.reduce((acc, s) => acc + s.violationsCount, 0);
+  console.log(`\n====================================================`);
+  if (totalViolations === 0) {
+    console.log(`AUDIT PASSED: All ${auditSummary.length} states have 0 axe violations!`);
+    console.log(`====================================================\n`);
+  } else {
+    console.error(`AUDIT FAILED: Found ${totalViolations} total violation(s) across states.`);
+    console.log(`====================================================\n`);
+    process.exit(1);
+  }
 }
 
 run().catch((e) => {

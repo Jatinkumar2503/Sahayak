@@ -429,7 +429,7 @@ export function Overlay() {
         role="region"
         aria-label={t.demoToolsTitle}
         aria-hidden={!isDemoToolsOpen}
-        className={`fixed top-0 right-0 h-full w-80 max-w-[90vw] bg-slate-950/95 backdrop-blur-2xl border-l border-slate-800 shadow-2xl z-50 p-5 flex flex-col justify-between overflow-y-auto pointer-events-auto transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-full w-full sm:w-80 max-w-[340px] bg-slate-950/95 backdrop-blur-2xl border-l border-slate-800 shadow-2xl z-50 p-4 sm:p-5 flex flex-col justify-between overflow-y-auto overflow-x-hidden pointer-events-auto transform transition-transform duration-300 ease-in-out ${
           isDemoToolsOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'
         }`}
       >

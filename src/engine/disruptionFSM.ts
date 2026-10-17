@@ -28,6 +28,7 @@ export type DisruptionEvent =
   | { type: 'TRIGGER_MISSED_CONNECTION' }
   | { type: 'TRIGGER_PLATFORM_CHANGE'; fromPlatform: number; toPlatform: number }
   | { type: 'RESOLVE_DISRUPTION'; optionId: string; outcomeAction: 'resume' | 'reroute' | 'rebook' | 'cab' }
+  | { type: 'UNDO_RESOLUTION'; previousState: DisruptionFSMState }
   | { type: 'RESET_NORMAL' };
 
 export const INITIAL_DISRUPTION_STATE: DisruptionFSMState = {
@@ -88,6 +89,12 @@ export function disruptionReducer(
         kind: 'RESOLVED',
         selectedOptionId: event.optionId,
         outcomeAction: event.outcomeAction,
+        timestamp: Date.now(),
+      };
+
+    case 'UNDO_RESOLUTION':
+      return {
+        ...event.previousState,
         timestamp: Date.now(),
       };
 

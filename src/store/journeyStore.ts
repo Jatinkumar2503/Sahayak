@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { journeyPhysics, ShadowQualityTier } from './journeyPhysics';
+import { broadcastJourneyState, getSyncChannel } from '@/utils/broadcastSync';
 
 export type JourneyStatus = 'on-time' | 'delay' | 'cancelled' | 'rerouted' | 'resolved';
 export type DisruptionType = 'none' | 'delay' | 'cancellation' | 'missed_connection' | 'platform_change';
@@ -44,6 +45,15 @@ export const STATIONS: StationInfo[] = [
   },
 ];
 
+export interface PreviousDisruptionState {
+  disruptionType: DisruptionType;
+  status: JourneyStatus;
+  activeBranch: 'main' | 'branch';
+  targetSpeed: number;
+  speed: number;
+  cameraMode: CameraMode;
+}
+
 export interface JourneyState {
   status: JourneyStatus;
   progress: number;
@@ -82,11 +92,7 @@ export interface JourneyState {
   isDemoToolsOpen: boolean;
   previewRouteId: string | null;
   confirmedOption: any | null;
-  previousDisruptionState: {
-    disruptionType: DisruptionType;
-    status: JourneyStatus;
-    activeBranch: 'main' | 'branch';
-  } | null;
+  previousDisruptionState: PreviousDisruptionState | null;
 
   startJourney: () => void;
   toggleDemoTools: () => void;
@@ -126,7 +132,7 @@ export interface JourneyState {
   resetJourney: () => void;
 }
 
-export const useJourneyStore = create<JourneyState>((set) => ({
+export const useJourneyStore = create<JourneyState>((set, get) => ({
   status: 'on-time',
   progress: 0.02,
   speed: 0.25,
@@ -176,30 +182,86 @@ export const useJourneyStore = create<JourneyState>((set) => ({
   setDemoToolsOpen: (open) => set({ isDemoToolsOpen: open }),
   setPreviewRouteId: (previewRouteId) => set({ previewRouteId }),
   confirmOption: (option) => {
-    set((state) => ({
-      confirmedOption: option,
-      previousDisruptionState: {
-        disruptionType: state.disruptionType,
-        status: state.status,
-        activeBranch: state.activeBranch,
-      },
+    const state = get();
+    const prev: PreviousDisruptionState = {
+      disruptionType: state.disruptionType,
+      status: state.status,
+      activeBranch: state.activeBranch,
+      targetSpeed: journeyPhysics.targetSpeed,
+      speed: journeyPhysics.speed,
+      cameraMode: state.cameraMode,
+    };
+
+    const nextBranch = option?.actionType === 'reroute' ? 'branch' : state.activeBranch;
+
+    // Cross-tab broadcast sync
+    broadcastJourneyState({
       status: 'resolved',
-    }));
+      disruptionType: state.disruptionType,
+      confirmedOption: option,
+      activeBranch: nextBranch,
+      timestamp: Date.now(),
+    });
+
+    set({
+      confirmedOption: option,
+      previousDisruptionState: prev,
+      status: 'resolved',
+      previewRouteId: null,
+    });
   },
   undoConfirmedOption: () => {
-    set((state) => {
-      const prev = state.previousDisruptionState;
-      if (prev) {
-        journeyPhysics.activeBranch = prev.activeBranch;
-        return {
-          confirmedOption: null,
-          status: prev.status,
-          disruptionType: prev.disruptionType,
-          activeBranch: prev.activeBranch,
-          previousDisruptionState: null,
-        };
-      }
-      return { confirmedOption: null, status: 'delay' };
+    const state = get();
+    const prev = state.previousDisruptionState;
+
+    if (prev) {
+      journeyPhysics.activeBranch = prev.activeBranch;
+      journeyPhysics.targetSpeed = prev.targetSpeed;
+      journeyPhysics.speed = prev.speed;
+
+      broadcastJourneyState({
+        status: prev.status,
+        disruptionType: prev.disruptionType,
+        confirmedOption: null,
+        activeBranch: prev.activeBranch,
+        timestamp: Date.now(),
+      });
+
+      set({
+        confirmedOption: null,
+        status: prev.status,
+        disruptionType: prev.disruptionType,
+        activeBranch: prev.activeBranch,
+        targetSpeed: prev.targetSpeed,
+        speed: prev.speed,
+        cameraMode: prev.cameraMode,
+        previewRouteId: null,
+        previousDisruptionState: null,
+      });
+      return;
+    }
+
+    // Default fallback if no prior state was recorded
+    journeyPhysics.activeBranch = 'main';
+    journeyPhysics.targetSpeed = 0.02;
+
+    broadcastJourneyState({
+      status: 'delay',
+      disruptionType: 'delay',
+      confirmedOption: null,
+      activeBranch: 'main',
+      timestamp: Date.now(),
+    });
+
+    set({
+      confirmedOption: null,
+      status: 'delay',
+      disruptionType: 'delay',
+      activeBranch: 'main',
+      targetSpeed: 0.02,
+      cameraMode: 'chase',
+      previewRouteId: null,
+      previousDisruptionState: null,
     });
   },
 
@@ -231,12 +293,26 @@ export const useJourneyStore = create<JourneyState>((set) => ({
       targetSpeed = 0.15;
     }
 
+    // Short dramatic slow-motion beat when disruption triggers (unless reduced motion is active)
+    const currentStore = get();
+    if (disruptionType !== 'none' && !currentStore.reducedMotion) {
+      journeyPhysics.speed = Math.max(0.015, journeyPhysics.speed * 0.35);
+    }
     journeyPhysics.targetSpeed = targetSpeed;
+
+    broadcastJourneyState({
+      status: nextStatus,
+      disruptionType,
+      confirmedOption: null,
+      activeBranch: 'main',
+      timestamp: Date.now(),
+    });
 
     set({
       disruptionType,
       status: nextStatus,
       targetSpeed,
+      previewRouteId: null,
     });
   },
   toggleTimeOfDay: () =>
@@ -308,11 +384,8 @@ export const useJourneyStore = create<JourneyState>((set) => ({
   toggleLiteMode: () =>
     set((state) => {
       const next = !state.isLiteMode;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('sahayak_lite_mode', String(next));
-      }
-      journeyPhysics.shadowQuality = 'blob';
-      return { isLiteMode: next, shadowTier: 'blob' };
+      journeyPhysics.shadowQuality = next ? 'blob' : 'blob';
+      return { isLiteMode: next };
     }),
   setLiteMode: (isLiteMode) => {
     if (typeof window !== 'undefined') {
@@ -328,6 +401,14 @@ export const useJourneyStore = create<JourneyState>((set) => ({
     journeyPhysics.speed = 0.25;
     journeyPhysics.targetSpeed = 0.25;
     journeyPhysics.activeBranch = 'main';
+
+    broadcastJourneyState({
+      status: 'on-time',
+      disruptionType: 'none',
+      confirmedOption: null,
+      activeBranch: 'main',
+      timestamp: Date.now(),
+    });
 
     set({
       status: 'on-time',
@@ -345,6 +426,24 @@ export const useJourneyStore = create<JourneyState>((set) => ({
   },
 }));
 
+// Cross-tab synchronization listener & test automation hook
 if (typeof window !== 'undefined') {
   (window as any).__journeyStore = useJourneyStore;
+  const channel = getSyncChannel();
+  if (channel) {
+    channel.onmessage = (event) => {
+      if (event.data?.type === 'JOURNEY_SYNC' && event.data.payload) {
+        const p = event.data.payload;
+        useJourneyStore.setState({
+          status: p.status as JourneyStatus,
+          disruptionType: p.disruptionType as DisruptionType,
+          confirmedOption: p.confirmedOption,
+          activeBranch: p.activeBranch,
+        });
+        if (p.activeBranch) {
+          journeyPhysics.activeBranch = p.activeBranch;
+        }
+      }
+    };
+  }
 }

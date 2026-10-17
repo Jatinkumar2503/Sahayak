@@ -15,6 +15,9 @@ import {
   RotateCcw,
   CheckCircle2,
   Armchair,
+  Users,
+  Eye,
+  GitBranch,
 } from 'lucide-react';
 import { useJourneyStore } from '@/store/journeyStore';
 import { journeyPhysics } from '@/store/journeyPhysics';
@@ -29,9 +32,11 @@ export function DecisionCardsOverlay() {
   const setActiveBranch = useJourneyStore((s) => s.setActiveBranch);
   const setCameraMode = useJourneyStore((s) => s.setCameraMode);
   const setPreviewRouteId = useJourneyStore((s) => s.setPreviewRouteId);
+  const previewRouteId = useJourneyStore((s) => s.previewRouteId);
   const confirmOption = useJourneyStore((s) => s.confirmOption);
   const confirmedOption = useJourneyStore((s) => s.confirmedOption as DecisionOption | null);
   const undoConfirmedOption = useJourneyStore((s) => s.undoConfirmedOption);
+  const setFamilyShareOpen = useJourneyStore((s) => s.setFamilyShareOpen);
 
   const [expandedWhyId, setExpandedWhyId] = useState<string | null>(null);
 
@@ -133,10 +138,13 @@ export function DecisionCardsOverlay() {
 
       {/* 2. Ranked Decision Cards Grid */}
       {options.length > 0 && status !== 'resolved' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <div>
+          <h2 className="sr-only">{t.decisionCardsHeader}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {options.map((option) => {
             const isTop = option.isTopRanked;
             const isWhyExpanded = expandedWhyId === option.id;
+            const isPreviewActive = previewRouteId === option.id;
 
             return (
               <div
@@ -149,6 +157,8 @@ export function DecisionCardsOverlay() {
                 className={`relative flex flex-col justify-between p-3.5 rounded-2xl backdrop-blur-xl transition-all duration-300 border shadow-2xl focus:outline-none focus:ring-2 focus:ring-amber-400 ${
                   isTop
                     ? 'bg-slate-900/95 border-amber-400/80 ring-2 ring-amber-400/20'
+                    : isPreviewActive
+                    ? 'bg-slate-900/95 border-amber-400/60 ring-1 ring-amber-400/30'
                     : 'bg-slate-950/90 border-slate-700/60 hover:border-slate-400'
                 }`}
               >
@@ -191,12 +201,30 @@ export function DecisionCardsOverlay() {
                     </div>
                   </div>
 
+                  {/* Tap-to-Preview Route Toggle Button for Touch / Mobile Users */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPreviewRouteId(isPreviewActive ? null : option.id);
+                    }}
+                    aria-pressed={isPreviewActive}
+                    className={`mt-2 py-2 px-2.5 min-h-[44px] w-full rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all border ${
+                      isPreviewActive
+                        ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-md font-extrabold'
+                        : 'bg-slate-900/90 text-slate-300 border-slate-800 hover:border-slate-700'
+                    }`}
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>{isPreviewActive ? t.hidePreviewBtn : t.previewRouteBtn}</span>
+                  </button>
+
                   {/* Accessible "Why this ranking?" expander button */}
                   <button
                     type="button"
                     aria-expanded={isWhyExpanded}
                     onClick={() => setExpandedWhyId(isWhyExpanded ? null : option.id)}
-                    className="mt-2.5 text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center justify-between w-full py-2 px-2.5 min-h-[44px] rounded-xl bg-slate-900/90 border border-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 active:scale-95"
+                    className="mt-1.5 text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center justify-between w-full py-2 px-2.5 min-h-[44px] rounded-xl bg-slate-900/90 border border-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 active:scale-95"
                   >
                     <span className="flex items-center gap-1.5">
                       <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
@@ -207,7 +235,7 @@ export function DecisionCardsOverlay() {
                     />
                   </button>
 
-                  {/* Collapsible Factor Breakdown */}
+                  {/* Collapsible Factor Breakdown (All factors driven by dynamic option data) */}
                   {isWhyExpanded && (
                     <div className="mt-2 p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-[10px] space-y-1.5 animate-fadeIn">
                       <div className="font-bold text-slate-200 border-b border-slate-800 pb-1 flex justify-between">
@@ -222,7 +250,7 @@ export function DecisionCardsOverlay() {
                         <div className="flex justify-between">
                           <span>{t.factorTimeSaved}:</span>
                           <span className="font-semibold text-sky-400">
-                            {option.timeDeltaMinutes < 0 ? `${Math.abs(option.timeDeltaMinutes)}m saved` : `+${option.timeDeltaMinutes}m delay`}
+                            {isHindi ? option.timeDisplayHi : option.timeDisplayEn}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -231,7 +259,15 @@ export function DecisionCardsOverlay() {
                         </div>
                         <div className="flex justify-between">
                           <span>{t.factorCost}:</span>
-                          <span className="font-semibold text-emerald-300">₹{option.costInr}</span>
+                          <span className="font-semibold text-emerald-300">
+                            {isHindi ? option.costDisplayHi : option.costDisplayEn}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{t.factorTransfer}:</span>
+                          <span className="font-semibold text-purple-300">
+                            {isHindi ? option.transfersDisplayHi : option.transfersDisplayEn}
+                          </span>
                         </div>
                       </div>
                       <p className="pt-1 border-t border-slate-800 text-[9px] text-slate-400 italic">
@@ -257,10 +293,11 @@ export function DecisionCardsOverlay() {
               </div>
             );
           })}
+          </div>
         </div>
       )}
 
-      {/* 3. Resolved Screen Summarizing Outcome with Undo Button */}
+      {/* 3. Resolved Screen Summarizing Outcome with Undo & Family Share Buttons */}
       {status === 'resolved' && (
         <div className="p-5 rounded-3xl bg-slate-950/95 backdrop-blur-2xl border-2 border-emerald-500/80 shadow-2xl text-slate-100 flex flex-col gap-4 animate-fadeIn">
           {/* Header */}
@@ -268,9 +305,9 @@ export function DecisionCardsOverlay() {
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="w-6 h-6 text-[#009E73]" />
               <div>
-                <h3 className="text-sm sm:text-base font-extrabold text-white">
+                <h2 className="text-sm sm:text-base font-extrabold text-white">
                   {t.resolvedTitle}
-                </h3>
+                </h2>
                 <p className="text-xs text-slate-300">
                   {t.resolvedSubtitle}
                 </p>
@@ -281,7 +318,7 @@ export function DecisionCardsOverlay() {
             </span>
           </div>
 
-          {/* Outcome Summary Grid */}
+          {/* Outcome Summary Grid (Driven dynamically by confirmedOption data) */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
@@ -289,7 +326,7 @@ export function DecisionCardsOverlay() {
                 {t.newArrival}
               </span>
               <span className="font-extrabold text-white text-sm">
-                {confirmedOption ? (confirmedOption.timeDeltaMinutes < 0 ? '18:33 (Saved 22m)' : '18:55 (+25m)') : '18:35'}
+                {confirmedOption ? (isHindi ? confirmedOption.newEtaHi : confirmedOption.newEtaEn) : '18:35'}
               </span>
             </div>
 
@@ -299,7 +336,7 @@ export function DecisionCardsOverlay() {
                 {t.additionalCost}
               </span>
               <span className="font-extrabold text-emerald-300 text-sm">
-                {confirmedOption ? `₹${confirmedOption.costInr}` : '₹0'}
+                {confirmedOption ? (isHindi ? confirmedOption.costDisplayHi : confirmedOption.costDisplayEn) : '₹0'}
               </span>
             </div>
 
@@ -309,7 +346,7 @@ export function DecisionCardsOverlay() {
                 {t.comfortScore}
               </span>
               <span className="font-extrabold text-amber-300 text-sm">
-                {confirmedOption ? `${confirmedOption.comfortRating}/5 Stars` : '4/5'}
+                {confirmedOption ? `${confirmedOption.comfortRating}/5 ${isHindi ? 'सितारे' : 'Stars'}` : '4/5'}
               </span>
             </div>
 
@@ -318,27 +355,41 @@ export function DecisionCardsOverlay() {
                 <Armchair className="w-3.5 h-3.5 text-purple-400" />
                 {t.seatNote}
               </span>
-              <span className="font-bold text-slate-200 text-xs truncate">
-                {confirmedOption?.actionType === 'reroute'
-                  ? 'Unreserved Chord Line'
-                  : 'Coach C-4, Seat 24'}
+              <span className="font-bold text-slate-200 text-xs truncate" title={confirmedOption ? (isHindi ? confirmedOption.seatNoteHi : confirmedOption.seatNoteEn) : ''}>
+                {confirmedOption
+                  ? (isHindi ? confirmedOption.seatNoteHi : confirmedOption.seatNoteEn)
+                  : (isHindi ? 'वर्तमान आरक्षित कोच सी-४, सीट २४' : 'Coach C-4, Seat 24 (Reserved AC)')}
               </span>
             </div>
           </div>
 
-          {/* Action Row: Undo Decision Button */}
-          <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+          {/* Action Row: Undo Decision Button & Share with Family Button */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800">
             <span className="text-[11px] text-slate-400">
               {t.undoDesc}
             </span>
-            <button
-              type="button"
-              onClick={undoConfirmedOption}
-              className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 hover:border-amber-400/60 font-bold text-xs transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-amber-400"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>{t.undoBtn}</span>
-            </button>
+
+            <div className="flex items-center gap-2">
+              {/* Share with family button */}
+              <button
+                type="button"
+                onClick={() => setFamilyShareOpen(true)}
+                className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-blue-400"
+              >
+                <Users className="w-4 h-4" />
+                <span>{t.shareWithFamilyBtn}</span>
+              </button>
+
+              {/* Undo button */}
+              <button
+                type="button"
+                onClick={undoConfirmedOption}
+                className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 hover:border-amber-400/60 font-bold text-xs transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-amber-400"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>{t.undoBtn}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

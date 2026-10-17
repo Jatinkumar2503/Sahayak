@@ -27,6 +27,7 @@ export function FamilyShareModal({ isOpen, onClose }: FamilyShareModalProps) {
   const disruptionType = useJourneyStore((s) => s.disruptionType);
   const activeBranch = useJourneyStore((s) => s.activeBranch);
   const language = useJourneyStore((s) => s.language);
+  const confirmedOption = useJourneyStore((s) => s.confirmedOption);
 
   const [lastUpdatedSec, setLastUpdatedSec] = useState(2);
   const [viewState, setViewState] = useState<'ready' | 'loading' | 'offline'>('ready');
@@ -97,11 +98,17 @@ export function FamilyShareModal({ isOpen, onClose }: FamilyShareModalProps) {
 
   // Compute family status message based on live journey store
   const getFamilyStatusMessage = () => {
+    if (confirmedOption) {
+      if (confirmedOption.actionType === 'reroute') {
+        return t.familyStatusRerouted;
+      }
+      if (confirmedOption.actionType === 'rebook') {
+        return t.familyStatusRebooked;
+      }
+      return t.familyStatusSafe;
+    }
     if (activeBranch === 'branch') {
       return t.familyStatusRerouted;
-    }
-    if (status === 'resolved') {
-      return t.familyStatusRebooked;
     }
     if (disruptionType === 'delay') {
       return t.familyStatusDelayed;
@@ -195,7 +202,9 @@ export function FamilyShareModal({ isOpen, onClose }: FamilyShareModalProps) {
                   {getFamilyStatusMessage()}
                 </h3>
                 <p className="text-[11px] text-slate-300 mt-1">
-                  {t.familyCoachSeat}
+                  {confirmedOption
+                    ? (isHindi ? confirmedOption.seatNoteHi : confirmedOption.seatNoteEn)
+                    : t.familyCoachSeat}
                 </p>
               </div>
 
@@ -221,7 +230,9 @@ export function FamilyShareModal({ isOpen, onClose }: FamilyShareModalProps) {
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400 text-[11px]">Est. Ambala Arrival:</span>
                   <span className="font-bold text-slate-200">
-                    {status === 'delay' ? '18:55 (+25m)' : '18:30 (On Time)'}
+                    {confirmedOption
+                      ? (isHindi ? confirmedOption.newEtaHi : confirmedOption.newEtaEn)
+                      : (status === 'delay' ? '18:55 (+25m)' : '18:30 (On Time)')}
                   </span>
                 </div>
               </div>
