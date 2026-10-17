@@ -1,49 +1,94 @@
 [
   {
-    "state": "Default English (/)",
+    "state": "First View (Default English, Clean Train Scene + Start Journey)",
     "passed": 33,
-    "incomplete": 1,
+    "incomplete": 2,
     "violationsCount": 0,
     "violations": []
   },
   {
-    "state": "Hindi Localization Mode (hi)",
-    "passed": 34,
-    "incomplete": 1,
+    "state": "First View (Hindi Localization Mode)",
+    "passed": 33,
+    "incomplete": 2,
     "violationsCount": 0,
     "violations": []
   },
   {
     "state": "Elder Accessibility Mode",
     "passed": 33,
+    "incomplete": 2,
+    "violationsCount": 0,
+    "violations": []
+  },
+  {
+    "state": "Collapsible \"Demo tools\" Drawer Open",
+    "passed": 35,
     "incomplete": 1,
+    "violationsCount": 0,
+    "violations": []
+  },
+  {
+    "state": "Active Journey Running (\"Simulate a problem\" CTA)",
+    "passed": 34,
+    "incomplete": 2,
+    "violationsCount": 0,
+    "violations": []
+  },
+  {
+    "state": "Disruption Decision Cards Overlay (With \"Why this ranking?\" expander)",
+    "passed": 36,
+    "incomplete": 2,
+    "violationsCount": 0,
+    "violations": []
+  },
+  {
+    "state": "Resolved Outcome Screen (Outcome summary + Undo button)",
+    "passed": 35,
+    "incomplete": 2,
     "violationsCount": 0,
     "violations": []
   },
   {
     "state": "Onboarding Modal Open",
-    "passed": 34,
-    "incomplete": 1,
+    "passed": 35,
+    "incomplete": 2,
     "violationsCount": 0,
     "violations": []
   },
   {
     "state": "Family Share Modal Open",
-    "passed": 34,
-    "incomplete": 1,
-    "violationsCount": 0,
-    "violations": []
+    "passed": 35,
+    "incomplete": 2,
+    "violationsCount": 1,
+    "violations": [
+      {
+        "id": "heading-order",
+        "impact": "moderate",
+        "description": "Ensure the order of headings is semantically correct",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright",
+        "nodes": [
+          "<h4 class=\"text-sm font-extrabold text-white leading-tight\">Passenger is safe on board</h4>"
+        ]
+      }
+    ]
   },
   {
     "state": "Voice Assistant Modal Open",
-    "passed": 34,
-    "incomplete": 1,
+    "passed": 35,
+    "incomplete": 2,
     "violationsCount": 0,
     "violations": []
   },
   {
     "state": "Journey Timeline Modal Open",
-    "passed": 34,
+    "passed": 35,
+    "incomplete": 2,
+    "violationsCount": 0,
+    "violations": []
+  },
+  {
+    "state": "404 Not Found Page (/nonexistent-route)",
+    "passed": 27,
     "incomplete": 1,
     "violationsCount": 0,
     "violations": []

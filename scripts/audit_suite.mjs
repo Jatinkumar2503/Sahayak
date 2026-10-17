@@ -85,60 +85,153 @@ async function run() {
   }
 
   // -----------------------------------------------------------------
-  // 2. AXE-CORE AUDITS ACROSS MULTIPLE STATES
+  // 2. AXE-CORE AUDITS ACROSS ALL REQUIRED UX STATES
   // -----------------------------------------------------------------
   console.log('\n--- 2. AXE-CORE MULTI-STATE ACCESSIBILITY AUDIT ---');
 
   const states = [
     {
-      name: 'Default English (/)',
+      name: 'First View (Default English, Clean Train Scene + Start Journey)',
       setup: async (page) => {
-        await page.goto(`${BASE_URL}/?quality=full`, { waitUntil: 'networkidle' });
+        await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
         try {
           const skipBtn = await page.$('button:has-text("Skip")');
           if (skipBtn) await skipBtn.click();
         } catch {}
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(600);
       },
     },
     {
-      name: 'Hindi Localization Mode (hi)',
+      name: 'First View (Hindi Localization Mode)',
       setup: async (page) => {
-        await page.goto(`${BASE_URL}/?quality=full`, { waitUntil: 'networkidle' });
+        await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
         await page.evaluate(() => {
           localStorage.setItem('sahayak_language', 'hi');
+          localStorage.setItem('sahayak_onboarding_seen', 'true');
         });
         await page.reload({ waitUntil: 'networkidle' });
         try {
           const skipBtn = await page.$('button:has-text("छोड़ें")');
           if (skipBtn) await skipBtn.click();
         } catch {}
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(600);
       },
     },
     {
       name: 'Elder Accessibility Mode',
       setup: async (page) => {
-        await page.goto(`${BASE_URL}/?quality=full`, { waitUntil: 'networkidle' });
+        await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
         await page.evaluate(() => {
           localStorage.setItem('sahayak_elder_mode', 'true');
+          localStorage.setItem('sahayak_onboarding_seen', 'true');
         });
         await page.reload({ waitUntil: 'networkidle' });
         try {
           const skipBtn = await page.$('button:has-text("Skip")');
           if (skipBtn) await skipBtn.click();
         } catch {}
+        await page.waitForTimeout(600);
+      },
+    },
+    {
+      name: 'Collapsible "Demo tools" Drawer Open',
+      setup: async (page) => {
+        await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
+        try {
+          const skipBtn = await page.$('button:has-text("Skip")');
+          if (skipBtn) await skipBtn.click();
+        } catch {}
         await page.waitForTimeout(500);
+        // Click Demo tools trigger
+        const trigger = await page.$('#demo-tools-trigger');
+        if (trigger) {
+          await trigger.click();
+        } else {
+          await page.evaluate(() => {
+            window.__journeyStore?.getState()?.setDemoToolsOpen?.(true);
+          });
+        }
+        await page.waitForTimeout(500);
+      },
+    },
+    {
+      name: 'Active Journey Running ("Simulate a problem" CTA)',
+      setup: async (page) => {
+        await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
+        try {
+          const skipBtn = await page.$('button:has-text("Skip")');
+          if (skipBtn) await skipBtn.click();
+        } catch {}
+        await page.waitForTimeout(500);
+        await page.evaluate(() => {
+          window.__journeyStore?.getState()?.startJourney?.();
+        });
+        await page.waitForTimeout(600);
+      },
+    },
+    {
+      name: 'Disruption Decision Cards Overlay (With "Why this ranking?" expander)',
+      setup: async (page) => {
+        await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
+        try {
+          const skipBtn = await page.$('button:has-text("Skip")');
+          if (skipBtn) await skipBtn.click();
+        } catch {}
+        await page.waitForTimeout(500);
+        await page.evaluate(() => {
+          window.__journeyStore?.getState()?.startJourney?.();
+          window.__journeyStore?.getState()?.setDisruptionType?.('delay');
+        });
+        await page.waitForTimeout(600);
+      },
+    },
+    {
+      name: 'Resolved Outcome Screen (Outcome summary + Undo button)',
+      setup: async (page) => {
+        await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
+        try {
+          const skipBtn = await page.$('button:has-text("Skip")');
+          if (skipBtn) await skipBtn.click();
+        } catch {}
+        await page.waitForTimeout(500);
+        await page.evaluate(() => {
+          const store = window.__journeyStore?.getState();
+          store?.startJourney?.();
+          store?.setDisruptionType?.('delay');
+        });
+        await page.waitForTimeout(400);
+        // Click the first confirm option button
+        const confirmBtn = await page.$('button:has-text("Confirm Option"), button:has-text("विकल्प चुनें")');
+        if (confirmBtn) {
+          await confirmBtn.click();
+        } else {
+          await page.evaluate(() => {
+            const store = window.__journeyStore?.getState();
+            store?.confirmOption?.({
+              id: 'opt-wait-short',
+              titleEn: 'Hold on Main Track for Signal Clearance',
+              titleHi: 'सिग्नल क्लीयरेंस के लिए मुख्य ट्रैक पर रुकें',
+              actionType: 'resume',
+              delayDeltaMinutes: 25,
+              costInRupees: 0,
+              comfortScore: 92,
+              transfers: 0,
+              newEta: '16:45',
+              seatNote: 'Stay in your current reserved coach and berth with AC running.',
+            });
+          });
+        }
+        await page.waitForTimeout(600);
       },
     },
     {
       name: 'Onboarding Modal Open',
       setup: async (page) => {
-        await page.goto(`${BASE_URL}/?quality=full`, { waitUntil: 'networkidle' });
+        await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
         await page.evaluate(() => {
           localStorage.removeItem('sahayak_onboarding_seen');
+          window.__journeyStore?.getState()?.setIsOnboardingOpen?.(true);
         });
-        await page.reload({ waitUntil: 'networkidle' });
         await page.waitForSelector('div[role="dialog"]', { timeout: 3000 });
         await page.waitForTimeout(500);
       },
@@ -146,14 +239,15 @@ async function run() {
     {
       name: 'Family Share Modal Open',
       setup: async (page) => {
-        await page.goto(`${BASE_URL}/?quality=full`, { waitUntil: 'networkidle' });
+        await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
         try {
           const skipBtn = await page.$('button:has-text("Skip")');
           if (skipBtn) await skipBtn.click();
         } catch {}
         await page.waitForTimeout(500);
-        const btn = await page.$('button:has-text("Family Share"), button:has-text("परिवार शेयर")');
-        if (btn) await btn.click();
+        await page.evaluate(() => {
+          window.__journeyStore?.getState()?.setFamilyShareOpen?.(true);
+        });
         await page.waitForSelector('div[role="dialog"]', { timeout: 3000 });
         await page.waitForTimeout(500);
       },
@@ -161,15 +255,15 @@ async function run() {
     {
       name: 'Voice Assistant Modal Open',
       setup: async (page) => {
-        await page.goto(`${BASE_URL}/?quality=full`, { waitUntil: 'networkidle' });
+        await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
         try {
           const skipBtn = await page.$('button:has-text("Skip")');
           if (skipBtn) await skipBtn.click();
         } catch {}
         await page.waitForTimeout(500);
-        // Click mic button
-        const micBtn = await page.$('button[title*="Voice"], button[title*="वॉयस"]');
-        if (micBtn) await micBtn.click();
+        await page.evaluate(() => {
+          window.__journeyStore?.getState()?.setVoiceAssistantOpen?.(true);
+        });
         await page.waitForSelector('div[role="dialog"]', { timeout: 3000 });
         await page.waitForTimeout(500);
       },
@@ -177,15 +271,23 @@ async function run() {
     {
       name: 'Journey Timeline Modal Open',
       setup: async (page) => {
-        await page.goto(`${BASE_URL}/?quality=full`, { waitUntil: 'networkidle' });
+        await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
         try {
           const skipBtn = await page.$('button:has-text("Skip")');
           if (skipBtn) await skipBtn.click();
         } catch {}
         await page.waitForTimeout(500);
-        const tlBtn = await page.$('button:has-text("Timeline"), button:has-text("समयरेखा")');
-        if (tlBtn) await tlBtn.click();
+        await page.evaluate(() => {
+          window.__journeyStore?.getState()?.setTimelineOpen?.(true);
+        });
         await page.waitForSelector('div[role="dialog"]', { timeout: 3000 });
+        await page.waitForTimeout(500);
+      },
+    },
+    {
+      name: '404 Not Found Page (/nonexistent-route)',
+      setup: async (page) => {
+        await page.goto(`${BASE_URL}/nonexistent-route`, { waitUntil: 'networkidle' });
         await page.waitForTimeout(500);
       },
     },

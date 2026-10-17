@@ -191,9 +191,9 @@ export function FamilyShareModal({ isOpen, onClose }: FamilyShareModalProps) {
                     {t.familyVerifiedStatus}
                   </span>
                 </div>
-                <h4 className="text-sm font-extrabold text-white leading-tight">
+                <h3 className="text-sm font-extrabold text-white leading-tight">
                   {getFamilyStatusMessage()}
-                </h4>
+                </h3>
                 <p className="text-[11px] text-slate-300 mt-1">
                   {t.familyCoachSeat}
                 </p>
