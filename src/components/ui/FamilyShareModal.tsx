@@ -148,7 +148,7 @@ export function FamilyShareModal({ isOpen, onClose }: FamilyShareModalProps) {
                 <Users className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-xs font-bold leading-tight">{t.familyShareTitle}</h3>
+                <h2 className="text-xs font-bold leading-tight">{t.familyShareTitle}</h2>
                 <p className="text-[10px] text-slate-400">{t.familyShareSubtitle}</p>
               </div>
             </div>
