@@ -239,10 +239,13 @@ async function run() {
     }
   }
 
-  await browser.close();
-
-  fs.writeFileSync('axe-multi-state-report.json', JSON.stringify(auditSummary, null, 2));
-  console.log('\n[Report Written] axe-multi-state-report.json');
+  const reportsDir = path.resolve('docs', 'reports');
+  if (!fs.existsSync(reportsDir)) {
+    fs.mkdirSync(reportsDir, { recursive: true });
+  }
+  const reportPath = path.join(reportsDir, 'axe-multi-state-report.json');
+  fs.writeFileSync(reportPath, JSON.stringify(auditSummary, null, 2));
+  console.log(`\n[Report Written] ${reportPath}`);
 }
 
 run().catch((e) => {
