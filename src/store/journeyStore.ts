@@ -45,6 +45,57 @@ export const STATIONS: StationInfo[] = [
   },
 ];
 
+export interface SignalInfo {
+  id: string;
+  nameEn: string;
+  nameHi: string;
+  code: string;
+  progress: number;
+  position: [number, number, number];
+}
+
+export const SIGNALS: SignalInfo[] = [
+  {
+    id: 'sig-102',
+    nameEn: 'Signal 102',
+    nameHi: 'सिग्नल १०२',
+    code: 'SIG-102',
+    progress: 0.22,
+    position: [9.1, 0.3, -44.3],
+  },
+  {
+    id: 'sig-104',
+    nameEn: 'Signal 104',
+    nameHi: 'सिग्नल १०४',
+    code: 'SIG-104',
+    progress: 0.44,
+    position: [15.4, 0.5, -166.1],
+  },
+  {
+    id: 'sig-106',
+    nameEn: 'Signal 106',
+    nameHi: 'सिग्नल १०६',
+    code: 'SIG-106',
+    progress: 0.68,
+    position: [-16.8, 1.1, -301.5],
+  },
+  {
+    id: 'sig-108',
+    nameEn: 'Signal 108',
+    nameHi: 'सिग्नल १०८',
+    code: 'SIG-108',
+    progress: 0.88,
+    position: [-1.0, 0.2, -411.5],
+  },
+];
+
+export function getNextSignalAhead(progress: number): SignalInfo {
+  for (const sig of SIGNALS) {
+    if (sig.progress > progress + 0.005) return sig;
+  }
+  return SIGNALS[0];
+}
+
 export interface PreviousDisruptionState {
   disruptionType: DisruptionType;
   status: JourneyStatus;
@@ -71,6 +122,10 @@ export interface JourneyState {
 
   activeBranch: 'main' | 'branch';
   branchProgress: number;
+
+  // Signal management
+  activeSignalId: string;
+  setActiveSignalId: (id: string) => void;
 
   // Shadow tier management
   shadowTier: ShadowTier;
@@ -149,6 +204,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
 
   activeBranch: 'main',
   branchProgress: 0,
+  activeSignalId: 'sig-104',
 
   shadowTier: 'blob', // Default fast contact blob shadows
   scrollMode: false,
@@ -279,16 +335,31 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
     set({ targetSpeed });
   },
   setStatus: (status) => set({ status }),
+  setActiveSignalId: (activeSignalId) => set({ activeSignalId }),
   setDisruptionType: (disruptionType) => {
     let nextStatus: JourneyStatus = 'on-time';
     let targetSpeed = 0.25;
 
-    if (disruptionType === 'delay') {
-      nextStatus = 'delay';
-      targetSpeed = 0.02; // Slowing down to brake
-    } else if (disruptionType === 'cancellation') {
-      nextStatus = 'cancelled';
-      targetSpeed = 0; // Hard brake
+    let nextSignalId = get().activeSignalId || 'sig-104';
+
+    if (disruptionType === 'delay' || disruptionType === 'cancellation') {
+      nextStatus = disruptionType === 'delay' ? 'delay' : 'cancelled';
+      targetSpeed = disruptionType === 'delay' ? 0.02 : 0;
+
+      // Target the red signal immediately ahead of the train
+      const nextSig = getNextSignalAhead(journeyPhysics.progress);
+      nextSignalId = nextSig.id;
+
+      const CORRIDOR_CURVE_LENGTH = 568.74;
+      const SIGNAL_STOP_MARGIN_UNITS = 4.5;
+      const stopProgress = (nextSig.progress - (SIGNAL_STOP_MARGIN_UNITS / CORRIDOR_CURVE_LENGTH) + 1) % 1;
+      const initialDist = Math.max(0.1, (stopProgress - journeyPhysics.progress) * CORRIDOR_CURVE_LENGTH);
+      const idealVmax = (initialDist / (0.045 * CORRIDOR_CURVE_LENGTH * 3.8)) * 1.5;
+
+      journeyPhysics.targetSignalProgress = nextSig.progress;
+      journeyPhysics.stopProgress = stopProgress;
+      journeyPhysics.initialBrakeDist = initialDist;
+      journeyPhysics.initialBrakeSpeed = Math.max(0.12, Math.min(0.42, idealVmax));
     } else if (disruptionType === 'missed_connection' || disruptionType === 'platform_change') {
       nextStatus = 'rerouted';
       targetSpeed = 0.15;
@@ -312,6 +383,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
     set({
       disruptionType,
       status: nextStatus,
+      activeSignalId: nextSignalId,
       targetSpeed,
       speed: journeyPhysics.speed,
       previewRouteId: null,

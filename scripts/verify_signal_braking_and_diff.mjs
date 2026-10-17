@@ -5,10 +5,11 @@ import path from 'path';
 
 const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const BASE_URL = 'http://localhost:3000';
+const CORRIDOR_CURVE_LENGTH = 568.74;
 
 async function runBrakingAndDiff() {
   console.log('================================================================');
-  console.log('SAHAYAK 3D — SIGNAL 104 BRAKING DISTANCE & PIXEL DIFF TELEMETRY');
+  console.log('SAHAYAK 3D — CORRIDOR SIGNAL BRAKING, STATION/ELDER & PIXEL DIFF');
   console.log('================================================================\n');
 
   const browser = await chromium.launch({
@@ -28,150 +29,300 @@ async function runBrakingAndDiff() {
   await page.waitForTimeout(500);
 
   // ---------------------------------------------------------------------------
-  // 1. SIGNAL 104 BRAKING DISTANCE & TIME-TO-STOP TELEMETRY
+  // 1. SIGNAL-TARGETED BRAKING ACROSS 5 START POSITIONS ON THE CORRIDOR
   // ---------------------------------------------------------------------------
-  console.log('--- 1. MEASURING TRAIN DISTANCE TO SIGNAL 104 DURING DECELERATION ---');
-  
-  // Initialize train approaching Signal 104
-  // Signal 104 is at Z = -165. Placing train at Z = -140 with normal cruising speed (0.25).
-  const setupData = await page.evaluate(() => {
-    const store = window.__journeyStore;
+  console.log('--- 1. TESTING DELAY BRAKING ACROSS 5 START POSITIONS ALONG CORRIDOR ---');
+
+  const testPositions = [
+    { label: 'Pos 1 (Delhi -> Panipat)', startProgress: 0.19, expectedSignal: 'Signal 102' },
+    { label: 'Pos 2 (Approaching Panipat Outer)', startProgress: 0.38, expectedSignal: 'Signal 104' },
+    { label: 'Pos 3 (Panipat Approach Close)', startProgress: 0.41, expectedSignal: 'Signal 104' },
+    { label: 'Pos 4 (Panipat -> Ambala)', startProgress: 0.64, expectedSignal: 'Signal 106' },
+    { label: 'Pos 5 (Approaching Ambala)', startProgress: 0.84, expectedSignal: 'Signal 108' },
+  ];
+
+  const brakingResults = [];
+
+  for (let idx = 0; idx < testPositions.length; idx++) {
+    const test = testPositions[idx];
+    console.log(`\n  [Run ${idx + 1}/5] ${test.label}: startProgress=${test.startProgress}`);
+
+    // Set train position and reset journey state
+    await page.evaluate((pos) => {
+      const store = window.__journeyStore.getState();
+      const physics = window.__journeyPhysics;
+
+      store.startJourney();
+      store.setDisruptionType('none');
+
+      physics.progress = pos;
+      physics.speed = 0.25;
+      physics.targetSpeed = 0.25;
+      physics.isStationStopped = false;
+      physics.stationStopTimer = 0;
+      store.setSpeed(0.25);
+    }, test.startProgress);
+
+    await page.waitForTimeout(200);
+
+    // Trigger delay disruption
+    await page.evaluate(() => {
+      window.__journeyStore.getState().setDisruptionType('delay');
+    });
+
+    const startTime = Date.now();
+    let stopTime = null;
+    let finalTelemetry = null;
+
+    console.log('    Time (s)  | Speed (norm) | Dist to Signal | Target Signal | Train Progress');
+    console.log('    --------------------------------------------------------------------------');
+
+    while ((Date.now() - startTime) < 8000) {
+      await page.waitForTimeout(250);
+      const elapsedSec = (Date.now() - startTime) / 1000;
+
+      const telem = await page.evaluate(() => {
+        const physics = window.__journeyPhysics;
+        const store = window.__journeyStore.getState();
+        const activeSignalId = store.activeSignalId;
+        const signals = [
+          { id: 'sig-102', nameEn: 'Signal 102', progress: 0.22 },
+          { id: 'sig-104', nameEn: 'Signal 104', progress: 0.44 },
+          { id: 'sig-106', nameEn: 'Signal 106', progress: 0.68 },
+          { id: 'sig-108', nameEn: 'Signal 108', progress: 0.88 },
+        ];
+        const sig = signals.find((s) => s.id === activeSignalId) || signals[1];
+        const distUnits = (sig.progress - physics.progress) * 568.74;
+
+        return {
+          speed: physics.speed,
+          progress: physics.progress,
+          signalName: sig.nameEn,
+          signalProgress: sig.progress,
+          distanceToSignal: Number(distUnits.toFixed(2)),
+        };
+      });
+
+      const isStopped = telem.speed < 0.005;
+
+      console.log(
+        `    +${elapsedSec.toFixed(1)}s     | ${telem.speed.toFixed(4).padEnd(12)} | ${(telem.distanceToSignal + ' m').padEnd(14)} | ${telem.signalName.padEnd(13)} | ${telem.progress.toFixed(5)}`
+      );
+
+      finalTelemetry = telem;
+
+      if (isStopped && stopTime === null) {
+        stopTime = elapsedSec;
+        break;
+      }
+    }
+
+    console.log('    --------------------------------------------------------------------------');
+    console.log(`    Result: Stop Time = ${stopTime ? stopTime.toFixed(2) + 's' : 'Timeout (>8s)'}, Final Dist = ${finalTelemetry.distanceToSignal} m`);
+
+    // Strict assertions:
+    assert.ok(stopTime !== null, `[${test.label}] Train must stop within 8.0 seconds`);
+    assert.ok(stopTime <= 6.0, `[${test.label}] Stop time must be <= 6.0s (actual: ${stopTime.toFixed(2)}s)`);
+    assert.ok(stopTime >= 2.0, `[${test.label}] Stop time must be >= 2.0s (actual: ${stopTime.toFixed(2)}s)`);
+    assert.ok(
+      finalTelemetry.distanceToSignal >= 3.0 && finalTelemetry.distanceToSignal <= 6.0,
+      `[${test.label}] Train must stop short of signal within margin of 3-6 scene units (actual: ${finalTelemetry.distanceToSignal}m)`
+    );
+    assert.ok(
+      finalTelemetry.progress < finalTelemetry.signalProgress,
+      `[${test.label}] Train must never pass the signal (progress: ${finalTelemetry.progress} < signal: ${finalTelemetry.signalProgress})`
+    );
+
+    brakingResults.push({
+      label: test.label,
+      startProgress: test.startProgress,
+      stopTime: Number(stopTime.toFixed(2)),
+      finalDistance: finalTelemetry.distanceToSignal,
+      targetSignal: finalTelemetry.signalName,
+    });
+  }
+
+  console.log('\n  ✔ All 5 start positions PASSED signal-targeted deceleration assertions:');
+  console.table(brakingResults);
+
+  // ---------------------------------------------------------------------------
+  // 2. STATION STOP & ELDER MODE DECELERATION
+  // ---------------------------------------------------------------------------
+  console.log('\n--- 2. STATION STOP & ELDER MODE TELEMETRY ---');
+
+  // A. Station Stop at Panipat (progress 0.50, slow zone starts at 0.045 distance)
+  console.log('  Testing Station Stop deceleration into Panipat platform (progress = 0.50)...');
+  await page.evaluate(() => {
+    const store = window.__journeyStore.getState();
     const physics = window.__journeyPhysics;
 
-    store.getState().startJourney();
-    store.getState().setDisruptionType('none');
-
-    // Find progress corresponding to approach before Signal 104 (z = -165)
-    // In our Northern corridor spline, z ≈ -140 is at progress ≈ 0.38
-    physics.progress = 0.38;
+    store.startJourney();
+    store.setDisruptionType('none');
+    physics.progress = 0.465; // Approaching station slow zone
     physics.speed = 0.25;
     physics.targetSpeed = 0.25;
     physics.isStationStopped = false;
     physics.stationStopTimer = 0;
-    store.getState().setSpeed(0.25);
-
-    return {
-      initialProgress: physics.progress,
-      initialSpeed: physics.speed,
-    };
+    store.setSpeed(0.25);
   });
 
-  console.log(`  Train initialized in approach zone: progress=${setupData.initialProgress}, cruising speed=${setupData.initialSpeed}`);
+  const stationStartTime = Date.now();
+  let stationStopTime = null;
+  let stationFinalSpeed = null;
 
-  // Trigger delay disruption (Signal 104 turns RED, brakes apply)
-  await page.evaluate(() => {
-    window.__journeyStore?.getState()?.setDisruptionType('delay');
-  });
+  while ((Date.now() - stationStartTime) < 8000) {
+    await page.waitForTimeout(200);
+    const elapsedSec = (Date.now() - stationStartTime) / 1000;
 
-  console.log('  Disruption triggered: Signal 104 aspect flipped to RED, braking initiated.\n');
-  console.log('  Time (s)  | Speed (norm) | Speed (km/h) | Distance to Signal 104 | Status');
-  console.log('  ---------------------------------------------------------------------------------');
-
-  const SIGNAL_Z = -165; // Signal 104 world coordinate
-  const samples = [];
-  let stopTime = null;
-  const startTime = Date.now();
-
-  while ((Date.now() - startTime) < 8000) {
-    await page.waitForTimeout(300); // Sample every 300ms
-    const elapsedSec = (Date.now() - startTime) / 1000;
-
-    const telemetry = await page.evaluate((sigZ) => {
+    const telem = await page.evaluate(() => {
       const physics = window.__journeyPhysics;
-      const speed = physics ? physics.speed : 0;
-      // In Three.js, progress maps along the curve. We read the lead engine position.
-      // Approach to Signal 104: train travels from positive Z towards negative Z (-165).
-      // Distance remaining to signal line: trainZ - sigZ (positive = before signal)
-      // We estimate train world Z from progress:
-      // Z(p) around p=0.38 to 0.44 travels from -140 towards -165.
-      // Visual distance = (0.4375 - physics.progress) * 560
-      const pSignal = 0.435; // Curve parameter where curve intersects z = -165
-      const distUnits = (pSignal - physics.progress) * 560; // in visual meters
-
       return {
-        speed,
+        speed: physics.speed,
         progress: physics.progress,
-        distanceToSignal: Number(distUnits.toFixed(2)),
+        isStationStopped: physics.isStationStopped,
+        stationStopTimer: physics.stationStopTimer,
       };
-    }, SIGNAL_Z);
-
-    const kmh = Math.round(telemetry.speed * 440);
-    const isStopped = telemetry.speed < 0.005;
-
-    console.log(
-      `  +${elapsedSec.toFixed(1)}s     | ${telemetry.speed.toFixed(4).padEnd(12)} | ${(kmh + ' km/h').padEnd(12)} | ${(telemetry.distanceToSignal + ' m').padEnd(22)} | ${
-        isStopped ? 'STOPPED (Holding at Signal 104)' : 'Decelerating'
-      }`
-    );
-
-    samples.push({
-      elapsed: elapsedSec,
-      speed: telemetry.speed,
-      distanceToSignal: telemetry.distanceToSignal,
     });
 
-    if (isStopped && stopTime === null) {
-      stopTime = elapsedSec;
+    if (telem.isStationStopped && stationStopTime === null) {
+      stationStopTime = elapsedSec;
+      stationFinalSpeed = telem.speed;
       break;
     }
   }
 
-  console.log('  ---------------------------------------------------------------------------------');
+  console.log(`    Station stop time: ${stationStopTime ? stationStopTime.toFixed(2) + 's' : 'Timeout (>8s)'}`);
+  console.log(`    Station final speed: ${stationFinalSpeed !== null ? stationFinalSpeed.toFixed(4) : 'N/A'}`);
+  assert.ok(stationStopTime !== null, 'Train must enter station dwell within 8s');
+  assert.ok(stationFinalSpeed < 0.005, 'Train speed at station dwell must be 0');
+  console.log('  ✔ Station Stop passed: smooth deceleration into platform dwell.\n');
 
-  const finalSample = samples[samples.length - 1];
-  console.log(`\n  [Deceleration Results]:`);
-  console.log(`    Time to complete stop: ${stopTime ? stopTime.toFixed(2) + ' seconds' : '> 8.0s (Timeout)'}`);
-  console.log(`    Final speed: ${finalSample.speed.toFixed(5)}`);
-  console.log(`    Final distance to Signal 104: ${finalSample.distanceToSignal} m`);
+  // B. Elder Mode
+  console.log('  Testing Elder Mode (reduced target speed)...');
+  const elderData = await page.evaluate(() => {
+    const store = window.__journeyStore;
+    store.getState().setElderMode(true);
+    const updatedState = store.getState();
+    const physics = window.__journeyPhysics;
+    return {
+      elderMode: updatedState.elderMode,
+      targetSpeed: physics.targetSpeed,
+    };
+  });
 
-  // Assertions:
-  assert.ok(stopTime !== null, 'Train must achieve complete stop (speed < 0.005) within 8 seconds');
-  assert.ok(stopTime <= 6.0, `Train must stop smoothly within 6.0 seconds (actual: ${stopTime.toFixed(2)}s)`);
-  assert.ok(stopTime >= 2.0, `Train must not stop unrealistically abruptly (< 2.0s) (actual: ${stopTime.toFixed(2)}s)`);
-  assert.ok(finalSample.distanceToSignal > 0, `Train must stop BEFORE Signal 104 without overshooting (actual distance: ${finalSample.distanceToSignal}m)`);
-  console.log('  ✔ Check 1 Passed: Train smoothly decelerates and comes to a complete halt before Signal 104 in 3.6s without overshooting.\n');
+  console.log(`    Elder Mode state: ${elderData.elderMode ? 'ON' : 'OFF'}`);
+  console.log(`    Elder targetSpeed: ${elderData.targetSpeed} (expected: 0.16)`);
+  assert.strictEqual(elderData.elderMode, true, 'Elder mode must be active');
+  assert.strictEqual(elderData.targetSpeed, 0.16, 'Elder mode target speed must be 0.16');
+  console.log('  ✔ Elder Mode passed: targetSpeed is 0.16.\n');
 
   // ---------------------------------------------------------------------------
-  // 2. PIXEL DIFF: BEFORE-DISRUPTION VS AFTER-UNDO
+  // 3. CANVAS-ONLY PIXEL DIFF: AFTER DELAY VS AFTER UNDO
   // ---------------------------------------------------------------------------
-  console.log('--- 2. PIXEL DIFF: BEFORE DISRUPTION VS AFTER UNDO ---');
+  console.log('--- 3. CANVAS-ONLY PIXEL DIFF: AFTER DELAY VS AFTER UNDO ---');
 
-  const diffResult = await page.evaluate(async () => {
-    const loadImg = (url) =>
+  // Reset to clean delay state
+  await page.evaluate(() => {
+    const store = window.__journeyStore.getState();
+    const physics = window.__journeyPhysics;
+
+    store.setElderMode(false);
+    store.startJourney();
+    store.setDisruptionType('none');
+    physics.progress = 0.41;
+    physics.speed = 0.25;
+    physics.targetSpeed = 0.25;
+    physics.isStationStopped = false;
+    physics.stationStopTimer = 0;
+    store.setSpeed(0.25);
+  });
+
+  await page.waitForTimeout(300);
+
+  // Trigger delay
+  await page.evaluate(() => {
+    window.__journeyStore.getState().setDisruptionType('delay');
+  });
+
+  // Wait for train to achieve complete stop
+  console.log('  Waiting for train to come to a halt in delay state...');
+  await page.waitForFunction(() => {
+    return window.__journeyPhysics && window.__journeyPhysics.speed < 0.005;
+  }, { timeout: 8000 });
+  await page.waitForTimeout(500);
+
+  // Capture canvas after delay triggers (before confirming option)
+  const canvasLocator = page.locator('canvas');
+  const bufDelay = await canvasLocator.screenshot({
+    path: path.join(process.cwd(), 'public', 'screenshots', 'test-canvas-delay-state.png'),
+  });
+  console.log('  Captured canvas: public/screenshots/test-canvas-delay-state.png');
+
+  // Apply branch bypass option
+  const applyBtn = page.locator('#apply-option-btn-opt-branch-bypass');
+  await applyBtn.waitFor({ state: 'visible', timeout: 5000 });
+  await applyBtn.click();
+  console.log('  Applied option: Branch Bypass (switching to resolved state)');
+
+  // Wait for resolved screen with Undo button
+  const undoBtn = page.locator('#undo-decision-btn');
+  await undoBtn.waitFor({ state: 'visible', timeout: 5000 });
+  await page.waitForTimeout(500);
+
+  // Click Undo button
+  await undoBtn.click();
+  console.log('  Clicked Undo button (restoring delay state)');
+
+  // Wait for train to settle back in delay state
+  await page.waitForFunction(() => {
+    const store = window.__journeyStore.getState();
+    return store.disruptionType === 'delay' && store.status === 'delay' && store.activeBranch === 'main';
+  }, { timeout: 5000 });
+  await page.waitForTimeout(800);
+
+  // Capture canvas after Undo
+  const bufUndo = await canvasLocator.screenshot({
+    path: path.join(process.cwd(), 'public', 'screenshots', 'test-canvas-after-undo.png'),
+  });
+  console.log('  Captured canvas: public/screenshots/test-canvas-after-undo.png');
+
+  // Compute pixel diff in browser using in-memory data URLs
+  const diffResult = await page.evaluate(async ({ b64Delay, b64Undo }) => {
+    const loadImg = (b64) =>
       new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = url;
+        img.onerror = (e) => reject(new Error('Failed to load image in canvas: ' + e));
+        img.src = 'data:image/png;base64,' + b64;
       });
 
-    const [imgBefore, imgAfterUndo] = await Promise.all([
-      loadImg('/screenshots/test-scene-before-disruption.png'),
-      loadImg('/screenshots/test-scene-after-undo.png'),
+    const [imgDelay, imgUndo] = await Promise.all([
+      loadImg(b64Delay),
+      loadImg(b64Undo),
     ]);
 
     const canvas = document.createElement('canvas');
-    canvas.width = imgBefore.width;
-    canvas.height = imgBefore.height;
+    canvas.width = imgDelay.width;
+    canvas.height = imgDelay.height;
     const ctx = canvas.getContext('2d');
 
-    // Draw Before image
-    ctx.drawImage(imgBefore, 0, 0);
-    const dataBefore = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    // Draw Delay image
+    ctx.drawImage(imgDelay, 0, 0);
+    const dataDelay = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
 
     // Draw After Undo image
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(imgAfterUndo, 0, 0);
-    const dataAfter = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    ctx.drawImage(imgUndo, 0, 0);
+    const dataUndo = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
 
     const totalPixels = canvas.width * canvas.height;
     let differingPixels = 0;
     const threshold = 15; // Noise tolerance for WebGL canvas jitter
 
-    for (let i = 0; i < dataBefore.length; i += 4) {
-      const dr = Math.abs(dataBefore[i] - dataAfter[i]);
-      const dg = Math.abs(dataBefore[i + 1] - dataAfter[i + 1]);
-      const db = Math.abs(dataBefore[i + 2] - dataAfter[i + 2]);
+    for (let i = 0; i < dataDelay.length; i += 4) {
+      const dr = Math.abs(dataDelay[i] - dataUndo[i]);
+      const dg = Math.abs(dataDelay[i + 1] - dataUndo[i + 1]);
+      const db = Math.abs(dataDelay[i + 2] - dataUndo[i + 2]);
 
       if (dr > threshold || dg > threshold || db > threshold) {
         differingPixels++;
@@ -188,26 +339,29 @@ async function runBrakingAndDiff() {
       diffPercent: Number(diffPercent.toFixed(2)),
       matchPercent: Number((100 - diffPercent).toFixed(2)),
     };
-  });
+  }, { b64Delay: bufDelay.toString('base64'), b64Undo: bufUndo.toString('base64') });
 
-  console.log(`  Compared images: test-scene-before-disruption.png vs test-scene-after-undo.png`);
-  console.log(`  Dimensions: ${diffResult.width} × ${diffResult.height} (${diffResult.totalPixels.toLocaleString()} total pixels)`);
-  console.log(`  Matching Pixels: ${diffResult.matchingPixels.toLocaleString()} (${diffResult.matchPercent}%)`);
-  console.log(`  Differing Pixels: ${diffResult.differingPixels.toLocaleString()} (${diffResult.diffPercent}%)`);
-  console.log(`  Pixel Diff Breakdown:`);
-  console.log(`    - 3D Corridor & Camera Alignment: Shared track geometry and camera orientation.`);
-  console.log(`    - Signal 104 Aspect: Green clear aspect (before disruption) vs Red danger aspect (after undo).`);
-  console.log(`    - Overlay UI: Cruising HUD (before disruption) vs Delay disruption cards (after undo).`);
-  console.log(`    - Branch Track: Glow chevrons off in both; train on main track in both.`);
-  console.log('  ✔ Check 2 Passed: Pixel diff confirms exact visual parity of main track alignment and expected red signal/card differences.\n');
+  console.log(`\n  [Canvas Pixel Diff Results]:`);
+  console.log(`    Compared: test-canvas-delay-state.png vs test-canvas-after-undo.png`);
+  console.log(`    Dimensions: ${diffResult.width} × ${diffResult.height}`);
+  console.log(`    Total Pixels: ${diffResult.totalPixels.toLocaleString()}`);
+  console.log(`    Matching Pixels: ${diffResult.matchingPixels.toLocaleString()} (${diffResult.matchPercent}%)`);
+  console.log(`    Differing Pixels: ${diffResult.differingPixels.toLocaleString()} (${diffResult.diffPercent}%)`);
+
+  // Assert diff is strictly under 2%
+  assert.ok(
+    diffResult.diffPercent < 2.0,
+    `Canvas pixel difference must be strictly under 2% (actual: ${diffResult.diffPercent}%)`
+  );
+  console.log(`  ✔ Pixel Diff Passed: Canvas difference is ${diffResult.diffPercent}% (< 2.0% threshold).\n`);
 
   await browser.close();
   console.log('================================================================');
-  console.log('SIGNAL BRAKING & PIXEL DIFF VERIFICATION COMPLETED SUCCESSFULLY');
+  console.log('ALL SIGNAL BRAKING, STATION/ELDER & CANVAS PIXEL DIFF CHECKS PASSED');
   console.log('================================================================\n');
 }
 
 runBrakingAndDiff().catch((e) => {
-  console.error('\n❌ SCRIPT ERROR:', e.message);
+  console.error('\n❌ SCRIPT ASSERTION FAILED:', e.message);
   process.exit(1);
 });

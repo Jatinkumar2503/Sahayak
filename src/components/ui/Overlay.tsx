@@ -30,7 +30,7 @@ import {
   MousePointerClick,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useJourneyStore, STATIONS } from '@/store/journeyStore';
+import { useJourneyStore, STATIONS, SIGNALS } from '@/store/journeyStore';
 import { journeyPhysics } from '@/store/journeyPhysics';
 import { railwayAudio } from '@/utils/audioEngine';
 import { translations } from '@/i18n/translations';
@@ -43,6 +43,7 @@ export function Overlay() {
   const elderMode = useJourneyStore((s) => s.elderMode);
   const reducedMotion = useJourneyStore((s) => s.reducedMotion);
   const disruptionType = useJourneyStore((s) => s.disruptionType);
+  const activeSignalId = useJourneyStore((s) => s.activeSignalId);
   const isLiteMode = useJourneyStore((s) => s.isLiteMode);
   const scrollMode = useJourneyStore((s) => s.scrollMode);
 
@@ -145,28 +146,30 @@ export function Overlay() {
     }
   };
 
-  // Signal 104 HTML Aspect
+  // Trackside Signal Aspect
+  const activeSignal = SIGNALS.find((s) => s.id === activeSignalId) || SIGNALS[1]; // default Signal 104
+
   const getSignalAspect = () => {
     if (disruptionType === 'delay' || disruptionType === 'cancellation') {
       return {
         icon: <OctagonAlert className="w-3.5 h-3.5 text-[#D55E00]" aria-hidden="true" />,
-        textEn: 'Signal 104: STOP (Red)',
-        textHi: 'सिग्नल १०४: रोकें (लाल)',
+        textEn: `${activeSignal.nameEn}: STOP (Red)`,
+        textHi: `${activeSignal.nameHi}: रोकें (लाल)`,
         colorClass: 'text-[#FEF3C7] bg-[#6E3100]/70 border-[#D55E00]',
       };
     }
     if (disruptionType === 'missed_connection' || disruptionType === 'platform_change') {
       return {
         icon: <AlertTriangle className="w-3.5 h-3.5 text-[#E69F00]" aria-hidden="true" />,
-        textEn: 'Signal 104: CAUTION (Yellow)',
-        textHi: 'सिग्नल १०४: सावधानी (पीला)',
+        textEn: `${activeSignal.nameEn}: CAUTION (Yellow)`,
+        textHi: `${activeSignal.nameHi}: सावधानी (पीला)`,
         colorClass: 'text-[#FEF3C7] bg-[#7A5400]/70 border-[#E69F00]',
       };
     }
     return {
       icon: <CheckCircle2 className="w-3.5 h-3.5 text-[#009E73]" aria-hidden="true" />,
-      textEn: 'Signal 104: CLEAR (Green)',
-      textHi: 'सिग्नल १०४: साफ़ (हरा)',
+      textEn: `${activeSignal.nameEn}: CLEAR (Green)`,
+      textHi: `${activeSignal.nameHi}: साफ़ (हरा)`,
       colorClass: 'text-[#D1FAE5] bg-[#004D38]/70 border-[#009E73]',
     };
   };

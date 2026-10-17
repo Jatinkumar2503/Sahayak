@@ -35,6 +35,12 @@ export interface JourneyPhysicsState {
   // Station sequence & scroll control
   stationDwell: StationDwellState;
   scrollDriven: boolean;
+
+  // Signal-targeted braking parameters
+  targetSignalProgress?: number;
+  stopProgress?: number;
+  initialBrakeDist?: number;
+  initialBrakeSpeed?: number;
 }
 
 // 1 Engine + 4 Coaches. Arc-length offsets (in normalized 0-1 curve progress)

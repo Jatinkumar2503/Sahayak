@@ -3,7 +3,7 @@
 import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { AlertTriangle, Compass, CheckCircle2 } from 'lucide-react';
-import { useJourneyStore, STATIONS } from '@/store/journeyStore';
+import { useJourneyStore, STATIONS, SIGNALS } from '@/store/journeyStore';
 import { translations } from '@/i18n/translations';
 import { SkyDome } from './SkyDome';
 import { LightingRig } from './LightingRig';
@@ -243,8 +243,10 @@ export function Scene() {
           {/* Low-poly station architectures (Delhi, Panipat, Ambala) */}
           <Stations />
 
-          {/* 3D Track Signal Heads with Slow Pulsing Red/Yellow/Green Lamps */}
-          <SignalHeads position={[2.8, 0, -165]} />
+          {/* 3D Track Signal Heads with Slow Pulsing Red/Yellow/Green Lamps along corridor */}
+          {SIGNALS.map((sig) => (
+            <SignalHeads key={sig.id} signalId={sig.id} position={sig.position} />
+          ))}
 
           {/* Moving 5-Coach Articulated Train with aerodynamic locomotive and passenger coaches */}
           <Train />

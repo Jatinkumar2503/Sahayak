@@ -7,21 +7,24 @@ import { useJourneyStore } from '@/store/journeyStore';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface SignalHeadProps {
-  position: [number, number, number];
+  position?: [number, number, number];
+  signalId?: string;
 }
 
-export function SignalHeads({ position = [2.8, 0, -165] }: SignalHeadProps) {
+export function SignalHeads({ position = [2.8, 0, -165], signalId = 'sig-104' }: SignalHeadProps) {
   const status = useJourneyStore((s) => s.status);
   const disruptionType = useJourneyStore((s) => s.disruptionType);
+  const activeSignalId = useJourneyStore((s) => s.activeSignalId);
   const isReducedMotion = useReducedMotion();
 
   const redLampRef = useRef<THREE.MeshStandardMaterial>(null);
   const yellowLampRef = useRef<THREE.MeshStandardMaterial>(null);
   const greenLampRef = useRef<THREE.MeshStandardMaterial>(null);
 
-  // Red signal when delayed, cancelled, or holding
-  const isRed = disruptionType === 'delay' || disruptionType === 'cancellation';
-  const isYellow = disruptionType === 'missed_connection' || disruptionType === 'platform_change';
+  // Red signal when delayed, cancelled, or holding for the active signal ahead
+  const isThisSignalActive = !signalId || signalId === activeSignalId || (!activeSignalId && signalId === 'sig-104');
+  const isRed = (disruptionType === 'delay' || disruptionType === 'cancellation') && isThisSignalActive;
+  const isYellow = (disruptionType === 'missed_connection' || disruptionType === 'platform_change') && isThisSignalActive;
   const isGreen = !isRed && !isYellow;
 
   useFrame((state) => {

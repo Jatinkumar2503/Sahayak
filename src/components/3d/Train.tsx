@@ -3,7 +3,7 @@
 import React, { useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { useJourneyStore, STATIONS } from '@/store/journeyStore';
+import { useJourneyStore, STATIONS, SIGNALS, getNextSignalAhead } from '@/store/journeyStore';
 import { journeyPhysics, COACH_COUNT, COACH_OFFSET_STEP } from '@/store/journeyPhysics';
 import { mainTrackCurve, branchTrackCurve, getBlendedRoutePoint } from './trackCurves';
 
@@ -36,6 +36,7 @@ function createBlobShadowTexture() {
 
 export function Train() {
   const disruptionType = useJourneyStore((s) => s.disruptionType);
+  const activeSignalId = useJourneyStore((s) => s.activeSignalId);
   const activeBranch = useJourneyStore((s) => s.activeBranch);
   const shadowTier = useJourneyStore((s) => s.shadowTier);
 
@@ -99,9 +100,33 @@ export function Train() {
           }
         }
 
-        // Deceleration easing curve when delayed or stopped at red signal (tuned for smooth ~4s stop)
+        // Deceleration easing curve targeting the next red signal ahead (stops within 3-6 margin, ~3.8-4.5s)
         if (disruptionType === 'delay' || disruptionType === 'cancellation') {
-          journeyPhysics.speed = Math.max(0, THREE.MathUtils.lerp(journeyPhysics.speed, 0, delta * 0.95));
+          const CORRIDOR_CURVE_LENGTH = 568.74;
+          const SIGNAL_STOP_MARGIN_UNITS = 4.5;
+          const MARGIN_PROGRESS = SIGNAL_STOP_MARGIN_UNITS / CORRIDOR_CURVE_LENGTH;
+
+          const activeSig =
+            SIGNALS.find((s) => s.id === activeSignalId) ||
+            getNextSignalAhead(journeyPhysics.progress);
+          const stopProgress = (activeSig.progress - MARGIN_PROGRESS + 1) % 1;
+          const distRemaining = (stopProgress - journeyPhysics.progress) * CORRIDOR_CURVE_LENGTH;
+
+          if (distRemaining <= 0.04) {
+            journeyPhysics.speed = 0;
+            journeyPhysics.progress = stopProgress;
+          } else {
+            const initialDist = journeyPhysics.initialBrakeDist || Math.max(5.0, distRemaining);
+            const ratio = Math.max(0, Math.min(1, distRemaining / initialDist));
+            const baseV = journeyPhysics.initialBrakeSpeed || journeyPhysics.targetSpeed;
+            const targetSpeed = baseV * Math.sqrt(ratio);
+            journeyPhysics.speed = THREE.MathUtils.lerp(journeyPhysics.speed, targetSpeed, delta * 5.0);
+
+            if (distRemaining < 0.20 && journeyPhysics.speed < 0.02) {
+              journeyPhysics.speed = 0;
+              journeyPhysics.progress = stopProgress;
+            }
+          }
         } else if (!approachingStation && journeyPhysics.stationStopTimer <= 0) {
           journeyPhysics.speed = THREE.MathUtils.lerp(
             journeyPhysics.speed,
@@ -111,9 +136,27 @@ export function Train() {
         }
       }
 
-      // 2. Advance train master progress along spline
-      journeyPhysics.progress =
-        (journeyPhysics.progress + journeyPhysics.speed * 0.045 * delta) % 1;
+      // 2. Advance train master progress along spline (never overshoots stopProgress at red signal)
+      if (disruptionType === 'delay' || disruptionType === 'cancellation') {
+        const CORRIDOR_CURVE_LENGTH = 568.74;
+        const SIGNAL_STOP_MARGIN_UNITS = 4.5;
+        const MARGIN_PROGRESS = SIGNAL_STOP_MARGIN_UNITS / CORRIDOR_CURVE_LENGTH;
+        const activeSig =
+          SIGNALS.find((s) => s.id === activeSignalId) ||
+          getNextSignalAhead(journeyPhysics.progress);
+        const stopProgress = (activeSig.progress - MARGIN_PROGRESS + 1) % 1;
+
+        const nextProgress = journeyPhysics.progress + journeyPhysics.speed * 0.045 * delta;
+        if (nextProgress >= stopProgress && journeyPhysics.progress <= stopProgress) {
+          journeyPhysics.progress = stopProgress;
+          journeyPhysics.speed = 0;
+        } else {
+          journeyPhysics.progress = nextProgress;
+        }
+      } else {
+        journeyPhysics.progress =
+          (journeyPhysics.progress + journeyPhysics.speed * 0.045 * delta) % 1;
+      }
     }
 
     // 3. Update Wheel Spin Angle
