@@ -132,39 +132,11 @@ All 9 Decision Engine & FSM Unit Tests PASSED successfully!
 
 ---
 
-## 6. Deployxa Deployment Guide
+## 6. Live Deployment
 
-Sahayak 3D is fully self-contained with no external database or server secrets required, making it 100% compatible with **Deployxa's zero-config Next.js framework detection**:
+Sahayak 3D is deployed on **Vercel** at [https://sahayak-tan-zeta.vercel.app/](https://sahayak-tan-zeta.vercel.app/).
 
-### Method 1: Git-Based Zero-Config Deployment (Recommended)
-1. **Push to Git**: Ensure your latest changes are pushed to `main`:
-   ```bash
-   git push origin main
-   ```
-2. **Connect on Deployxa**:
-   - In your Deployxa dashboard, select **New Project** and connect `https://github.com/Jatinkumar2503/Sahayak.git`.
-   - Select branch `main`.
-3. **Automated Pipeline**:
-   Deployxa automatically runs its 5-stage deployment lifecycle:
-   - `01 Repository connected`
-   - `02 Framework detected (Next.js App Router)`
-   - `03 Production image built (Turbopack optimized)`
-   - `04 Health checks passed`
-   - `05 Global route activated (Live with auto TLS/SSL)`
-
-### Method 2: Deployxa CLI (`@deployxa/cli`)
-If deploying directly from your terminal:
-```bash
-# 1. Install CLI
-npm i -g @deployxa/cli
-
-# 2. Login to Deployxa
-deployxa login
-
-# 3. Detect framework & trigger production deployment
-deployxa detect
-deployxa deploy
-```
+The application is fully self-contained with no external database or server secrets required, using standard Next.js App Router static optimization.
 
 ---
 

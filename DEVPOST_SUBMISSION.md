@@ -35,7 +35,7 @@ Most railway tools present static timetables or uninformative "Late by 45 mins" 
    - **Okabe-Ito Colorblind-Safe Palette**: No status ever relies on color alone; every badge pairs high-contrast hues with geometric SVG glyphs (`CheckCircle2`, `AlertTriangle`, `OctagonAlert`, `GitBranch`) and dual-language text.
    - **Elder Mode (वरिष्ठ मोड)**: Tailored for senior citizens with 18px–24px text, 48px+ touch targets, 2px amber borders, a simplified single-action HUD, and 36% slower 3D motion.
    - **Complete Reduced Motion**: Disables camera bobbing, freezes signal pulsing, and switches 3D reroutes to gentle cross-fades.
-   - **Web Speech API Voice Assistant**: Allows hands-free travelers to speak ("my train is 25 minutes late"), mapping voice to simulations and reading recommendations aloud in Hindi or English.
+   - **Web Speech API Voice Assistant**: Allows hands-free travelers to speak ("my train is 25 minutes late"), mapping voice to simulations and reading recommendations aloud in Hindi or English where the browser supports speech output.
    - **100% HTML Text Alternative (`JourneyTimelineA11y`)**: Complete semantic HTML alternative detailing stations, ETAs, signal aspects, and chosen options for screen readers and non-WebGL devices.
 6. **Family Live Share**: A realistic mobile phone frame mockup allowing passengers to share simulated live battery levels, safe transit confirmations, and reroute updates with loved ones at home.
 
@@ -59,13 +59,13 @@ Most railway tools present static timetables or uninformative "Late by 45 mins" 
   - **Best Practices: 100 / 100**
   - **SEO: 100 / 100**
   - **Desktop Performance: 87 / 100**
-- **Automated Axe-Core Multi-State Audit (0 Violations Across All 15 States)**:
+- **Automated Axe-Core Multi-State Audit (0 Violations Across All 17 States)**:
   - First View English (`/`): 0 violations (33 passed rules)
   - First View Hindi (`hi`): 0 violations (33 passed rules)
   - Elder Accessibility Mode: 0 violations (33 passed rules)
   - Collapsible "Demo tools" Drawer Open: 0 violations (35 passed rules)
   - Active Journey Running ("Simulate a problem" CTA): 0 violations (34 passed rules)
-  - Disruption Decision Cards Overlay (With "Why this ranking?" expander): 0 violations (36 passed rules)
+  - Disruption Decision Cards Overlay (With "Why this ranking?" expander): 0 violations (35 passed rules)
   - Resolved Outcome Screen (Outcome summary + Undo button): 0 violations (35 passed rules)
   - Onboarding Modal Open: 0 violations (35 passed rules)
   - Family Share Modal Open: 0 violations (35 passed rules)
@@ -75,6 +75,8 @@ Most railway tools present static timetables or uninformative "Late by 45 mins" 
   - Design System Page (`/design-system`): 0 violations (30 passed rules)
   - Collapsible Drawer Open at 360px Viewport (Mobile A11y & Contrast): 0 violations (35 passed rules)
   - Second Tab (BroadcastChannel Family Share Sync + Live Audit): 0 violations (35 passed rules)
+  - Disruption Decision Cards - Bypass Unavailable English (State 16): 0 violations (35 passed rules)
+  - Disruption Decision Cards - Bypass Unavailable Hindi (State 17): 0 violations (35 passed rules)
 - **Screen Reader Verification Status**:
   - Automated semantic structure, landmark navigation, and accessible names validated via Axe-Core (0 violations). Dedicated end-to-end screen reader testing with NVDA / Windows Narrator is scheduled for manual user pass; semantic markup, polite `aria-live` regions, and modal focus traps are fully implemented.
 - **Family Live Share Sync Note**:
