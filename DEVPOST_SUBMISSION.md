@@ -84,8 +84,8 @@ Most railway tools present static timetables or uninformative "Late by 45 mins" 
 - **Headless Container Telemetry (Software SwiftShader)**:
   - Cruise: 36–42 FPS (85 draw calls, 24k triangles)
   - Active Chord Reroute: 32–38 FPS (no draw call spikes)
-- **Laptop Hardware GPU Telemetry (User Verified)**:
-  - Real hardware Chrome on Windows: **142 FPS at 7.0 ms frame time** (85 draw calls, 24k triangles, Blob fast shadow tier, Full Quality during cruise and reroute) reflecting monitor refresh rate.
+- **Laptop Hardware GPU Telemetry**:
+  - [USER: fill in FPS and frame time from your Chrome run on Windows with ?quality=full&debug=1]
 - **Low-Power Fallback (Lite Mode)**:
   - Skips the initial 2.0s shader compilation warmup, then evaluates steady-state FPS between seconds 2.0 and 5.0. If steady FPS < 40, Sahayak 3D auto-activates Lite Mode. Supports URL override (`?quality=full` or `?quality=lite`) and manual toggle.
 
