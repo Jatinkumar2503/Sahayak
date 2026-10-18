@@ -3,7 +3,7 @@
 
 [![Accessibility: Lighthouse 100 & Axe Passed](https://img.shields.io/badge/Accessibility-Lighthouse%20100%20%7C%20Axe%200%20Violations-009E73?style=for-the-badge)](./a11y-statement.md)
 [![Lighthouse: 100/100/100](https://img.shields.io/badge/Lighthouse-100%20A11y%20%7C%20100%20SEO%20%7C%20100%20Best%20Practices-0072B2?style=for-the-badge)](./a11y-statement.md)
-[![Decision Engine: 9/9 Tests](https://img.shields.io/badge/Decision%20Engine-9%2F9%20Deterministic%20Tests%20Passing-E69F00?style=for-the-badge)](#running-unit-tests)
+[![Decision Engine: 21/21 Tests](https://img.shields.io/badge/Decision%20Engine-21%2F21%20Deterministic%20Tests%20Passing-E69F00?style=for-the-badge)](#running-unit-tests)
 
 ---
 
@@ -126,8 +126,20 @@ Running Decision Engine deterministic tests...
 ✔ Test 7: Disruption resolution successfully links dynamic option attributes passed
 ✔ Test 8: Disruption undo successfully restores pre-disruption state passed
 ✔ Test 9: All 11 generated options across disruptions contain complete dynamic fields passed
+✔ Test 10: Position-aware decision engine enables branch chord when before switch (progress < 0.48) passed
+✔ Test 11: Position-aware decision engine disables branch chord and shows plain-language reason when past switch (progress >= 0.48) passed
+✔ Test 12: Loop head at 0.06, coach spacing == 0.0145, non-negative progress, and all coaches behind head passed
+✔ Test 13: Active disruption at loop point cleanly resets to consistent on-time state passed
+✔ Test 14: Restart journey clears disruption, resets progress to 0.06 and coach positions behind head, and sets signal to green passed
+✔ Test 15: Constant deceleration curve v = v0 * sqrt(rem/initial) reaches zero with no clamp/snap passed
+✔ Test 16: Delay triggered inside stop margin ensures progress never decreases passed
+✔ Test 17: Cruise threshold (>40u) and sqrt braking (<40u) across all 5 positions: total < 20s, brake < 5s passed
+✔ Test 18: Trigger at cruise speed 2 units before stop mark decelerates smoothly with zero backwards movement passed
+✔ Test 19: Status message "Signal ahead is red, slowing" verified immediately on trigger passed
+✔ Test 20: Initial active signal sig-102 (Signal 102) verified passed
+✔ Test 21: Status line and live region show 0 km/h and "Stopped at platform" until journey starts and whenever stopped passed
 
-All 9 Decision Engine & FSM Unit Tests PASSED successfully!
+All 21 Decision Engine, FSM, Physics, Loop & Consistency Unit Tests PASSED successfully!
 ```
 
 ---

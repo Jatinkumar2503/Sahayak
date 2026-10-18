@@ -48,13 +48,13 @@ Most railway tools present static timetables or uninformative "Late by 45 mins" 
   - *Mutable Physics Engine*: High-frequency train coordinates and bogie sway are managed in a decoupled mutable physics reference (`journeyPhysics.ts`), completely bypassing React/Zustand render trees to maintain 60 FPS without component thrashing.
 - **State Management & Persistence**: Zustand with `localStorage` persistence for language preference (`en`/`hi`), Elder Mode, and Reduced Motion.
 - **Audio Synthesis**: Web Audio API oscillator synthesizing realistic electric locomotive dual-tone horns and rail track rumble without external audio assets.
-- **Auditing & Testing**: Google Lighthouse CLI v13.5.0, Playwright, Axe-Core engine, and a deterministic 6-test suite.
+- **Auditing & Testing**: Google Lighthouse CLI v13.5.0, Playwright, Axe-Core engine, and a deterministic 21-test suite.
 
 ---
 
 ## Verified Test Scores & Performance
 
-- **Google Lighthouse Scores (Production Build)**:
+- **Google Lighthouse Scores (run on Oct 17, 2026 on an earlier build)**:
   - **Accessibility: 100 / 100** (Axe-Core verified: 23 passed audits, 0 violations)
   - **Best Practices: 100 / 100**
   - **SEO: 100 / 100**

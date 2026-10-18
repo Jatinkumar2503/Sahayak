@@ -2,14 +2,14 @@
 
 > **Verified Status:** Lighthouse (100 Accessibility) and Axe-Core automated checks pass across all 17 states: First View (English & Hindi), Elder mode, Collapsible "Demo tools" drawer open, Active journey running, Decision cards overlay, Resolved outcome screen, Onboarding modal, Family Share modal, Voice Assistant modal, Journey Timeline modal, 404 page, `/design-system`, Collapsible drawer open at 360px viewport, Second Tab (BroadcastChannel live Family Share sync), and Decision Cards Bypass Unavailable (English & Hindi).
 > **Screen Reader Verification Status:** Automated semantic markup, ARIA trees, and accessible names are verified via Axe-Core (0 violations across 17 states). End-to-end screen reader testing with NVDA / Windows Narrator is scheduled for dedicated manual evaluation; the codebase implements semantic landmarks, strict heading hierarchies (h1 → h2 → h3), and polite aria-live regions.
-> **Audit Date:** October 17, 2026 (Production Build `next build && next start`)  
-> **Target URLs:** `http://localhost:3000/` and `http://localhost:3000/design-system`
+> **Audit Date:** October 18, 2026 (Local Production Build `next build && next start`)  
+> **Target Environment:** Local production build (`http://localhost:3000/` and `http://localhost:3000/design-system`)
 
 ---
 
 ## 1. Verified Audit Scores
 
-Lighthouse audits were executed in CLI mode against the Next.js production build using Google Chrome headless engine:
+Lighthouse audits were executed in CLI mode against an earlier build on Oct 17, 2026 using Google Chrome headless engine:
 
 | Category | Desktop Score | Mobile Score | Audit Engine | Violations Flagged |
 | :--- | :--- | :--- | :--- | :--- |
