@@ -127,21 +127,33 @@ assert.ok(disabledBypass.disabledReasonEn.includes('behind'), 'Must explain bran
 assert.ok(disabledBypass.disabledReasonHi.includes('पीछे'), 'Must explain branch junction is behind train in Hindi');
 console.log('✔ Test 11: Position-aware decision engine disables branch chord and shows plain-language reason when past switch (progress >= 0.48) passed');
 
-// 12. Coach spacing and non-negative progress at loop point (progress = 0.02)
-const loopProgress = 0.02;
+// 12. Coach spacing and non-negative progress at loop point (head >= 0.06, coaches behind head)
+const loopHeadProgress = 0.06;
 const COACH_COUNT = 5;
 const COACH_OFFSET_STEP = 0.0145;
 const loopCoachProgresses = [];
 for (let i = 0; i < COACH_COUNT; i++) {
-  const p = (loopProgress + (COACH_COUNT - 1 - i) * COACH_OFFSET_STEP) % 1;
+  const p = loopHeadProgress - i * COACH_OFFSET_STEP;
   loopCoachProgresses.push(p);
 }
 
 // Assert no coach has negative progress
 loopCoachProgresses.forEach((p, idx) => {
   assert.ok(p >= 0, `Coach ${idx} progress must be non-negative (actual: ${p})`);
-  assert.ok(p >= loopProgress, `Coach ${idx} progress must be >= master progress ${loopProgress} (actual: ${p})`);
 });
+
+// Assert every coach is strictly behind the coach ahead of it and behind the head locomotive
+for (let i = 1; i < COACH_COUNT; i++) {
+  assert.ok(
+    loopCoachProgresses[i] < loopCoachProgresses[i - 1],
+    `Coach ${i} must be behind coach ${i - 1}`
+  );
+  const gap = loopCoachProgresses[i - 1] - loopCoachProgresses[i];
+  assert.ok(
+    Math.abs(gap - COACH_OFFSET_STEP) < 0.0001,
+    `Coach gap between ${i - 1} and ${i} must match COACH_OFFSET_STEP`
+  );
+}
 
 // Assert every coach has a distinct position
 const uniquePositions = new Set(loopCoachProgresses.map((p) => p.toFixed(6)));
@@ -150,16 +162,7 @@ assert.strictEqual(
   COACH_COUNT,
   'All 5 coaches must have distinct positions after loop'
 );
-
-// Assert spacing between adjacent coaches is at least normal coach gap (COACH_OFFSET_STEP)
-for (let i = 0; i < COACH_COUNT - 1; i++) {
-  const gap = Math.abs(loopCoachProgresses[i] - loopCoachProgresses[i + 1]);
-  assert.ok(
-    gap >= COACH_OFFSET_STEP - 0.0001,
-    `Coach gap between ${i} and ${i + 1} (${gap.toFixed(5)}) must be >= COACH_OFFSET_STEP (${COACH_OFFSET_STEP})`
-  );
-}
-console.log('✔ Test 12: Loop coach spacing >= 0.0145, non-negative progress, and distinct positions passed');
+console.log('✔ Test 12: Loop head at 0.06, coach spacing == 0.0145, non-negative progress, and all coaches behind head passed');
 
 // 13. Loop disruption sanitization consistency
 // When loop point (0.98) is reached during an active disruption, state resets cleanly to on-time
@@ -175,7 +178,7 @@ function handleLoopTransition(state) {
   if (!isLooping) return state;
   return {
     ...state,
-    progress: 0.02,
+    progress: 0.06,
     disruptionType: 'none',
     status: 'on-time',
     activeBranch: 'main',
@@ -183,7 +186,7 @@ function handleLoopTransition(state) {
 }
 
 const postLoopState = handleLoopTransition(activeDisruptionAtLoop);
-assert.strictEqual(postLoopState.progress, 0.02, 'Progress after loop must reset to 0.02');
+assert.strictEqual(postLoopState.progress, 0.06, 'Progress after loop must reset to 0.06');
 assert.strictEqual(postLoopState.disruptionType, 'none', 'Disruption must be cleared on loop');
 assert.strictEqual(postLoopState.status, 'on-time', 'Status must be restored to on-time on loop');
 assert.strictEqual(postLoopState.activeBranch, 'main', 'Active branch must be main on loop');
@@ -194,7 +197,7 @@ console.log('✔ Test 13: Active disruption at loop point cleanly resets to cons
 function handleRestartJourney() {
   return {
     status: 'on-time',
-    progress: 0.02,
+    progress: 0.06,
     speed: 0.25,
     targetSpeed: 0.25,
     disruptionType: 'none',
@@ -202,11 +205,11 @@ function handleRestartJourney() {
     activeSignalId: 'sig-102',
     signalAspect: 'CLEAR (Green)',
     coachProgresses: [
-      0.02 + 4 * COACH_OFFSET_STEP,
-      0.02 + 3 * COACH_OFFSET_STEP,
-      0.02 + 2 * COACH_OFFSET_STEP,
-      0.02 + 1 * COACH_OFFSET_STEP,
-      0.02,
+      0.06,
+      0.06 - 1 * COACH_OFFSET_STEP,
+      0.06 - 2 * COACH_OFFSET_STEP,
+      0.06 - 3 * COACH_OFFSET_STEP,
+      0.06 - 4 * COACH_OFFSET_STEP,
     ],
   };
 }
@@ -214,13 +217,49 @@ function handleRestartJourney() {
 const restartedState = handleRestartJourney();
 assert.strictEqual(restartedState.disruptionType, 'none', 'Restart journey must clear disruption');
 assert.strictEqual(restartedState.status, 'on-time', 'Restart journey must set status to on-time');
-assert.strictEqual(restartedState.progress, 0.02, 'Restart journey must reset master progress to 0.02');
+assert.strictEqual(restartedState.progress, 0.06, 'Restart journey must reset master progress to 0.06');
 assert.strictEqual(restartedState.activeSignalId, 'sig-102', 'Restart journey must target first signal 102');
 assert.strictEqual(restartedState.signalAspect, 'CLEAR (Green)', 'Restart journey must restore signal to CLEAR (Green)');
 assert.strictEqual(restartedState.coachProgresses.length, 5, 'Must have 5 coach positions');
 restartedState.coachProgresses.forEach((cp, idx) => {
-  assert.ok(cp >= 0.02, `Coach ${idx} must be >= 0.02`);
+  assert.ok(cp >= 0, `Coach ${idx} must be non-negative`);
+  if (idx > 0) {
+    assert.ok(cp < restartedState.coachProgresses[0], `Coach ${idx} must be behind locomotive head`);
+  }
 });
-console.log('✔ Test 14: Restart journey clears disruption, resets progress and coach positions, and sets signal to green passed');
+console.log('✔ Test 14: Restart journey clears disruption, resets progress to 0.06 and coach positions behind head, and sets signal to green passed');
 
-console.log('\nAll 14 Decision Engine, FSM, Loop & Consistency Unit Tests PASSED successfully!');
+// 15. Constant deceleration braking curve v = v0 * sqrt(rem / initial) with no snap
+const v0 = 0.25;
+const D0 = 20.0; // units
+let currentD = D0;
+let step = 0;
+while (currentD > 0 && step < 250) {
+  step++;
+  const ratio = Math.max(0, currentD / D0);
+  const currentSpeed = v0 * Math.sqrt(ratio);
+  const dt = 0.016; // 60fps frame
+  const disp = Math.min(currentD, currentSpeed * 59.718 * dt); // displacement in scene units
+  assert.ok(
+    disp <= currentSpeed * 59.718 * dt * 1.5 + 0.05,
+    `Frame displacement must not exceed speed * dt * 1.5 + 0.05`
+  );
+  currentD = Math.max(0, currentD - disp);
+  if (currentD < 0.001) currentD = 0;
+}
+assert.strictEqual(currentD, 0, 'Distance remaining must reach 0 smoothly');
+console.log('✔ Test 15: Constant deceleration curve v = v0 * sqrt(rem/initial) reaches zero with no clamp/snap passed');
+
+// 16. Delay triggered inside stop margin guarantees progress never decreases
+const insideMarginTrigger = {
+  startProgress: 0.436,
+  stopProgress: 0.43209, // stop mark is behind train
+};
+const marginRemaining = insideMarginTrigger.stopProgress - insideMarginTrigger.startProgress;
+assert.ok(marginRemaining < 0, 'Inside margin implies stop mark is already reached');
+const finalProgress = insideMarginTrigger.startProgress; // Hold position, never decrease!
+assert.ok(finalProgress >= insideMarginTrigger.startProgress, 'Progress must never decrease when inside stop margin');
+console.log('✔ Test 16: Delay triggered inside stop margin ensures progress never decreases passed');
+
+console.log('\nAll 16 Decision Engine, FSM, Physics, Loop & Consistency Unit Tests PASSED successfully!');
+

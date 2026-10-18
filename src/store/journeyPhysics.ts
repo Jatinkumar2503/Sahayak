@@ -12,6 +12,15 @@ export interface StationDwellState {
   timer: number;
 }
 
+export interface FrameLogEntry {
+  dt: number;
+  progress: number;
+  displacementUnits: number;
+  speedUnitsPerSec: number;
+  speed: number;
+  coachProgresses: number[];
+}
+
 export interface JourneyPhysicsState {
   progress: number;
   speed: number;
@@ -41,6 +50,11 @@ export interface JourneyPhysicsState {
   stopProgress?: number;
   initialBrakeDist?: number;
   initialBrakeSpeed?: number;
+
+  // Frame logging for per-frame assertion of displacement & physics
+  isLoggingFrames: boolean;
+  frameLogs: FrameLogEntry[];
+  prevFrameProgress?: number;
 }
 
 // 1 Engine + 4 Coaches. Arc-length offsets (in normalized 0-1 curve progress)
@@ -49,16 +63,16 @@ export const COACH_COUNT = 5; // 1 Engine + 4 Passenger Coaches
 export const COACH_OFFSET_STEP = 0.0145; // Even arc-length step
 
 export const journeyPhysics: JourneyPhysicsState = {
-  progress: 0.02,
+  progress: 0.06,
   speed: 0.25,
   targetSpeed: 0.25,
   coachOffsets: [0, 1 * COACH_OFFSET_STEP, 2 * COACH_OFFSET_STEP, 3 * COACH_OFFSET_STEP, 4 * COACH_OFFSET_STEP],
   coachProgresses: [
-    0.02 + 4 * COACH_OFFSET_STEP,
-    0.02 + 3 * COACH_OFFSET_STEP,
-    0.02 + 2 * COACH_OFFSET_STEP,
-    0.02 + 1 * COACH_OFFSET_STEP,
-    0.02,
+    0.06,
+    0.06 - 1 * COACH_OFFSET_STEP,
+    0.06 - 2 * COACH_OFFSET_STEP,
+    0.06 - 3 * COACH_OFFSET_STEP,
+    0.06 - 4 * COACH_OFFSET_STEP,
   ],
   coachRotations: [0, 0, 0, 0, 0],
   wheelAngle: 0,
@@ -79,4 +93,7 @@ export const journeyPhysics: JourneyPhysicsState = {
     timer: 0,
   },
   scrollDriven: false,
+
+  isLoggingFrames: false,
+  frameLogs: [],
 };

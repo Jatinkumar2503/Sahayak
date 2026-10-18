@@ -209,7 +209,7 @@ export interface JourneyState {
 
 export const useJourneyStore = create<JourneyState>((set, get) => ({
   status: 'on-time',
-  progress: 0.02,
+  progress: 0.06,
   speed: 0.25,
   targetSpeed: 0.25,
   disruptionType: 'none',
@@ -377,37 +377,28 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
 
       const CORRIDOR_CURVE_LENGTH = 568.74;
       const SIGNAL_STOP_MARGIN_UNITS = 4.5;
-      let stopProgress = (nextSig.progress - (SIGNAL_STOP_MARGIN_UNITS / CORRIDOR_CURVE_LENGTH) + 1) % 1;
-      let initialDist = (stopProgress - journeyPhysics.progress) * CORRIDOR_CURVE_LENGTH;
+      const stopProgress = (nextSig.progress - (SIGNAL_STOP_MARGIN_UNITS / CORRIDOR_CURVE_LENGTH) + 1) % 1;
+      const initialDist = (stopProgress - journeyPhysics.progress) * CORRIDOR_CURVE_LENGTH;
 
-      // Handle edge case: train is already inside the 4.5-unit stop margin before the signal
-      if (initialDist <= 0) {
-        stopProgress = Math.min(nextSig.progress - (0.5 / CORRIDOR_CURVE_LENGTH), journeyPhysics.progress + (0.001 / CORRIDOR_CURVE_LENGTH));
-        initialDist = Math.max(0.001, (stopProgress - journeyPhysics.progress) * CORRIDOR_CURVE_LENGTH);
-      }
-
-      // Handle edge case: train is already stopped at station dwell
-      if (journeyPhysics.isStationStopped) {
+      // Handle edge case: train is already inside the 4.5-unit stop margin before the signal or station dwell
+      if (initialDist <= 0 || journeyPhysics.isStationStopped) {
         journeyPhysics.speed = 0;
-        initialDist = 0;
+        journeyPhysics.initialBrakeDist = 0;
+        journeyPhysics.initialBrakeSpeed = 0;
+        journeyPhysics.targetSignalProgress = nextSig.progress;
+        journeyPhysics.stopProgress = journeyPhysics.progress; // Progress NEVER decreases!
+      } else {
+        const currentCruiseSpeed = journeyPhysics.speed > 0.005 ? journeyPhysics.speed : 0.25;
+        journeyPhysics.initialBrakeSpeed = Math.min(currentCruiseSpeed, 0.25);
+        journeyPhysics.initialBrakeDist = initialDist;
+        journeyPhysics.targetSignalProgress = nextSig.progress;
+        journeyPhysics.stopProgress = stopProgress;
       }
-
-      // Cap braking speed strictly at current cruise speed (never accelerate after disruption!)
-      const currentCruiseSpeed = journeyPhysics.speed > 0.005 ? journeyPhysics.speed : 0.25;
-      journeyPhysics.initialBrakeSpeed = Math.min(currentCruiseSpeed, 0.25);
-      journeyPhysics.initialBrakeDist = initialDist;
-      journeyPhysics.targetSignalProgress = nextSig.progress;
-      journeyPhysics.stopProgress = stopProgress;
     } else if (disruptionType === 'missed_connection' || disruptionType === 'platform_change') {
       nextStatus = 'rerouted';
       targetSpeed = 0.15;
     }
 
-    // Short dramatic slow-motion beat when disruption triggers (unless reduced motion is active)
-    const currentStore = get();
-    if (disruptionType !== 'none' && !currentStore.reducedMotion) {
-      journeyPhysics.speed = Math.max(0.015, journeyPhysics.speed * 0.70);
-    }
     journeyPhysics.targetSpeed = targetSpeed;
 
     broadcastJourneyState({
@@ -424,6 +415,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
       activeSignalId: nextSignalId,
       targetSpeed,
       speed: journeyPhysics.speed,
+      progress: journeyPhysics.progress,
       previewRouteId: null,
     });
   },
@@ -509,16 +501,16 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
   setLowPowerDetected: (isLowPowerDetected) => set({ isLowPowerDetected }),
   setIsOnboardingOpen: (open) => set({ isOnboardingOpen: open }),
   resetJourney: () => {
-    journeyPhysics.progress = 0.02;
+    journeyPhysics.progress = 0.06;
     journeyPhysics.speed = 0.25;
     journeyPhysics.targetSpeed = 0.25;
     journeyPhysics.activeBranch = 'main';
     journeyPhysics.coachProgresses = [
-      0.02 + 4 * COACH_OFFSET_STEP,
-      0.02 + 3 * COACH_OFFSET_STEP,
-      0.02 + 2 * COACH_OFFSET_STEP,
-      0.02 + 1 * COACH_OFFSET_STEP,
-      0.02,
+      0.06,
+      0.06 - 1 * COACH_OFFSET_STEP,
+      0.06 - 2 * COACH_OFFSET_STEP,
+      0.06 - 3 * COACH_OFFSET_STEP,
+      0.06 - 4 * COACH_OFFSET_STEP,
     ];
 
     broadcastJourneyState({
@@ -531,7 +523,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
 
     set({
       status: 'on-time',
-      progress: 0.02,
+      progress: 0.06,
       speed: 0.25,
       targetSpeed: 0.25,
       disruptionType: 'none',

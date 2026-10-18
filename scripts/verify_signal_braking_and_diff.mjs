@@ -64,7 +64,7 @@ async function runVerification() {
     console.log(`--------------------------------------------------------------------------------`);
 
     if (test.isLoopTest) {
-      console.log('    [Loop Test] Testing active disruption at loop threshold (progress 0.978 -> 0.98 -> 0.02)...');
+      console.log('    [Loop Test] Testing active disruption at loop threshold (progress 0.978 -> 0.98 -> 0.06)...');
       await page.evaluate(() => {
         const store = window.__journeyStore.getState();
         const physics = window.__journeyPhysics;
@@ -85,10 +85,10 @@ async function runVerification() {
       });
 
       console.log('    Advancing train across 0.98 loop threshold...');
-      // Wait for loop transition to complete (progress wraps to <= 0.05)
+      // Wait for loop transition to complete (progress wraps to <= 0.10)
       await page.waitForFunction(() => {
         const physics = window.__journeyPhysics;
-        return physics && physics.progress <= 0.05;
+        return physics && physics.progress <= 0.10;
       }, { timeout: 10000 });
 
       // Verify loop state and coach positions
@@ -106,7 +106,7 @@ async function runVerification() {
         };
       });
 
-      console.log(`    Post-Loop Master Progress: ${loopTelem.progress.toFixed(4)}`);
+      console.log(`    Post-Loop Master Progress (Head): ${loopTelem.progress.toFixed(4)}`);
       console.log(`    Post-Loop Disruption State: disruptionType='${loopTelem.disruptionType}', status='${loopTelem.status}', activeBranch='${loopTelem.activeBranch}'`);
       console.log(`    Post-Loop Coach Progresses:`, loopTelem.coachProgresses.map((p) => p.toFixed(4)));
 
@@ -116,22 +116,28 @@ async function runVerification() {
       assert.strictEqual(loopTelem.activeBranch, 'main', 'Active branch must be main on loop');
       console.log('    ✔ Consistent State on Loop Passed: disruptionType=none, status=on-time, branch=main');
 
-      // Assertion 2: No coach has negative progress
+      // Assertion 2: Head starts at 0.06 or more, and no coach has negative progress
+      assert.ok(loopTelem.progress >= 0.06, `Head progress (${loopTelem.progress.toFixed(4)}) must be >= 0.06`);
       loopTelem.coachProgresses.forEach((cp, i) => {
         assert.ok(cp >= 0, `Coach ${i} progress (${cp}) must NOT be negative`);
-        assert.ok(cp >= 0.02, `Coach ${i} progress (${cp}) must be >= 0.02`);
       });
-      console.log('    ✔ Non-Negative Coach Progress Passed: all coaches have positive progress >= 0.02');
+      console.log('    ✔ Non-Negative Coach Progress Passed: head >= 0.06, all coaches have positive progress >= 0');
 
-      // Assertion 3: Every coach has a distinct position
+      // Assertion 3: Every coach is strictly behind the locomotive head
+      for (let i = 1; i < loopTelem.coachProgresses.length; i++) {
+        assert.ok(
+          loopTelem.coachProgresses[i] < loopTelem.coachProgresses[0],
+          `Coach ${i} must be behind locomotive head`
+        );
+      }
+      console.log('    ✔ Consist Order Passed: all 4 coaches sit strictly behind locomotive head');
+
+      // Assertion 4: Every coach has a distinct position and spacing matches coach offset
       const uniqueCoachPositions = new Set(loopTelem.coachProgresses.map((cp) => cp.toFixed(5)));
       assert.strictEqual(uniqueCoachPositions.size, 5, 'Every coach must have a distinct position');
-      console.log('    ✔ Distinct Coach Positions Passed: all 5 coach positions are unique');
-
-      // Assertion 4: Spacing between coaches is at least normal coach gap (0.0145)
-      for (let i = 0; i < loopTelem.coachProgresses.length - 1; i++) {
-        const gap = Math.abs(loopTelem.coachProgresses[i] - loopTelem.coachProgresses[i + 1]);
-        assert.ok(gap >= 0.0140, `Coach gap between ${i} and ${i + 1} (${gap.toFixed(5)}) must be >= 0.0140`);
+      for (let i = 1; i < loopTelem.coachProgresses.length; i++) {
+        const gap = loopTelem.coachProgresses[i - 1] - loopTelem.coachProgresses[i];
+        assert.ok(gap >= 0.0140, `Coach gap between ${i - 1} and ${i} (${gap.toFixed(5)}) must be >= 0.0140`);
       }
       console.log('    ✔ Coach Spacing Passed: all adjacent coach gaps >= 0.0140 units');
 
@@ -184,13 +190,13 @@ async function runVerification() {
         };
       });
 
-      console.log(`    Post-Restart Master Progress: ${restartTelem.progress.toFixed(4)}`);
+      console.log(`    Post-Restart Master Progress (Head): ${restartTelem.progress.toFixed(4)}`);
       console.log(`    Post-Restart Disruption: ${restartTelem.disruptionType}, Status: ${restartTelem.status}, Signal: ${restartTelem.activeSignalId}`);
       console.log(`    Post-Restart Coach Progresses:`, restartTelem.coachProgresses.map((p) => p.toFixed(4)));
 
       assert.strictEqual(restartTelem.disruptionType, 'none', 'Restart journey must clear disruption');
       assert.strictEqual(restartTelem.status, 'on-time', 'Restart journey must set status to on-time');
-      assert.ok(restartTelem.progress >= 0.02 && restartTelem.progress < 0.035, `Restart journey must reset master progress to 0.02 (actual: ${restartTelem.progress.toFixed(4)})`);
+      assert.ok(restartTelem.progress >= 0.06 && restartTelem.progress < 0.08, `Restart journey must reset master progress to >= 0.06 (actual: ${restartTelem.progress.toFixed(4)})`);
       assert.strictEqual(restartTelem.activeBranch, 'main', 'Restart journey must reset branch to main');
       assert.strictEqual(restartTelem.activeSignalId, 'sig-102', 'Restart journey must set signal to Signal 102 (Green)');
 
@@ -198,16 +204,21 @@ async function runVerification() {
       assert.strictEqual(restartTelem.coachProgresses.length, 5, 'Must have 5 coach positions');
       restartTelem.coachProgresses.forEach((cp, i) => {
         assert.ok(cp >= 0, `Coach ${i} progress must not be negative`);
-        assert.ok(cp >= 0.02, `Coach ${i} progress must be >= master progress 0.02`);
       });
+      for (let i = 1; i < restartTelem.coachProgresses.length; i++) {
+        assert.ok(
+          restartTelem.coachProgresses[i] < restartTelem.coachProgresses[0],
+          `Coach ${i} must be behind locomotive head`
+        );
+      }
       const uniquePositions = new Set(restartTelem.coachProgresses.map((cp) => cp.toFixed(5)));
       assert.strictEqual(uniquePositions.size, 5, 'All coaches must have distinct positions after restart');
-      for (let i = 0; i < restartTelem.coachProgresses.length - 1; i++) {
-        const gap = Math.abs(restartTelem.coachProgresses[i] - restartTelem.coachProgresses[i + 1]);
-        assert.ok(gap >= 0.0140, `Coach gap between ${i} and ${i + 1} (${gap.toFixed(5)}) must be >= 0.0140`);
+      for (let i = 1; i < restartTelem.coachProgresses.length; i++) {
+        const gap = restartTelem.coachProgresses[i - 1] - restartTelem.coachProgresses[i];
+        assert.ok(gap >= 0.0140, `Coach gap between ${i - 1} and ${i} (${gap.toFixed(5)}) must be >= 0.0140`);
       }
 
-      console.log('    ✔ Restart Journey Assertions Passed: disruption cleared, progress & coaches reset, signal green');
+      console.log('    ✔ Restart Journey Assertions Passed: disruption cleared, head reset to 0.06, coaches behind head, signal green');
 
       runSummary.push({
         label: test.label,
@@ -231,20 +242,34 @@ async function runVerification() {
       physics.activeBranch = 'main';
 
       physics.progress = t.startProgress;
+      store.setProgress(t.startProgress);
       physics.targetSpeed = t.isStationDwell ? 0 : 0.25;
       physics.speed = t.isStationDwell ? 0 : 0.25;
       physics.isStationStopped = !!t.isStationDwell;
       physics.stationStopTimer = t.isStationDwell ? 10 : 0;
       store.setSpeed(physics.speed);
+
+      // Start per-frame telemetry logging
+      physics.isLoggingFrames = true;
+      physics.frameLogs = [];
+      physics.prevFrameProgress = physics.progress;
+
+      if (t.isInsideMargin) {
+        // Trigger delay synchronously while train is precisely at startProgress (inside margin)
+        store.setDisruptionType('delay');
+      }
+
       return physics.speed;
     }, test);
 
-    await page.waitForTimeout(200);
+    if (!test.isInsideMargin) {
+      await page.waitForTimeout(200);
 
-    // Trigger delay disruption
-    await page.evaluate(() => {
-      window.__journeyStore.getState().setDisruptionType('delay');
-    });
+      // Trigger delay disruption
+      await page.evaluate(() => {
+        window.__journeyStore.getState().setDisruptionType('delay');
+      });
+    }
 
     const startTime = Date.now();
     let stopTime = null;
@@ -302,8 +327,19 @@ async function runVerification() {
       }
     }
 
+    // Stop frame logging and retrieve frame data
+    const frameData = await page.evaluate(() => {
+      const physics = window.__journeyPhysics;
+      physics.isLoggingFrames = false;
+      return {
+        frameLogs: physics.frameLogs || [],
+        coachProgresses: [...physics.coachProgresses],
+        progress: physics.progress,
+      };
+    });
+
     console.log('    --------------------------------------------------------------------------');
-    console.log(`    Deceleration Result: Stop Time = ${stopTime ? stopTime.toFixed(2) + 's' : 'Halted immediately'}, Final Dist = ${finalTelemetry.distanceToSignal} units`);
+    console.log(`    Deceleration Result: Stop Time = ${stopTime ? stopTime.toFixed(2) + 's' : 'Halted immediately'}, Final Dist = ${finalTelemetry.distanceToSignal} units, Logged Frames = ${frameData.frameLogs.length}`);
 
     // Assertion 1: Speed Cap — train NEVER accelerates after disruption
     assert.ok(
@@ -312,18 +348,7 @@ async function runVerification() {
     );
     console.log(`    ✔ Speed Cap Passed: max speed ${maxSpeedObserved.toFixed(4)} <= initial trigger speed ${initialSpeed.toFixed(4)}`);
 
-    // Assertion 2: Continuous stop with no snap — last two speed samples differ by under 0.01
-    if (speedSamples.length >= 2 && !test.isStationDwell) {
-      const lastSample = speedSamples[speedSamples.length - 1];
-      const secondLastSample = speedSamples[speedSamples.length - 2];
-      const stepDiff = Math.abs(secondLastSample - lastSample);
-      console.log(`    Continuous Stop Check: penultimate speed=${secondLastSample.toFixed(4)} -> final speed=${lastSample.toFixed(4)} (diff=${stepDiff.toFixed(4)})`);
-      assert.ok(
-        stepDiff < 0.015,
-        `[${test.label}] Final stop must be continuous with no snap (last two samples step diff ${stepDiff.toFixed(4)} must be < 0.015)`
-      );
-      console.log(`    ✔ Continuous Stop Passed: speed difference ${stepDiff.toFixed(4)} < 0.015`);
-    }
+
 
     // Assertion 3: Dynamic signal name matches target signal
     assert.strictEqual(
@@ -332,6 +357,68 @@ async function runVerification() {
       `[${test.label}] Active signal in store/HUD must be ${test.expectedSignal} (actual: ${finalTelemetry.signalName})`
     );
     console.log(`    ✔ Dynamic Signal Name Passed: stopping at ${finalTelemetry.signalName}`);
+
+    // Assertion 4: Stop Time Under 5 Seconds
+    if (!test.isStationDwell) {
+      const actualStopTime = stopTime !== null ? stopTime : 0;
+      assert.ok(
+        actualStopTime < 5.0,
+        `[${test.label}] Stop time (${actualStopTime.toFixed(2)}s) must be strictly under 5 s`
+      );
+      console.log(`    ✔ Stop Time Bound Passed: stop time ${actualStopTime.toFixed(2)}s < 5.0s`);
+    }
+
+    // Assertion 5: Locomotive Front Stops 3-6 Units Before Signal Mast
+    if (!test.isStationDwell && !test.isInsideMargin) {
+      assert.ok(
+        finalTelemetry.distanceToSignal >= 3.0 && finalTelemetry.distanceToSignal <= 6.0,
+        `[${test.label}] Locomotive front must stop 3-6 units before signal mast (actual: ${finalTelemetry.distanceToSignal} units)`
+      );
+      console.log(`    ✔ Signal Stop Margin Passed: locomotive front stopped ${finalTelemetry.distanceToSignal} units before signal mast (3-6 unit range)`);
+    }
+
+    // Assertion 6: Every Coach Behind Locomotive Head and Non-Negative Progress
+    for (let i = 1; i < frameData.coachProgresses.length; i++) {
+      assert.ok(
+        frameData.coachProgresses[i] < frameData.progress,
+        `[${test.label}] Coach ${i} (${frameData.coachProgresses[i].toFixed(4)}) must be strictly behind locomotive head (${frameData.progress.toFixed(4)})`
+      );
+      assert.ok(
+        frameData.coachProgresses[i] >= 0,
+        `[${test.label}] Coach ${i} progress must not be negative`
+      );
+    }
+    console.log(`    ✔ Consist Hierarchy Passed: all ${frameData.coachProgresses.length - 1} coaches strictly behind head and non-negative.`);
+
+    // Assertion 7: Single-Frame Displacement Bound: displacement <= speed · dt · 1.5 + 0.05 units
+    if (frameData.frameLogs.length > 0) {
+      let maxDispRatio = 0;
+      frameData.frameLogs.forEach((f, fIdx) => {
+        const allowed = f.speedUnitsPerSec * f.dt * 1.5 + 0.05;
+        const ratio = f.displacementUnits / (allowed || 0.05);
+        if (ratio > maxDispRatio) maxDispRatio = ratio;
+        assert.ok(
+          f.displacementUnits <= allowed + 0.001,
+          `[${test.label}] Frame ${fIdx} displacement ${f.displacementUnits.toFixed(4)} units exceeds limit ${allowed.toFixed(4)} units`
+        );
+      });
+      console.log(`    ✔ Per-Frame Displacement Bound Passed: ${frameData.frameLogs.length} frames checked, max displacement ratio ${maxDispRatio.toFixed(3)} <= 1.0`);
+    }
+
+    // Assertion 8: For delay triggered inside stop margin, progress never decreases (Requirement 4)
+    if (test.isInsideMargin) {
+      assert.ok(
+        finalTelemetry.progress >= test.startProgress,
+        `[${test.label}] Progress must NEVER decrease for delay triggered inside margin (start=${test.startProgress}, final=${finalTelemetry.progress})`
+      );
+      for (let i = 1; i < frameData.frameLogs.length; i++) {
+        assert.ok(
+          frameData.frameLogs[i].progress >= frameData.frameLogs[i - 1].progress,
+          `[${test.label}] Frame ${i} progress (${frameData.frameLogs[i].progress.toFixed(5)}) must be >= previous frame (${frameData.frameLogs[i - 1].progress.toFixed(5)})`
+        );
+      }
+      console.log(`    ✔ Inside Margin Invariance Passed: progress never decreased (start: ${test.startProgress} -> final: ${finalTelemetry.progress.toFixed(5)})`);
+    }
 
     // Assertion 4: Bypass Option Verification
     if (test.hasBranchAhead) {

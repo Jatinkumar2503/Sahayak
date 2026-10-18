@@ -38,6 +38,7 @@ export function DecisionCardsOverlay() {
   const undoConfirmedOption = useJourneyStore((s) => s.undoConfirmedOption);
   const resetJourney = useJourneyStore((s) => s.resetJourney);
   const setFamilyShareOpen = useJourneyStore((s) => s.setFamilyShareOpen);
+  const progress = useJourneyStore((s) => s.progress);
 
   const [expandedWhyId, setExpandedWhyId] = useState<string | null>(null);
 

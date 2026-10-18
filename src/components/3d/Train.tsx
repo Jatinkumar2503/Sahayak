@@ -60,6 +60,7 @@ export function Train() {
 
   useFrame((state, delta) => {
     const time = state.clock.getElapsedTime();
+    let speedDuringFrame = journeyPhysics.speed;
 
     // 1. Station-Stop Sequence & S-Curve Speed Easing
     if (!journeyPhysics.scrollDriven) {
@@ -100,7 +101,7 @@ export function Train() {
           }
         }
 
-        // Deceleration easing curve targeting the next red signal ahead (stops within 3-6 margin, ~3.8-4.5s)
+        // Constant Deceleration Braking Curve: v = v0 * sqrt(remaining / initial) with NO final clamp or snap
         if (disruptionType === 'delay' || disruptionType === 'cancellation') {
           const CORRIDOR_CURVE_LENGTH = 568.74;
           const SIGNAL_STOP_MARGIN_UNITS = 4.5;
@@ -112,29 +113,15 @@ export function Train() {
           const stopProgress = (activeSig.progress - MARGIN_PROGRESS + 1) % 1;
           const distRemaining = (stopProgress - journeyPhysics.progress) * CORRIDOR_CURVE_LENGTH;
 
-          const initialDist = journeyPhysics.initialBrakeDist || Math.max(5.0, distRemaining);
-          const ratio = Math.max(0, Math.min(1, distRemaining / initialDist));
-          const maxAllowedSpeed = Math.min(journeyPhysics.initialBrakeSpeed || 0.25, 0.25);
+          const initialDist = journeyPhysics.initialBrakeDist || distRemaining;
+          const v0 = journeyPhysics.initialBrakeSpeed || 0.25;
 
-          if (distRemaining <= 0.01 || ratio <= 0.001) {
+          if (distRemaining <= 0 || initialDist <= 0) {
             journeyPhysics.speed = 0;
-            journeyPhysics.progress = stopProgress;
           } else {
-            // Smooth, continuous deceleration curve that glides naturally into zero
-            // using sin easing combined with linear ratio so derivative approaches 0 smoothly
-            const targetSpeed = maxAllowedSpeed * Math.sin((ratio * Math.PI) / 2) * Math.min(1, ratio * 1.3);
-            journeyPhysics.speed = THREE.MathUtils.lerp(journeyPhysics.speed, targetSpeed, delta * 4.4);
-
-            // Strict cap: train can NEVER exceed initialBrakeSpeed (never accelerate after disruption)
-            if (journeyPhysics.speed > maxAllowedSpeed) {
-              journeyPhysics.speed = maxAllowedSpeed;
-            }
-
-            // Continuous cutoff threshold: when speed is negligible near target margin, smoothly reach complete stop
-            if ((distRemaining < 1.0 && journeyPhysics.speed < 0.010) || journeyPhysics.speed < 0.003) {
-              journeyPhysics.speed = 0;
-              journeyPhysics.progress = stopProgress;
-            }
+            // Speed follows exact constant deceleration relation: v = v0 * sqrt(remaining / initial)
+            const ratio = Math.max(0, Math.min(1, distRemaining / initialDist));
+            journeyPhysics.speed = v0 * Math.sqrt(ratio);
           }
         } else if (!approachingStation && journeyPhysics.stationStopTimer <= 0) {
           journeyPhysics.speed = THREE.MathUtils.lerp(
@@ -145,8 +132,9 @@ export function Train() {
         }
       }
 
-      // 2. Advance train master progress along spline (never overshoots stopProgress at red signal)
-      const deltaProgress = Math.max(0, journeyPhysics.speed * 0.045 * delta);
+      const SPEED_TO_PROGRESS_FACTOR = 0.105;
+      const speedDuringFrame = journeyPhysics.speed;
+      const deltaProgress = Math.max(0, journeyPhysics.speed * SPEED_TO_PROGRESS_FACTOR * delta);
       let nextProgress = journeyPhysics.progress + deltaProgress;
 
       if (disruptionType === 'delay' || disruptionType === 'cancellation') {
@@ -165,7 +153,7 @@ export function Train() {
       }
 
       // Seamless journey looping: When train completes run past Ambala (progress >= 0.98),
-      // smoothly loop back to Delhi approach with 0.6s fade and clean consistent state.
+      // smoothly loop back to Delhi approach with head at 0.06 or more
       if (nextProgress >= 0.98) {
         const store = useJourneyStore.getState();
         const isReduced = store.reducedMotion;
@@ -175,10 +163,11 @@ export function Train() {
           store.setDisruptionType('none');
         }
 
-        journeyPhysics.progress = 0.02;
+        journeyPhysics.progress = 0.06;
         journeyPhysics.speed = 0.25;
         journeyPhysics.targetSpeed = 0.25;
         journeyPhysics.activeBranch = 'main';
+        store.setProgress(0.06);
         store.setActiveBranch('main');
         store.setActiveSignalId('sig-102');
 
@@ -203,10 +192,8 @@ export function Train() {
       const ref = coachRefs[i].current;
       if (!ref) continue;
 
-      // Arc-length parameterization ensures uniform spacing through any curve radius
-      // Lead locomotive (i=0) leads at front; trailing coaches (i>0) follow behind with positive progress >= 0.02
-      const coachProgress =
-        (journeyPhysics.progress + (COACH_COUNT - 1 - i) * COACH_OFFSET_STEP) % 1;
+      // Locomotive head is at i=0 (progress). Coach i is at head - i * COACH_OFFSET_STEP
+      const coachProgress = (journeyPhysics.progress - i * COACH_OFFSET_STEP + 1) % 1;
       journeyPhysics.coachProgresses[i] = coachProgress;
 
       // Route abstraction: every coach follows the exact continuous blended curve path
@@ -227,6 +214,26 @@ export function Train() {
         0.016 *
         Math.min(1, journeyPhysics.speed / 0.15);
       ref.rotateZ(sway);
+    }
+
+    // 5. Per-Frame Logging for Automated Physics & Displacement Assertion
+    const CORRIDOR_CURVE_LENGTH = 568.74;
+    const currentP = journeyPhysics.progress;
+    const prevP = journeyPhysics.prevFrameProgress ?? currentP;
+    const dispUnits = Math.abs(currentP - prevP) * CORRIDOR_CURVE_LENGTH;
+    journeyPhysics.prevFrameProgress = currentP;
+
+    if (journeyPhysics.isLoggingFrames && delta > 0) {
+      const SPEED_TO_PROGRESS_FACTOR = 0.105;
+      const effectiveSpeed = Math.max(journeyPhysics.speed, speedDuringFrame);
+      journeyPhysics.frameLogs.push({
+        dt: delta,
+        progress: currentP,
+        displacementUnits: dispUnits,
+        speedUnitsPerSec: effectiveSpeed * SPEED_TO_PROGRESS_FACTOR * CORRIDOR_CURVE_LENGTH,
+        speed: effectiveSpeed,
+        coachProgresses: [...journeyPhysics.coachProgresses],
+      });
     }
 
     // Rotate spinning wheels
