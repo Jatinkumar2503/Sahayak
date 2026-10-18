@@ -214,8 +214,8 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
   statusMessageEn: 'ON TIME',
   statusMessageHi: 'समय पर',
   progress: 0.06,
-  speed: 0.25,
-  targetSpeed: 0.25,
+  speed: 0,
+  targetSpeed: 0,
   disruptionType: 'none',
 
   timeOfDay: 'day',

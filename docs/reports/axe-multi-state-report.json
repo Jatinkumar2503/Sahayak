@@ -1,29 +1,29 @@
 [
   {
     "state": "First View (Default English, Clean Train Scene + Start Journey)",
-    "passed": 33,
+    "passed": 34,
     "incomplete": 2,
     "violationsCount": 0,
     "violations": []
   },
   {
     "state": "First View (Hindi Localization Mode)",
-    "passed": 33,
+    "passed": 34,
     "incomplete": 2,
     "violationsCount": 0,
     "violations": []
   },
   {
     "state": "Elder Accessibility Mode",
-    "passed": 33,
+    "passed": 34,
     "incomplete": 2,
     "violationsCount": 0,
     "violations": []
   },
   {
     "state": "Collapsible \"Demo tools\" Drawer Open",
-    "passed": 35,
-    "incomplete": 1,
+    "passed": 34,
+    "incomplete": 2,
     "violationsCount": 0,
     "violations": []
   },
@@ -36,84 +36,35 @@
   },
   {
     "state": "Disruption Decision Cards Overlay (With \"Why this ranking?\" expander)",
-    "passed": 35,
+    "passed": 34,
     "incomplete": 2,
     "violationsCount": 0,
     "violations": []
   },
   {
     "state": "Resolved Outcome Screen (Outcome summary + Undo button)",
-    "passed": 35,
-    "incomplete": 2,
-    "violationsCount": 0,
-    "violations": []
-  },
-  {
-    "state": "Onboarding Modal Open",
-    "passed": 35,
-    "incomplete": 2,
-    "violationsCount": 0,
-    "violations": []
-  },
-  {
-    "state": "Family Share Modal Open",
-    "passed": 35,
-    "incomplete": 2,
-    "violationsCount": 0,
-    "violations": []
-  },
-  {
-    "state": "Voice Assistant Modal Open",
-    "passed": 35,
-    "incomplete": 2,
-    "violationsCount": 0,
-    "violations": []
-  },
-  {
-    "state": "Journey Timeline Modal Open",
-    "passed": 35,
+    "passed": 34,
     "incomplete": 2,
     "violationsCount": 0,
     "violations": []
   },
   {
     "state": "404 Not Found Page (/nonexistent-route)",
-    "passed": 27,
+    "passed": 18,
     "incomplete": 1,
     "violationsCount": 0,
     "violations": []
   },
   {
     "state": "Design System Page (/design-system)",
-    "passed": 30,
+    "passed": 21,
     "incomplete": 0,
     "violationsCount": 0,
     "violations": []
   },
   {
     "state": "Collapsible Drawer Open at 360px Viewport (Mobile A11y & Contrast)",
-    "passed": 35,
-    "incomplete": 1,
-    "violationsCount": 0,
-    "violations": []
-  },
-  {
-    "state": "Second Tab (BroadcastChannel Family Share Sync + Live Audit)",
-    "passed": 35,
-    "incomplete": 2,
-    "violationsCount": 0,
-    "violations": []
-  },
-  {
-    "state": "Disruption Decision Cards - Bypass Unavailable (English State 16)",
-    "passed": 35,
-    "incomplete": 2,
-    "violationsCount": 0,
-    "violations": []
-  },
-  {
-    "state": "Disruption Decision Cards - Bypass Unavailable (Hindi State 17)",
-    "passed": 35,
+    "passed": 34,
     "incomplete": 2,
     "violationsCount": 0,
     "violations": []

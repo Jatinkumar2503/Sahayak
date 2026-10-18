@@ -66,8 +66,8 @@ export const COACH_OFFSET_STEP = 0.0145; // Even arc-length step
 
 export const journeyPhysics: JourneyPhysicsState = {
   progress: 0.06,
-  speed: 0.25,
-  targetSpeed: 0.25,
+  speed: 0,
+  targetSpeed: 0,
   coachOffsets: [0, 1 * COACH_OFFSET_STEP, 2 * COACH_OFFSET_STEP, 3 * COACH_OFFSET_STEP, 4 * COACH_OFFSET_STEP],
   coachProgresses: [
     0.06,

@@ -40,13 +40,13 @@ export const metadata: Metadata = {
     title: "Sahayak 3D | Real-Time 3D Rail Journey & Disruption Simulator",
     description:
       "An accessible, real-time 3D low-poly Indian rail corridor companion for passenger journeys and instant disruption decision making.",
-    url: "https://sahayak-tan-zeta.vercel.app",
+    url: "/",
     siteName: "Sahayak 3D",
     locale: "en_IN",
     type: "website",
     images: [
       {
-        url: "https://sahayak-tan-zeta.vercel.app/opengraph-image",
+        url: "/opengraph-image",
         width: 1200,
         height: 630,
         alt: "Sahayak 3D - Low-poly Indian Rail Journey Simulator",
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     title: "Sahayak 3D | Real-Time 3D Rail Journey & Disruption Simulator",
     description:
       "An accessible, real-time 3D low-poly Indian rail corridor companion for passenger journeys and instant disruption decision making.",
-    images: ["https://sahayak-tan-zeta.vercel.app/opengraph-image"],
+    images: ["/opengraph-image"],
   },
 };
 

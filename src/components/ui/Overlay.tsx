@@ -70,8 +70,8 @@ export function Overlay() {
 
   // Throttled HUD metrics (updated at 4Hz to prevent 60fps React re-renders)
   const [hudState, setHudState] = useState({
-    progress: 0.02,
-    speed: 0.25,
+    progress: 0.06,
+    speed: 0,
   });
   const [isMuted, setIsMuted] = useState(true);
 
