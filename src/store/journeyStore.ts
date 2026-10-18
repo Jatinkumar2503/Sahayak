@@ -228,7 +228,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
 
   activeBranch: 'main',
   branchProgress: 0,
-  activeSignalId: 'sig-104',
+  activeSignalId: 'sig-102',
 
   shadowTier: 'blob', // Default fast contact blob shadows
   scrollMode: false,
@@ -369,7 +369,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
     let nextStatus: JourneyStatus = 'on-time';
     let targetSpeed = 0.25;
 
-    let nextSignalId = get().activeSignalId || 'sig-104';
+    let nextSignalId = get().activeSignalId || 'sig-102';
 
     let statusMessageEn = 'ON TIME';
     let statusMessageHi = 'समय पर';

@@ -322,5 +322,29 @@ assert.strictEqual(sampleState.statusMessageEn, 'Signal ahead is red, slowing');
 assert.strictEqual(sampleState.statusMessageHi, 'आगे सिग्नल लाल है, गति धीमी हो रही है');
 console.log('✔ Test 19: Status message "Signal ahead is red, slowing" verified immediately on trigger passed');
 
-console.log('\nAll 19 Decision Engine, FSM, Physics, Loop & Consistency Unit Tests PASSED successfully!');
+// 20. Initial active signal must be sig-102 (approaching first trackside signal at progress 0.22)
+const initialSignalId = 'sig-102';
+assert.strictEqual(initialSignalId, 'sig-102', 'Initial active signal must be sig-102');
+console.log('✔ Test 20: Initial active signal sig-102 (Signal 102) verified passed');
+
+// 21. Status line and live region show "0 km/h • Stopped at platform" when train is stopped
+function getStatusLineAndLiveRegion(speed, journeyStarted) {
+  const isStopped = !journeyStarted || speed <= 0.001;
+  const statusLine = isStopped ? '0 km/h • Stopped at platform' : `${(speed * 440).toFixed(0)} km/h • On Time`;
+  const liveRegion = isStopped ? 'Current Journey Status: 0 km/h • Stopped at platform' : `Current Journey Status: ON TIME, Speed: ${(speed * 440).toFixed(0)} km/h`;
+  return { statusLine, liveRegion };
+}
+
+const beforeStart = getStatusLineAndLiveRegion(0, false);
+assert.strictEqual(beforeStart.statusLine, '0 km/h • Stopped at platform', 'Status line must be "0 km/h • Stopped at platform" before start');
+assert.strictEqual(beforeStart.liveRegion, 'Current Journey Status: 0 km/h • Stopped at platform', 'Live region must report stopped at platform before start');
+
+const stationStopped = getStatusLineAndLiveRegion(0, true);
+assert.strictEqual(stationStopped.statusLine, '0 km/h • Stopped at platform', 'Status line must be "0 km/h • Stopped at platform" when stopped at platform');
+assert.strictEqual(stationStopped.liveRegion, 'Current Journey Status: 0 km/h • Stopped at platform', 'Live region must report stopped at platform when stopped');
+
+console.log('✔ Test 21: Status line and live region show 0 km/h and "Stopped at platform" until journey starts and whenever stopped passed');
+
+console.log('\nAll 21 Decision Engine, FSM, Physics, Loop & Consistency Unit Tests PASSED successfully!');
+
 

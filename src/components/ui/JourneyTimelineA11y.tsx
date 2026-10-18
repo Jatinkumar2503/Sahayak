@@ -24,7 +24,10 @@ export function JourneyTimelineA11y() {
   const isTimelineOpen = useJourneyStore((s) => s.isTimelineOpen);
   const setTimelineOpen = useJourneyStore((s) => s.setTimelineOpen);
 
-  const activeSignal = SIGNALS.find((s) => s.id === activeSignalId) || getNextSignalAhead(journeyPhysics.progress);
+  const approachingSignal = getNextSignalAhead(journeyPhysics.progress);
+  const activeSignal = disruptionType !== 'none'
+    ? (SIGNALS.find((s) => s.id === activeSignalId) || approachingSignal)
+    : approachingSignal;
 
   const t = translations[language];
   const isHindi = language === 'hi';
@@ -123,7 +126,7 @@ export function JourneyTimelineA11y() {
         <p>{t.timelineDesc}</p>
         <p>Current train: Express 00001</p>
         <p>Journey Status: {getStatusText()}</p>
-        <p>Track Signal: {getSignalAspectText()}</p>
+        <p>{isHindi ? 'निकटवर्ती ट्रैक सिग्नल:' : 'Approaching Track Signal:'} {getSignalAspectText()}</p>
         <p>Route Alignment: {activeBranch === 'branch' ? 'Bypass Chord Line' : 'Main Corridor'}</p>
         <ol>
           {STATIONS.map((st, i) => {
@@ -176,7 +179,7 @@ export function JourneyTimelineA11y() {
               </div>
 
               <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-semibold">Track Signal:</span>
+                <span className="text-slate-400 font-semibold">{isHindi ? 'निकटवर्ती सिग्नल:' : 'Approaching Signal:'}</span>
                 <span className="font-bold text-emerald-400">{getSignalAspectText()}</span>
               </div>
 

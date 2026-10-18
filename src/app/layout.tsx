@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://sahayak-3d.vercel.app"),
+  metadataBase: new URL("https://sahayak-tan-zeta.vercel.app"),
   title: {
     default: "Sahayak 3D | Real-Time 3D Rail Journey & Disruption Simulator",
     template: "%s | Sahayak 3D",
@@ -40,16 +40,25 @@ export const metadata: Metadata = {
     title: "Sahayak 3D | Real-Time 3D Rail Journey & Disruption Simulator",
     description:
       "An accessible, real-time 3D low-poly Indian rail corridor companion for passenger journeys and instant disruption decision making.",
-    url: "https://sahayak-3d.vercel.app",
+    url: "https://sahayak-tan-zeta.vercel.app",
     siteName: "Sahayak 3D",
     locale: "en_IN",
     type: "website",
+    images: [
+      {
+        url: "https://sahayak-tan-zeta.vercel.app/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Sahayak 3D - Low-poly Indian Rail Journey Simulator",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Sahayak 3D | Real-Time 3D Rail Journey & Disruption Simulator",
     description:
       "An accessible, real-time 3D low-poly Indian rail corridor companion for passenger journeys and instant disruption decision making.",
+    images: ["https://sahayak-tan-zeta.vercel.app/opengraph-image"],
   },
 };
 

@@ -101,7 +101,18 @@ export function Overlay() {
     STATIONS.find((st) => st.progress > hudState.progress) || STATIONS[STATIONS.length - 1];
 
   // Authentic Okabe-Ito status badge config
+  const isTrainStopped = !journeyStarted || hudState.speed <= 0.001 || journeyPhysics.isStationStopped;
+
   const getStatusBadge = () => {
+    if (isTrainStopped && disruptionType === 'none' && status !== 'resolved') {
+      return {
+        icon: <CheckCircle2 className="w-4 h-4 text-emerald-400" aria-hidden="true" />,
+        labelEn: '0 km/h • Stopped at platform',
+        labelHi: '० किमी/घंटा • प्लेटफ़ॉर्म पर खड़ी है',
+        classes: 'bg-[#004D38]/60 text-[#D1FAE5] border-emerald-400 shadow-emerald-400/20',
+        pattern: 'border-solid border-2',
+      };
+    }
     switch (status) {
       case 'resolved':
         return {
@@ -148,7 +159,10 @@ export function Overlay() {
   };
 
   // Trackside Signal Aspect
-  const activeSignal = SIGNALS.find((s) => s.id === activeSignalId) || getNextSignalAhead(hudState.progress);
+  const approachingSignal = getNextSignalAhead(hudState.progress);
+  const activeSignal = disruptionType !== 'none'
+    ? (SIGNALS.find((s) => s.id === activeSignalId) || approachingSignal)
+    : approachingSignal;
 
   const getSignalAspect = () => {
     if (disruptionType === 'delay' || disruptionType === 'cancellation') {
@@ -203,9 +217,13 @@ export function Overlay() {
 
       {/* Screen Reader Live Region for Status Changes */}
       <div className="sr-only" aria-live="polite" role="status">
-        {isHindi
-          ? `वर्तमान स्थिति: ${statusBadge.labelHi}, गति: ${(hudState.speed * 440).toFixed(0)} किमी प्रति घंटा`
-          : `Current Journey Status: ${statusBadge.labelEn}, Speed: ${(hudState.speed * 440).toFixed(0)} km/h`}
+        {isTrainStopped && disruptionType === 'none' && status !== 'resolved'
+          ? (isHindi
+              ? 'वर्तमान स्थिति: ० किमी/घंटा • प्लेटफ़ॉर्म पर खड़ी है'
+              : 'Current Journey Status: 0 km/h • Stopped at platform')
+          : (isHindi
+              ? `वर्तमान स्थिति: ${statusBadge.labelHi}, गति: ${(hudState.speed * 440).toFixed(0)} किमी प्रति घंटा`
+              : `Current Journey Status: ${statusBadge.labelEn}, Speed: ${(hudState.speed * 440).toFixed(0)} km/h`)}
       </div>
 
       {/* Top Header Bar: Clean & Minimal */}
@@ -220,26 +238,24 @@ export function Overlay() {
           </span>
         </div>
 
-        {/* Live Status Pill & Signal (Visible once journey starts) */}
-        {journeyStarted && (
-          <div className="hidden md:flex items-center gap-2">
-            <div
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-black shadow-lg backdrop-blur-md transition-all duration-300 ${statusBadge.classes} ${statusBadge.pattern}`}
-            >
-              {statusBadge.icon}
-              <span>{isHindi ? statusBadge.labelHi : statusBadge.labelEn}</span>
-            </div>
-
-            <div
-              id="signal-aspect-badge"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-md shadow-lg transition-all ${signalAspect.colorClass}`}
-              title={`Trackside ${activeSignal.nameEn} aspect status`}
-            >
-              {signalAspect.icon}
-              <span>{isHindi ? signalAspect.textHi : signalAspect.textEn}</span>
-            </div>
+        {/* Live Status Pill & Signal (Visible always on desktop) */}
+        <div className="hidden md:flex items-center gap-2">
+          <div
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-black shadow-lg backdrop-blur-md transition-all duration-300 ${statusBadge.classes} ${statusBadge.pattern}`}
+          >
+            {statusBadge.icon}
+            <span>{isHindi ? statusBadge.labelHi : statusBadge.labelEn}</span>
           </div>
-        )}
+
+          <div
+            id="signal-aspect-badge"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-md shadow-lg transition-all ${signalAspect.colorClass}`}
+            title={`Trackside ${activeSignal.nameEn} aspect status`}
+          >
+            {signalAspect.icon}
+            <span>{isHindi ? signalAspect.textHi : signalAspect.textEn}</span>
+          </div>
+        </div>
 
         {/* Controls: Language Toggle & Collapsible "Demo tools" Drawer Trigger */}
         <div className="flex items-center gap-2">
@@ -274,10 +290,10 @@ export function Overlay() {
         /* FIRST VIEW: Train Scene, Plain-Language Status Headline, One Primary Action */
         <div role="region" aria-label={t.journeyBoardingStatus} className="my-auto flex flex-col items-center justify-center text-center px-4 pointer-events-auto">
           <div className="max-w-md w-full bg-slate-950/90 backdrop-blur-xl border border-slate-700/80 p-6 sm:p-8 rounded-3xl shadow-2xl flex flex-col items-center">
-            {/* Plain-Language Status Headline */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-bold mb-3">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Platform 1 • NDLS</span>
+            {/* Plain-Language Status Headline: 0 km/h • Stopped at platform */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#004D38]/60 border border-[#009E73]/50 text-emerald-300 text-xs font-bold mb-3">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#009E73]" />
+              <span>{isHindi ? '० किमी/घंटा • प्लेटफ़ॉर्म पर खड़ी है' : '0 km/h • Stopped at platform'}</span>
             </div>
 
             <h1 className="text-xl sm:text-2xl font-black text-slate-100 tracking-tight leading-snug">
@@ -309,11 +325,17 @@ export function Overlay() {
               {/* Plain-Language Status Headline */}
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#004D38]/60 border border-[#009E73]/50 text-emerald-300 text-xs font-bold mb-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#009E73]" />
-                <span>{(hudState.speed * 440).toFixed(0)} km/h • {isHindi ? 'समय पर' : 'On Time'}</span>
+                <span>
+                  {isTrainStopped
+                    ? (isHindi ? '० किमी/घंटा • प्लेटफ़ॉर्म पर खड़ी है' : '0 km/h • Stopped at platform')
+                    : `${(hudState.speed * 440).toFixed(0)} km/h • ${isHindi ? 'समय पर' : 'On Time'}`}
+                </span>
               </div>
 
               <h2 className="text-lg sm:text-xl font-black text-slate-100 tracking-tight leading-snug">
-                {t.journeyRunningStatus}
+                {isTrainStopped
+                  ? (isHindi ? 'एक्सप्रेस ००००१ • प्लेटफ़ॉर्म पर रुकी हुई है' : 'Express 00001 • Stopped at platform')
+                  : t.journeyRunningStatus}
               </h2>
 
               {/* ONE PRIMARY ACTION: "Simulate a problem" */}

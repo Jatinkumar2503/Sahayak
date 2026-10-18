@@ -190,6 +190,12 @@ export function Train() {
         }
       } else {
         journeyPhysics.progress = Math.max(journeyPhysics.progress, nextProgress);
+        if (disruptionType === 'none') {
+          const approachingSig = getNextSignalAhead(journeyPhysics.progress);
+          if (useJourneyStore.getState().activeSignalId !== approachingSig.id) {
+            useJourneyStore.getState().setActiveSignalId(approachingSig.id);
+          }
+        }
       }
     }
 

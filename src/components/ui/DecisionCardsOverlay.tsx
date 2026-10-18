@@ -105,9 +105,12 @@ export function DecisionCardsOverlay() {
 
   // If normal cruising and not resolved, do not show options cards
   if (options.length === 0 && status !== 'resolved') {
+    const isStopped = !useJourneyStore.getState().journeyStarted || journeyPhysics.speed <= 0.001 || journeyPhysics.isStationStopped;
     return (
       <div className="sr-only" aria-live="polite">
-        {t.bannerNormal}
+        {isStopped
+          ? (isHindi ? 'वर्तमान स्थिति: ० किमी/घंटा • प्लेटफ़ॉर्म पर खड़ी है' : 'Current Journey Status: 0 km/h • Stopped at platform')
+          : t.bannerNormal}
       </div>
     );
   }

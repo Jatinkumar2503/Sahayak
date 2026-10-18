@@ -178,6 +178,8 @@ export const translations = {
     simulateProblemBtn: 'Simulate a Disruption',
     journeyBoardingStatus: 'Express 00001 • Ready for Departure (New Delhi)',
     journeyRunningStatus: 'Express 00001 • Cruising Smoothly (110 km/h)',
+    stoppedAtPlatform: 'Stopped at platform',
+    stoppedAtPlatformSpeed: '0 km/h • Stopped at platform',
 
     // "Why this ranking?" expander
     whyRankingBtn: 'Why this ranking?',
@@ -382,6 +384,8 @@ export const translations = {
     simulateProblemBtn: 'समस्या का अनुकरण करें',
     journeyBoardingStatus: 'एक्सप्रेस ००००१ • प्रस्थान के लिए तैयार (नई दिल्ली)',
     journeyRunningStatus: 'एक्सप्रेस ००००१ • सामान्य गति पर अग्रसर (११० किमी/घंटा)',
+    stoppedAtPlatform: 'प्लेटफ़ॉर्म पर खड़ी है',
+    stoppedAtPlatformSpeed: '० किमी/घंटा • प्लेटफ़ॉर्म पर खड़ी है',
 
     // "Why this ranking?" expander
     whyRankingBtn: 'यह रैंकिंग क्यों?',
