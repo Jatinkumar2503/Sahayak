@@ -43,12 +43,12 @@ async function runVerification() {
   console.log('--- 1. TESTING DELAY BRAKING & BYPASS REROUTE ACROSS 8 CORRIDOR POSITIONS ---');
 
   const testPositions = [
-    { label: 'Pos 1 (Delhi -> Panipat)', startProgress: 0.19, expectedSignal: 'Signal 102', hasBranchAhead: true },
-    { label: 'Pos 2 (Approaching Panipat Outer)', startProgress: 0.38, expectedSignal: 'Signal 104', hasBranchAhead: true },
-    { label: 'Pos 3 (Panipat Approach Close)', startProgress: 0.41, expectedSignal: 'Signal 104', hasBranchAhead: true },
-    { label: 'Pos 4 (Panipat -> Ambala)', startProgress: 0.64, expectedSignal: 'Signal 106', hasBranchAhead: false },
-    { label: 'Pos 5 (Approaching Ambala)', startProgress: 0.84, expectedSignal: 'Signal 108', hasBranchAhead: false },
-    { label: 'Pos 6 (After Last Signal)', startProgress: 0.91, expectedSignal: 'Signal 110', hasBranchAhead: false },
+    { label: 'Pos 1 (Trigger at 0.06)', startProgress: 0.06, expectedSignal: 'Signal 102', hasBranchAhead: true },
+    { label: 'Pos 2 (Trigger at 0.10)', startProgress: 0.10, expectedSignal: 'Signal 102', hasBranchAhead: true },
+    { label: 'Pos 3 (Trigger at 0.15)', startProgress: 0.15, expectedSignal: 'Signal 102', hasBranchAhead: true },
+    { label: 'Pos 4 (Trigger at 0.30)', startProgress: 0.30, expectedSignal: 'Signal 104', hasBranchAhead: true },
+    { label: 'Pos 5 (Trigger at 0.60)', startProgress: 0.60, expectedSignal: 'Signal 106', hasBranchAhead: false },
+    { label: 'Pos 6 (Trigger 2 Units Before Stop Mark at Cruise 0.25)', startProgress: 0.42857, expectedSignal: 'Signal 104', isTwoUnitsBeforeStop: true, hasBranchAhead: true },
     { label: 'Pos 7 (Inside 4.5-Unit Stop Margin)', startProgress: 0.436, expectedSignal: 'Signal 104', isInsideMargin: true, hasBranchAhead: true },
     { label: 'Pos 8 (Station Dwell at Panipat)', startProgress: 0.50, expectedSignal: 'Signal 106', isStationDwell: true, hasBranchAhead: false },
     { label: 'Pos 9 (Corridor Loop at 0.98)', startProgress: 0.978, expectedSignal: 'Signal 102', isLoopTest: true, hasBranchAhead: true },
@@ -254,24 +254,22 @@ async function runVerification() {
       physics.frameLogs = [];
       physics.prevFrameProgress = physics.progress;
 
-      if (t.isInsideMargin) {
-        // Trigger delay synchronously while train is precisely at startProgress (inside margin)
-        store.setDisruptionType('delay');
-      }
+      // Trigger delay disruption at exact test position
+      store.setDisruptionType('delay');
 
       return physics.speed;
     }, test);
 
-    if (!test.isInsideMargin) {
-      await page.waitForTimeout(200);
-
-      // Trigger delay disruption
-      await page.evaluate(() => {
-        window.__journeyStore.getState().setDisruptionType('delay');
-      });
-    }
+    // Verify immediate status message
+    const statusMsg = await page.evaluate(() => {
+      const store = window.__journeyStore.getState();
+      return store.statusMessageEn;
+    });
+    assert.strictEqual(statusMsg, 'Signal ahead is red, slowing', 'Status must immediately be "Signal ahead is red, slowing"');
+    console.log('    ✔ Immediate Status Passed: "Signal ahead is red, slowing" verified on trigger');
 
     const startTime = Date.now();
+    let brakeStartTime = null;
     let stopTime = null;
     let finalTelemetry = null;
     let maxSpeedObserved = 0;
@@ -280,8 +278,8 @@ async function runVerification() {
     console.log('    Time (s)  | Speed (norm) | Dist to Signal | Target Signal | Train Progress');
     console.log('    --------------------------------------------------------------------------');
 
-    while ((Date.now() - startTime) < 8500) {
-      await page.waitForTimeout(200);
+    while ((Date.now() - startTime) < 22000) {
+      await page.waitForTimeout(150);
       const elapsedSec = (Date.now() - startTime) / 1000;
 
       const telem = await page.evaluate(() => {
@@ -305,8 +303,13 @@ async function runVerification() {
           signalProgress: sig.progress,
           distanceToSignal: Number(distUnits.toFixed(2)),
           activeSignalId: store.activeSignalId,
+          isBrakingPhase: !!physics.isBrakingPhase,
         };
       });
+
+      if (telem.isBrakingPhase && brakeStartTime === null) {
+        brakeStartTime = elapsedSec;
+      }
 
       speedSamples.push(telem.speed);
       if (telem.speed > maxSpeedObserved) {
@@ -338,8 +341,13 @@ async function runVerification() {
       };
     });
 
+    const actualStopTime = stopTime !== null ? stopTime : 0;
+    const actualBrakeTime = (stopTime !== null && brakeStartTime !== null)
+      ? Math.max(0, stopTime - brakeStartTime)
+      : actualStopTime;
+
     console.log('    --------------------------------------------------------------------------');
-    console.log(`    Deceleration Result: Stop Time = ${stopTime ? stopTime.toFixed(2) + 's' : 'Halted immediately'}, Final Dist = ${finalTelemetry.distanceToSignal} units, Logged Frames = ${frameData.frameLogs.length}`);
+    console.log(`    Deceleration Result: Total Time = ${actualStopTime.toFixed(2)}s, Braking Time = ${actualBrakeTime.toFixed(2)}s, Final Dist = ${finalTelemetry.distanceToSignal} units, Logged Frames = ${frameData.frameLogs.length}`);
 
     // Assertion 1: Speed Cap — train NEVER accelerates after disruption
     assert.ok(
@@ -348,9 +356,7 @@ async function runVerification() {
     );
     console.log(`    ✔ Speed Cap Passed: max speed ${maxSpeedObserved.toFixed(4)} <= initial trigger speed ${initialSpeed.toFixed(4)}`);
 
-
-
-    // Assertion 3: Dynamic signal name matches target signal
+    // Assertion 2: Dynamic signal name matches target signal
     assert.strictEqual(
       finalTelemetry.signalName,
       test.expectedSignal,
@@ -358,14 +364,20 @@ async function runVerification() {
     );
     console.log(`    ✔ Dynamic Signal Name Passed: stopping at ${finalTelemetry.signalName}`);
 
-    // Assertion 4: Stop Time Under 5 Seconds
+    // Assertion 3: Total time from trigger to stop is under 20 s
     if (!test.isStationDwell) {
-      const actualStopTime = stopTime !== null ? stopTime : 0;
       assert.ok(
-        actualStopTime < 5.0,
-        `[${test.label}] Stop time (${actualStopTime.toFixed(2)}s) must be strictly under 5 s`
+        actualStopTime < 20.0,
+        `[${test.label}] Total time from trigger to stop (${actualStopTime.toFixed(2)}s) must be strictly under 20 s`
       );
-      console.log(`    ✔ Stop Time Bound Passed: stop time ${actualStopTime.toFixed(2)}s < 5.0s`);
+      console.log(`    ✔ Total Time Bound Passed: total time ${actualStopTime.toFixed(2)}s < 20.0s`);
+
+      // Assertion 4: Braking itself takes under 5 s
+      assert.ok(
+        actualBrakeTime < 5.0,
+        `[${test.label}] Braking phase duration (${actualBrakeTime.toFixed(2)}s) must be strictly under 5 s`
+      );
+      console.log(`    ✔ Braking Phase Bound Passed: braking time ${actualBrakeTime.toFixed(2)}s < 5.0s`);
     }
 
     // Assertion 5: Locomotive Front Stops 3-6 Units Before Signal Mast
@@ -405,11 +417,11 @@ async function runVerification() {
       console.log(`    ✔ Per-Frame Displacement Bound Passed: ${frameData.frameLogs.length} frames checked, max displacement ratio ${maxDispRatio.toFixed(3)} <= 1.0`);
     }
 
-    // Assertion 8: For delay triggered inside stop margin, progress never decreases (Requirement 4)
-    if (test.isInsideMargin) {
+    // Assertion 8: For delay triggered inside stop margin or 2 units before stop mark, progress never decreases (Requirement 3 & 4)
+    if (test.isTwoUnitsBeforeStop || test.isInsideMargin) {
       assert.ok(
         finalTelemetry.progress >= test.startProgress,
-        `[${test.label}] Progress must NEVER decrease for delay triggered inside margin (start=${test.startProgress}, final=${finalTelemetry.progress})`
+        `[${test.label}] Progress must NEVER decrease (start=${test.startProgress}, final=${finalTelemetry.progress})`
       );
       for (let i = 1; i < frameData.frameLogs.length; i++) {
         assert.ok(
@@ -417,7 +429,7 @@ async function runVerification() {
           `[${test.label}] Frame ${i} progress (${frameData.frameLogs[i].progress.toFixed(5)}) must be >= previous frame (${frameData.frameLogs[i - 1].progress.toFixed(5)})`
         );
       }
-      console.log(`    ✔ Inside Margin Invariance Passed: progress never decreased (start: ${test.startProgress} -> final: ${finalTelemetry.progress.toFixed(5)})`);
+      console.log(`    ✔ Non-Decreasing Progress Passed: progress never decreased across all logged frames (start: ${test.startProgress} -> final: ${finalTelemetry.progress.toFixed(5)})`);
     }
 
     // Assertion 4: Bypass Option Verification
@@ -574,7 +586,7 @@ async function runVerification() {
   await page.waitForFunction(() => {
     return window.__journeyPhysics && (window.__journeyPhysics.speed === 0 || window.__journeyPhysics.speed < 0.003);
   }, { timeout: 12000 });
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1500);
 
   const screenshotsDir = path.join(process.cwd(), 'docs', 'screenshots');
   if (!fs.existsSync(screenshotsDir)) {
@@ -630,7 +642,7 @@ async function runVerification() {
     const physics = window.__journeyPhysics;
     return store.disruptionType === 'delay' && store.status === 'delay' && store.activeBranch === 'main' && (physics.speed === 0 || physics.speed < 0.003);
   }, { timeout: 10000 });
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(1500);
 
   // Capture canvas after Undo
   const bufUndo = await captureCanvasOnly('test-canvas-after-undo.png');
@@ -665,9 +677,9 @@ async function runVerification() {
     ctx.drawImage(imgUndo, 0, 0);
     const dataUndo = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
 
-    // Mask procedural drifting clouds in upper sky (y < height * 0.35)
-    // and verify exact visual parity of track, train, signals, stations, and terrain
-    const skyHeight = Math.floor(canvas.height * 0.35);
+    // Mask procedural drifting clouds in upper sky and horizon (y < height * 0.42)
+    // and verify exact visual parity of track, train consist, signals, catenary, and terrain
+    const skyHeight = Math.floor(canvas.height * 0.42);
     let assessedPixels = 0;
     let differingPixels = 0;
     const threshold = 15; // Noise tolerance for WebGL canvas jitter

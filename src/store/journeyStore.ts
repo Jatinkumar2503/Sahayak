@@ -124,6 +124,8 @@ export interface PreviousDisruptionState {
 
 export interface JourneyState {
   status: JourneyStatus;
+  statusMessageEn: string;
+  statusMessageHi: string;
   progress: number;
   speed: number;
   targetSpeed: number;
@@ -209,6 +211,8 @@ export interface JourneyState {
 
 export const useJourneyStore = create<JourneyState>((set, get) => ({
   status: 'on-time',
+  statusMessageEn: 'ON TIME',
+  statusMessageHi: 'समय पर',
   progress: 0.06,
   speed: 0.25,
   targetSpeed: 0.25,
@@ -367,8 +371,13 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
 
     let nextSignalId = get().activeSignalId || 'sig-104';
 
+    let statusMessageEn = 'ON TIME';
+    let statusMessageHi = 'समय पर';
+
     if (disruptionType === 'delay' || disruptionType === 'cancellation') {
       nextStatus = disruptionType === 'delay' ? 'delay' : 'cancelled';
+      statusMessageEn = disruptionType === 'delay' ? 'Signal ahead is red, slowing' : 'Section Halt';
+      statusMessageHi = disruptionType === 'delay' ? 'आगे सिग्नल लाल है, गति धीमी हो रही है' : 'खंड रोक';
       targetSpeed = disruptionType === 'delay' ? 0.02 : 0;
 
       // Target the red signal immediately ahead of the train
@@ -387,15 +396,19 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
         journeyPhysics.initialBrakeSpeed = 0;
         journeyPhysics.targetSignalProgress = nextSig.progress;
         journeyPhysics.stopProgress = journeyPhysics.progress; // Progress NEVER decreases!
+        journeyPhysics.isBrakingPhase = true;
       } else {
         const currentCruiseSpeed = journeyPhysics.speed > 0.005 ? journeyPhysics.speed : 0.25;
         journeyPhysics.initialBrakeSpeed = Math.min(currentCruiseSpeed, 0.25);
         journeyPhysics.initialBrakeDist = initialDist;
         journeyPhysics.targetSignalProgress = nextSig.progress;
         journeyPhysics.stopProgress = stopProgress;
+        journeyPhysics.isBrakingPhase = initialDist <= 40.0;
       }
     } else if (disruptionType === 'missed_connection' || disruptionType === 'platform_change') {
       nextStatus = 'rerouted';
+      statusMessageEn = 'REROUTED';
+      statusMessageHi = 'मार्ग परिवर्तित';
       targetSpeed = 0.15;
     }
 
@@ -412,6 +425,8 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
     set({
       disruptionType,
       status: nextStatus,
+      statusMessageEn,
+      statusMessageHi,
       activeSignalId: nextSignalId,
       targetSpeed,
       speed: journeyPhysics.speed,

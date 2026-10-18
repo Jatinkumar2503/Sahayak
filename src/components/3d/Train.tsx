@@ -105,6 +105,7 @@ export function Train() {
         if (disruptionType === 'delay' || disruptionType === 'cancellation') {
           const CORRIDOR_CURVE_LENGTH = 568.74;
           const SIGNAL_STOP_MARGIN_UNITS = 4.5;
+          const BRAKE_ZONE_DISTANCE = 40.0;
           const MARGIN_PROGRESS = SIGNAL_STOP_MARGIN_UNITS / CORRIDOR_CURVE_LENGTH;
 
           const activeSig =
@@ -113,14 +114,24 @@ export function Train() {
           const stopProgress = (activeSig.progress - MARGIN_PROGRESS + 1) % 1;
           const distRemaining = (stopProgress - journeyPhysics.progress) * CORRIDOR_CURVE_LENGTH;
 
-          const initialDist = journeyPhysics.initialBrakeDist || distRemaining;
+          const initialDist = journeyPhysics.initialBrakeDist ?? distRemaining;
           const v0 = journeyPhysics.initialBrakeSpeed || 0.25;
 
           if (distRemaining <= 0 || initialDist <= 0) {
             journeyPhysics.speed = 0;
+            journeyPhysics.isBrakingPhase = true;
+          } else if (distRemaining > BRAKE_ZONE_DISTANCE) {
+            // Farther than 40 units ahead: keep train at cruise speed until reaching 40 units from stop mark
+            journeyPhysics.speed = v0;
+            journeyPhysics.isBrakingPhase = false;
           } else {
-            // Speed follows exact constant deceleration relation: v = v0 * sqrt(remaining / initial)
-            const ratio = Math.max(0, Math.min(1, distRemaining / initialDist));
+            // Within 40 units of stop mark: brake with sqrt curve
+            if (!journeyPhysics.isBrakingPhase) {
+              journeyPhysics.isBrakingPhase = true;
+              journeyPhysics.brakingStartTime = time;
+            }
+            const brakeZone = Math.min(BRAKE_ZONE_DISTANCE, initialDist);
+            const ratio = Math.max(0, Math.min(1, distRemaining / brakeZone));
             journeyPhysics.speed = v0 * Math.sqrt(ratio);
           }
         } else if (!approachingStation && journeyPhysics.stationStopTimer <= 0) {
@@ -132,7 +143,7 @@ export function Train() {
         }
       }
 
-      const SPEED_TO_PROGRESS_FACTOR = 0.105;
+      const SPEED_TO_PROGRESS_FACTOR = 0.125;
       const speedDuringFrame = journeyPhysics.speed;
       const deltaProgress = Math.max(0, journeyPhysics.speed * SPEED_TO_PROGRESS_FACTOR * delta);
       let nextProgress = journeyPhysics.progress + deltaProgress;
@@ -224,7 +235,7 @@ export function Train() {
     journeyPhysics.prevFrameProgress = currentP;
 
     if (journeyPhysics.isLoggingFrames && delta > 0) {
-      const SPEED_TO_PROGRESS_FACTOR = 0.105;
+      const SPEED_TO_PROGRESS_FACTOR = 0.125;
       const effectiveSpeed = Math.max(journeyPhysics.speed, speedDuringFrame);
       journeyPhysics.frameLogs.push({
         dt: delta,

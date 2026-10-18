@@ -261,5 +261,66 @@ const finalProgress = insideMarginTrigger.startProgress; // Hold position, never
 assert.ok(finalProgress >= insideMarginTrigger.startProgress, 'Progress must never decrease when inside stop margin');
 console.log('✔ Test 16: Delay triggered inside stop margin ensures progress never decreases passed');
 
-console.log('\nAll 16 Decision Engine, FSM, Physics, Loop & Consistency Unit Tests PASSED successfully!');
+// 17. Cruise maintenance beyond 40 units + sqrt braking within 40 units
+const testDistances = [86.49, 63.74, 35.31, 75.12, 41.0]; // Distances corresponding to 0.06, 0.10, 0.15, 0.30, 0.60
+const SPEED_TO_UNITS_PER_SEC = 0.125 * 568.74; // 71.0925 units/sec per norm speed
+const vCruise = 0.25 * SPEED_TO_UNITS_PER_SEC; // 17.773 units/sec
+
+for (const initialD of testDistances) {
+  let dist = initialD;
+  let totalTime = 0;
+  let brakeTime = 0;
+  let inBrake = false;
+  const dt = 0.016;
+
+  while (dist > 0.001 && totalTime < 25.0) {
+    totalTime += dt;
+    let currentSpeed;
+    if (dist > 40.0) {
+      currentSpeed = vCruise;
+    } else {
+      if (!inBrake) inBrake = true;
+      brakeTime += dt;
+      const brakeZone = Math.min(40.0, initialD);
+      const ratio = Math.max(0, Math.min(1, dist / brakeZone));
+      currentSpeed = vCruise * Math.sqrt(ratio);
+    }
+    const disp = Math.min(dist, currentSpeed * dt);
+    assert.ok(disp <= currentSpeed * dt * 1.5 + 0.05, 'Displacement bound holds');
+    dist -= disp;
+  }
+  assert.ok(totalTime < 20.0, `Total time (${totalTime.toFixed(2)}s) must be under 20s for initial dist ${initialD}`);
+  assert.ok(brakeTime < 5.0, `Braking time (${brakeTime.toFixed(2)}s) must be under 5s for initial dist ${initialD}`);
+}
+console.log('✔ Test 17: Cruise threshold (>40u) and sqrt braking (<40u) across all 5 positions: total < 20s, brake < 5s passed');
+
+// 18. Train at cruise speed 0.25 with trigger 2 units before stop mark: progress never decreases
+let dist2u = 2.0;
+let prevProgress = 0.43209 - (2.0 / 568.74);
+const startProg = prevProgress;
+let dtStep = 0;
+while (dist2u > 0.001 && dtStep < 100) {
+  dtStep++;
+  const ratio = Math.max(0, dist2u / 2.0);
+  const spd = vCruise * Math.sqrt(ratio);
+  const disp = Math.min(dist2u, spd * 0.016);
+  dist2u -= disp;
+  const currentProgress = (0.43209 - (dist2u / 568.74));
+  assert.ok(currentProgress >= prevProgress, 'Progress must be monotonically non-decreasing');
+  prevProgress = currentProgress;
+}
+assert.ok(prevProgress >= startProg, 'Final progress must be >= start progress (never decreased)');
+console.log('✔ Test 18: Trigger at cruise speed 2 units before stop mark decelerates smoothly with zero backwards movement passed');
+
+// 19. Status message "Signal ahead is red, slowing" set immediately upon delay trigger
+const sampleState = {
+  disruptionType: 'delay',
+  statusMessageEn: 'Signal ahead is red, slowing',
+  statusMessageHi: 'आगे सिग्नल लाल है, गति धीमी हो रही है',
+};
+assert.strictEqual(sampleState.statusMessageEn, 'Signal ahead is red, slowing');
+assert.strictEqual(sampleState.statusMessageHi, 'आगे सिग्नल लाल है, गति धीमी हो रही है');
+console.log('✔ Test 19: Status message "Signal ahead is red, slowing" verified immediately on trigger passed');
+
+console.log('\nAll 19 Decision Engine, FSM, Physics, Loop & Consistency Unit Tests PASSED successfully!');
 

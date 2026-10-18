@@ -50,6 +50,8 @@ export interface JourneyPhysicsState {
   stopProgress?: number;
   initialBrakeDist?: number;
   initialBrakeSpeed?: number;
+  isBrakingPhase?: boolean;
+  brakingStartTime?: number;
 
   // Frame logging for per-frame assertion of displacement & physics
   isLoggingFrames: boolean;

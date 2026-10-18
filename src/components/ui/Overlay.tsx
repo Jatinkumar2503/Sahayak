@@ -114,8 +114,8 @@ export function Overlay() {
       case 'delay':
         return {
           icon: <AlertTriangle className="w-4 h-4 text-[#E69F00]" aria-hidden="true" />,
-          labelEn: 'DELAYED (+25m)',
-          labelHi: 'विलंबित (+२५ मि.)',
+          labelEn: 'Signal ahead is red, slowing',
+          labelHi: 'आगे सिग्नल लाल है, गति धीमी हो रही है',
           classes: 'bg-[#7A5400]/40 text-[#FEF3C7] border-[#E69F00] shadow-[#E69F00]/20',
           pattern: 'border-dashed border-2',
         };
