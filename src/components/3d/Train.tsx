@@ -7,10 +7,12 @@ import { useJourneyStore, STATIONS, SIGNALS, getNextSignalAhead } from '@/store/
 import { journeyPhysics, COACH_COUNT, COACH_OFFSET_STEP } from '@/store/journeyPhysics';
 import { mainTrackCurve, branchTrackCurve, getBlendedRoutePoint } from './trackCurves';
 
-// Station stop threshold distances
-const STATION_SLOW_ZONE = 0.045; // Starts decelerating
+// Corridor scale & station parameters: calibrated for a spacious ~2 minute full-journey presentation
+const SPEED_TO_PROGRESS_FACTOR = 0.045; // Smooth long-distance corridor scaling (110 km/h)
+const STATION_SLOW_ZONE = 0.035; // Starts decelerating into platform
 const STATION_STOP_ZONE = 0.008; // Dwells at station platform
-const STATION_DWELL_SECONDS = 4.0; // Seconds to stop at platform
+const STATION_DWELL_SECONDS = 7.0; // 7-second dwell at Panipat platform
+const TERMINUS_DWELL_SECONDS = 15.0; // 15-second terminus dwell at Ambala Cantt platform before looping
 
 // Helper to create a soft radial gradient canvas texture for contact-blob shadows
 function createBlobShadowTexture() {
@@ -117,8 +119,9 @@ export function Train() {
           if (dist > 0 && dist < STATION_SLOW_ZONE) {
             approachingStation = true;
             if (dist < STATION_STOP_ZONE && !journeyPhysics.isStationStopped) {
-              // Trigger station dwell
-              journeyPhysics.stationStopTimer = STATION_DWELL_SECONDS;
+              // Trigger station dwell (15s at terminus Ambala, 7s at Panipat)
+              const dwell = st.id === 'ambala' ? TERMINUS_DWELL_SECONDS : STATION_DWELL_SECONDS;
+              journeyPhysics.stationStopTimer = dwell;
               journeyPhysics.isStationStopped = true;
               journeyPhysics.doorsOpen = true;
               currentStationIdRef.current = st.id;
@@ -174,7 +177,6 @@ export function Train() {
         }
       }
 
-      const SPEED_TO_PROGRESS_FACTOR = 0.125;
       const speedDuringFrame = journeyPhysics.speed;
       const deltaProgress = Math.max(0, journeyPhysics.speed * SPEED_TO_PROGRESS_FACTOR * delta);
       let nextProgress = journeyPhysics.progress + deltaProgress;
@@ -194,9 +196,9 @@ export function Train() {
         }
       }
 
-      // Seamless journey looping: When train completes run past Ambala (progress >= 0.98),
-      // smoothly loop back to Delhi approach with head at 0.06 or more
-      if (nextProgress >= 0.98) {
+      // Seamless journey looping: When train completes run past Ambala (progress >= 0.985)
+      // and has concluded its terminus platform dwell at Ambala Cantt
+      if (nextProgress >= 0.985 && departedStationIdRef.current === 'ambala') {
         const store = useJourneyStore.getState();
         const isReduced = store.reducedMotion;
 
@@ -274,7 +276,6 @@ export function Train() {
     journeyPhysics.prevFrameProgress = currentP;
 
     if (journeyPhysics.isLoggingFrames && delta > 0) {
-      const SPEED_TO_PROGRESS_FACTOR = 0.125;
       const effectiveSpeed = Math.max(journeyPhysics.speed, speedDuringFrame);
       journeyPhysics.frameLogs.push({
         dt: delta,
