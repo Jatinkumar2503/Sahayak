@@ -35,6 +35,7 @@ function createBlobShadowTexture() {
 }
 
 export function Train() {
+  const status = useJourneyStore((s) => s.status);
   const disruptionType = useJourneyStore((s) => s.disruptionType);
   const activeSignalId = useJourneyStore((s) => s.activeSignalId);
   const activeBranch = useJourneyStore((s) => s.activeBranch);
@@ -55,7 +56,7 @@ export function Train() {
   // Soft contact blob shadow texture
   const blobShadowTexture = useMemo(() => createBlobShadowTexture(), []);
 
-  const isBraking = disruptionType === 'delay' || disruptionType === 'cancellation';
+  const isBraking = (disruptionType === 'delay' || disruptionType === 'cancellation') && status !== 'resolved';
   const showBlobShadow = shadowTier === 'blob';
 
   useFrame((state, delta) => {
@@ -102,7 +103,7 @@ export function Train() {
         }
 
         // Constant Deceleration Braking Curve: v = v0 * sqrt(remaining / initial) with NO final clamp or snap
-        if (disruptionType === 'delay' || disruptionType === 'cancellation') {
+        if ((disruptionType === 'delay' || disruptionType === 'cancellation') && status !== 'resolved') {
           const CORRIDOR_CURVE_LENGTH = 568.74;
           const SIGNAL_STOP_MARGIN_UNITS = 4.5;
           const BRAKE_ZONE_DISTANCE = 40.0;
@@ -148,7 +149,7 @@ export function Train() {
       const deltaProgress = Math.max(0, journeyPhysics.speed * SPEED_TO_PROGRESS_FACTOR * delta);
       let nextProgress = journeyPhysics.progress + deltaProgress;
 
-      if (disruptionType === 'delay' || disruptionType === 'cancellation') {
+      if ((disruptionType === 'delay' || disruptionType === 'cancellation') && status !== 'resolved') {
         const CORRIDOR_CURVE_LENGTH = 568.74;
         const SIGNAL_STOP_MARGIN_UNITS = 4.5;
         const MARGIN_PROGRESS = SIGNAL_STOP_MARGIN_UNITS / CORRIDOR_CURVE_LENGTH;

@@ -21,10 +21,10 @@ export function SignalHeads({ position = [2.8, 0, -165], signalId = 'sig-104' }:
   const yellowLampRef = useRef<THREE.MeshStandardMaterial>(null);
   const greenLampRef = useRef<THREE.MeshStandardMaterial>(null);
 
-  // Red signal when delayed, cancelled, or holding for the active signal ahead
+  // Red signal when delayed, cancelled, or holding for the active signal ahead (clears to green once resolved)
   const isThisSignalActive = !signalId || signalId === activeSignalId || (!activeSignalId && signalId === 'sig-102');
-  const isRed = (disruptionType === 'delay' || disruptionType === 'cancellation') && isThisSignalActive;
-  const isYellow = (disruptionType === 'missed_connection' || disruptionType === 'platform_change') && isThisSignalActive;
+  const isRed = (disruptionType === 'delay' || disruptionType === 'cancellation') && isThisSignalActive && status !== 'resolved';
+  const isYellow = (disruptionType === 'missed_connection' || disruptionType === 'platform_change') && isThisSignalActive && status !== 'resolved';
   const isGreen = !isRed && !isYellow;
 
   useFrame((state) => {

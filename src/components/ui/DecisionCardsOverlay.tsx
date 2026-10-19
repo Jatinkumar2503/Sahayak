@@ -87,6 +87,11 @@ export function DecisionCardsOverlay() {
     setPreviewRouteId(null);
 
     // 3D Outcomes triggered deterministically:
+    journeyPhysics.isBrakingPhase = false;
+    if (journeyPhysics.speed <= 0.01) {
+      journeyPhysics.speed = 0.04;
+    }
+
     if (option.actionType === 'reroute') {
       setActiveBranch('branch');
       journeyPhysics.activeBranch = 'branch';
@@ -96,7 +101,11 @@ export function DecisionCardsOverlay() {
       journeyPhysics.targetSpeed = 0.22;
     } else if (option.actionType === 'resume') {
       setTimeout(() => {
+        journeyPhysics.isBrakingPhase = false;
         journeyPhysics.targetSpeed = 0.25;
+        if (journeyPhysics.speed <= 0.01) {
+          journeyPhysics.speed = 0.04;
+        }
       }, 1200);
     } else if (option.actionType === 'cab') {
       setCameraMode('map');

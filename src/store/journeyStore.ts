@@ -292,6 +292,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
       previousDisruptionState: prev,
       status: 'resolved',
       previewRouteId: null,
+      activeBranch: nextBranch,
     });
   },
   undoConfirmedOption: () => {

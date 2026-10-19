@@ -165,6 +165,14 @@ export function Overlay() {
     : approachingSignal;
 
   const getSignalAspect = () => {
+    if (status === 'resolved') {
+      return {
+        icon: <CheckCircle2 className="w-3.5 h-3.5 text-[#009E73]" aria-hidden="true" />,
+        textEn: `${activeSignal.nameEn}: CLEAR (Green)`,
+        textHi: `${activeSignal.nameHi}: साफ़ (हरा)`,
+        colorClass: 'text-[#D1FAE5] bg-[#004D38]/70 border-[#009E73]',
+      };
+    }
     if (disruptionType === 'delay' || disruptionType === 'cancellation') {
       return {
         icon: <OctagonAlert className="w-3.5 h-3.5 text-[#D55E00]" aria-hidden="true" />,

@@ -17,6 +17,7 @@ const SPARK_COUNT = 24;
  */
 export function BrakeSparks() {
   const meshRef = useRef<THREE.InstancedMesh>(null);
+  const status = useJourneyStore((s) => s.status);
   const disruptionType = useJourneyStore((s) => s.disruptionType);
   const isLiteMode = useJourneyStore((s) => s.isLiteMode);
   const isReducedMotion = useReducedMotion();
@@ -25,6 +26,7 @@ export function BrakeSparks() {
   const isBraking =
     !isLiteMode &&
     !isReducedMotion &&
+    status !== 'resolved' &&
     journeyPhysics.speed > 0.01 &&
     (disruptionType === 'delay' ||
       disruptionType === 'cancellation' ||

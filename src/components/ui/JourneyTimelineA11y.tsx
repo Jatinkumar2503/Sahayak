@@ -99,6 +99,9 @@ export function JourneyTimelineA11y() {
   };
 
   const getSignalAspectText = () => {
+    if (status === 'resolved') {
+      return isHindi ? `${activeSignal.nameHi}: साफ़ (हरा)` : `${activeSignal.nameEn}: CLEAR (Green)`;
+    }
     if (disruptionType === 'delay' || disruptionType === 'cancellation') {
       return isHindi ? `${activeSignal.nameHi}: रुकें (लाल)` : `${activeSignal.nameEn}: STOP (Red)`;
     }
