@@ -404,7 +404,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
         journeyPhysics.initialBrakeDist = initialDist;
         journeyPhysics.targetSignalProgress = nextSig.progress;
         journeyPhysics.stopProgress = stopProgress;
-        journeyPhysics.isBrakingPhase = initialDist <= 40.0;
+        journeyPhysics.isBrakingPhase = initialDist <= 15.0;
       }
     } else if (disruptionType === 'missed_connection' || disruptionType === 'platform_change') {
       nextStatus = 'rerouted';

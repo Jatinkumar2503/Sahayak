@@ -7,12 +7,13 @@ import { useJourneyStore, STATIONS, SIGNALS, getNextSignalAhead } from '@/store/
 import { journeyPhysics, COACH_COUNT, COACH_OFFSET_STEP } from '@/store/journeyPhysics';
 import { mainTrackCurve, branchTrackCurve, getBlendedRoutePoint } from './trackCurves';
 
-// Corridor scale & station parameters: calibrated for a spacious ~2 minute full-journey presentation
-const SPEED_TO_PROGRESS_FACTOR = 0.045; // Smooth long-distance corridor scaling (110 km/h)
-const STATION_SLOW_ZONE = 0.035; // Starts decelerating into platform
-const STATION_STOP_ZONE = 0.008; // Dwells at station platform
-const STATION_DWELL_SECONDS = 7.0; // 7-second dwell at Panipat platform
-const TERMINUS_DWELL_SECONDS = 15.0; // 15-second terminus dwell at Ambala Cantt platform before looping
+// Corridor scale & station parameters: calibrated for a full 3.5-minute Delhi to Ambala journey
+const SPEED_TO_PROGRESS_FACTOR = 0.018; // ~3.5 minutes total Delhi -> Panipat -> Ambala run at 110 km/h
+const STATION_SLOW_ZONE = 0.025; // Starts decelerating into platform
+const STATION_STOP_ZONE = 0.006; // Dwells at station platform
+const STATION_DWELL_SECONDS = 10.0; // 10-second dwell at Panipat platform
+const TERMINUS_DWELL_SECONDS = 25.0; // 25-second terminus dwell at Ambala Cantt platform before looping
+const BRAKE_ZONE_DISTANCE = 15.0; // Smooth deceleration zone ahead of red signal
 
 // Helper to create a soft radial gradient canvas texture for contact-blob shadows
 function createBlobShadowTexture() {
@@ -139,7 +140,6 @@ export function Train() {
         if ((disruptionType === 'delay' || disruptionType === 'cancellation') && status !== 'resolved') {
           const CORRIDOR_CURVE_LENGTH = 568.74;
           const SIGNAL_STOP_MARGIN_UNITS = 4.5;
-          const BRAKE_ZONE_DISTANCE = 40.0;
           const MARGIN_PROGRESS = SIGNAL_STOP_MARGIN_UNITS / CORRIDOR_CURVE_LENGTH;
 
           const activeSig =
