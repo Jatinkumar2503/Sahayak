@@ -56,12 +56,21 @@ export function Train() {
   // Soft contact blob shadow texture
   const blobShadowTexture = useMemo(() => createBlobShadowTexture(), []);
 
+  // Station dwell departure tracking (prevents infinite dwell loop)
+  const departedStationIdRef = useRef<string | null>(null);
+  const currentStationIdRef = useRef<string | null>(null);
+
   const isBraking = (disruptionType === 'delay' || disruptionType === 'cancellation') && status !== 'resolved';
   const showBlobShadow = shadowTier === 'blob';
 
   useFrame((state, delta) => {
     const time = state.clock.getElapsedTime();
     let speedDuringFrame = journeyPhysics.speed;
+
+    // Reset station departed flags when near corridor start
+    if (journeyPhysics.progress < 0.1) {
+      departedStationIdRef.current = null;
+    }
 
     // 1. Station-Stop Sequence & S-Curve Speed Easing
     if (!journeyPhysics.scrollDriven) {
@@ -78,10 +87,30 @@ export function Train() {
           // Depart station: accelerate back
           journeyPhysics.isStationStopped = false;
           journeyPhysics.doorsOpen = false;
+          departedStationIdRef.current = currentStationIdRef.current;
+          currentStationIdRef.current = null;
+          if (journeyPhysics.speed <= 0.01) {
+            journeyPhysics.speed = 0.05;
+          }
         }
       } else {
         // Check if train is approaching any station platform
         for (const st of STATIONS) {
+          // If taking the bypass chord line, bypass Panipat without stopping at main platform
+          if (activeBranch === 'branch' && st.id === 'panipat') {
+            continue;
+          }
+
+          // Once train passes the station, clear departed flag for future loops
+          if (departedStationIdRef.current === st.id && journeyPhysics.progress > st.progress + 0.01) {
+            departedStationIdRef.current = null;
+          }
+
+          // If recently departed from this station, do not re-trigger stop
+          if (departedStationIdRef.current === st.id) {
+            continue;
+          }
+
           const dist = st.progress - journeyPhysics.progress;
 
           // Approaching station: smooth S-curve deceleration
@@ -92,6 +121,7 @@ export function Train() {
               journeyPhysics.stationStopTimer = STATION_DWELL_SECONDS;
               journeyPhysics.isStationStopped = true;
               journeyPhysics.doorsOpen = true;
+              currentStationIdRef.current = st.id;
             } else {
               // Smooth deceleration into platform
               const tDecel = dist / STATION_SLOW_ZONE;
@@ -179,6 +209,8 @@ export function Train() {
         journeyPhysics.speed = 0.25;
         journeyPhysics.targetSpeed = 0.25;
         journeyPhysics.activeBranch = 'main';
+        departedStationIdRef.current = null;
+        currentStationIdRef.current = null;
         store.setProgress(0.06);
         store.setActiveBranch('main');
         store.setActiveSignalId('sig-102');
