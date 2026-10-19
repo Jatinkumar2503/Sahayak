@@ -5,6 +5,9 @@
 [![Lighthouse: 100/100/100](https://img.shields.io/badge/Lighthouse-100%20A11y%20%7C%20100%20SEO%20%7C%20100%20Best%20Practices-0072B2?style=for-the-badge)](./a11y-statement.md)
 [![Decision Engine: 21/21 Tests](https://img.shields.io/badge/Decision%20Engine-21%2F21%20Deterministic%20Tests%20Passing-E69F00?style=for-the-badge)](#running-unit-tests)
 
+**🌐 Live Deployment:** [https://sahayak-tan-zeta.vercel.app/](https://sahayak-tan-zeta.vercel.app/)  
+**🎥 Video Demo:** [https://youtu.be/j3TkQGKsTaI](https://youtu.be/j3TkQGKsTaI)
+
 ---
 
 ## 1. Problem Statement

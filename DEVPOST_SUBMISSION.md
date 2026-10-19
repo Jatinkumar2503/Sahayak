@@ -1,6 +1,8 @@
 # Devpost Project Submission Draft — Sahayak 3D (सहायक ३डी)
 
-> **Tagline:** An accessible, moving 3D Indian rail corridor and real-time disruption decision assistant empowering passengers with transparent choices, voice interaction, and family peace of mind.
+> **Tagline:** An accessible, moving 3D Indian rail corridor and real-time disruption decision assistant empowering passengers with transparent choices, voice interaction, and family peace of mind.  
+> **Demo Video:** [https://youtu.be/j3TkQGKsTaI](https://youtu.be/j3TkQGKsTaI)  
+> **Live Site:** [https://sahayak-tan-zeta.vercel.app/](https://sahayak-tan-zeta.vercel.app/)
 
 ---
 
